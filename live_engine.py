@@ -8,7 +8,10 @@ from config import (
     RISK_PER_TRADE,
     LOOP_INTERVAL,
     SETUP_ALERTS_ENABLED,
-    SETUP_ALERT_COOLDOWN_MINUTES
+    SETUP_ALERT_COOLDOWN_MINUTES,
+    SIGNAL_ALERT_COOLDOWN_MINUTES,
+    ERROR_ALERT_COOLDOWN_MINUTES,
+    STARTUP_MESSAGE_ENABLED
 )
 from data_feed import get_data
 from indicators import add_indicators
@@ -56,10 +59,6 @@ from asset_labels import get_asset_label_with_ticker
 _SIGNAL_ALERT_MEMORY = {}
 _SETUP_ALERT_MEMORY = {}
 _ERROR_ALERT_MEMORY = {}
-
-# Cooldowns internos de protección
-SIGNAL_ALERT_COOLDOWN_MINUTES = 90
-ERROR_ALERT_COOLDOWN_MINUTES = 30
 
 
 def _now():
@@ -492,7 +491,9 @@ def run_live_engine(interval_seconds=None):
     if interval_seconds is None:
         interval_seconds = LOOP_INTERVAL
 
-    send_telegram_message("🤖 SHARK V15 SNIPER INICIADO")
+    if STARTUP_MESSAGE_ENABLED:
+        send_telegram_message("🤖 SHARK V15 SNIPER INICIADO")
+
     print("=== SHARK V15 SNIPER INICIADO ===")
 
     while True:
