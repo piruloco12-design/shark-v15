@@ -6,6 +6,6 @@ services:
     startCommand: python main.py
     envVars:
       - key: DATABASE_NAME
-        value: /var/data/shark_v8.db
+        value: shark_v8.db
       - key: PRIMARY_PROVIDER
         value: yfinance
