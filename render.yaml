@@ -1,0 +1,23 @@
+services:
+  - type: worker
+    name: shark-bot
+    env: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python main.py
+    envVars:
+      - key: DATABASE_NAME
+        value: /var/data/shark_v8.db
+      - key: PRIMARY_PROVIDER
+        value: yfinance
+      - key: TELEGRAM_TOKEN
+        sync: false
+      - key: TELEGRAM_CHAT_ID
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+
+    disk:
+      name: shark-disk
+      mountPath: /var/data
+      sizeGB: 1

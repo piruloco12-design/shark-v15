@@ -1,0 +1,7 @@
+.env
+__pycache__/
+*.pyc
+bot_env/
+venv/
+.env.*
+shark_v8.db
