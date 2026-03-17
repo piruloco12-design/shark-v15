@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from config import (
     ASSETS,
@@ -48,6 +48,129 @@ from final_decision_engine import evaluate_final_decision
 from opportunity_scanner import scan_smart_opportunity
 from setup_alert_engine import detect_setup_watch
 from asset_labels import get_asset_label_with_ticker
+
+
+# =========================================================
+# ANTI-SPAM RUNTIME MEMORY
+# =========================================================
+_SIGNAL_ALERT_MEMORY = {}
+_SETUP_ALERT_MEMORY = {}
+_ERROR_ALERT_MEMORY = {}
+
+# Cooldowns internos de protección
+SIGNAL_ALERT_COOLDOWN_MINUTES = 90
+ERROR_ALERT_COOLDOWN_MINUTES = 30
+
+
+def _now():
+    return datetime.now()
+
+
+def _normalize_text(value):
+    if value is None:
+        return ""
+    return str(value).strip()
+
+
+def _round_safe(value, digits=4):
+    try:
+        return round(float(value), digits)
+    except Exception:
+        return 0.0
+
+
+def _should_send_runtime_alert(memory_store, key, signature, cooldown_minutes):
+    """
+    Regla anti-spam:
+    - Si nunca se envió -> enviar
+    - Si la firma cambió -> enviar inmediatamente
+    - Si la firma es igual y sigue dentro del cooldown -> NO enviar
+    - Si la firma es igual pero el cooldown expiró -> enviar
+    """
+    now = _now()
+    existing = memory_store.get(key)
+
+    if existing is None:
+        memory_store[key] = {
+            "signature": signature,
+            "timestamp": now
+        }
+        return True
+
+    last_signature = existing.get("signature")
+    last_timestamp = existing.get("timestamp")
+
+    if last_signature != signature:
+        memory_store[key] = {
+            "signature": signature,
+            "timestamp": now
+        }
+        return True
+
+    if last_timestamp is None:
+        memory_store[key] = {
+            "signature": signature,
+            "timestamp": now
+        }
+        return True
+
+    elapsed = now - last_timestamp
+    if elapsed >= timedelta(minutes=cooldown_minutes):
+        memory_store[key] = {
+            "signature": signature,
+            "timestamp": now
+        }
+        return True
+
+    return False
+
+
+def _build_signal_alert_signature(
+    ticker,
+    signal,
+    regime,
+    trade_setup,
+    ai_result,
+    context_result,
+    session_result,
+    volatility_result,
+    final_result,
+    scanner_info
+):
+    return (
+        f"{ticker}|"
+        f"{signal}|"
+        f"{regime}|"
+        f"{_round_safe(trade_setup.get('entry', 0), 2)}|"
+        f"{_round_safe(trade_setup.get('stop_loss', 0), 2)}|"
+        f"{_round_safe(trade_setup.get('take_profit', 0), 2)}|"
+        f"{_round_safe(trade_setup.get('position_size', 0), 4)}|"
+        f"{_round_safe(ai_result.get('score', 0), 1)}|"
+        f"{_round_safe(context_result.get('final_score', 0), 1)}|"
+        f"{_normalize_text(session_result.get('session'))}|"
+        f"{_normalize_text(volatility_result.get('volatility_state'))}|"
+        f"{_normalize_text(final_result.get('decision'))}|"
+        f"{_round_safe(final_result.get('score', 0), 1)}|"
+        f"{_normalize_text(scanner_info.get('signal'))}|"
+        f"{_normalize_text(scanner_info.get('reason'))}"
+    )
+
+
+def _build_setup_alert_signature(ticker, setup_info, regime, last_row):
+    return (
+        f"{ticker}|"
+        f"{_normalize_text(setup_info.get('alert_type'))}|"
+        f"{_normalize_text(regime)}|"
+        f"{_round_safe(last_row.get('Close', 0), 2)}|"
+        f"{_round_safe(last_row.get('rsi', 0), 2)}|"
+        f"{_round_safe(last_row.get('adx', 0), 2)}|"
+        f"{_normalize_text(setup_info.get('reason'))}"
+    )
+
+
+def _build_error_signature(scope, error_text):
+    clean_error = _normalize_text(error_text)
+    return f"{scope}|{clean_error}"
 
 
 def build_technical_reason(df, signal):
@@ -166,11 +289,27 @@ def run_live_cycle():
                 if setup_info["alert_type"] != "NONE":
                     print(f"SETUP | {asset_name} | {setup_info['alert_type']} | {setup_info['reason']}")
 
-                    if not has_recent_setup_alert(
+                    setup_signature = _build_setup_alert_signature(
+                        ticker=ticker,
+                        setup_info=setup_info,
+                        regime=regime,
+                        last_row=last
+                    )
+
+                    db_allows_setup = not has_recent_setup_alert(
                         ticker=ticker,
                         alert_type=setup_info["alert_type"],
                         within_minutes=SETUP_ALERT_COOLDOWN_MINUTES
-                    ):
+                    )
+
+                    runtime_allows_setup = _should_send_runtime_alert(
+                        memory_store=_SETUP_ALERT_MEMORY,
+                        key=f"{ticker}|{setup_info['alert_type']}",
+                        signature=setup_signature,
+                        cooldown_minutes=SETUP_ALERT_COOLDOWN_MINUTES
+                    )
+
+                    if db_allows_setup and runtime_allows_setup:
                         send_telegram_message(
                             format_setup_watch_message(
                                 ticker=ticker,
@@ -186,6 +325,8 @@ def run_live_cycle():
                             alert_type=setup_info["alert_type"],
                             reason=setup_info["reason"]
                         )
+                    else:
+                        print(f"ANTI-SPAM SETUP | {asset_name} | alerta duplicada evitada")
 
             base_trade_setup = calculate_trade_levels(
                 df=df,
@@ -282,21 +423,49 @@ def run_live_cycle():
                     print(f"--> Trade bloqueado por semáforo final: {asset_name}")
                     continue
 
-                send_telegram_message(
-                    format_pro_signal_message(
-                        ticker=ticker,
-                        signal=signal,
-                        trade_setup=trade_setup,
-                        last_row=last,
-                        ai_result=ai_result,
-                        risk_result=risk_result,
-                        regime=regime,
-                        technical_reason=technical_reason,
-                        session_result=session_result,
-                        volatility_result=volatility_result,
-                        context_result=context_result
-                    )
+                already_has_open_trade = has_open_trade_for_ticker(ticker)
+
+                signal_signature = _build_signal_alert_signature(
+                    ticker=ticker,
+                    signal=signal,
+                    regime=regime,
+                    trade_setup=trade_setup,
+                    ai_result=ai_result,
+                    context_result=context_result,
+                    session_result=session_result,
+                    volatility_result=volatility_result,
+                    final_result=final_result,
+                    scanner_info=scanner_info
                 )
+
+                can_send_signal_alert = _should_send_runtime_alert(
+                    memory_store=_SIGNAL_ALERT_MEMORY,
+                    key=f"{ticker}|{signal}",
+                    signature=signal_signature,
+                    cooldown_minutes=SIGNAL_ALERT_COOLDOWN_MINUTES
+                )
+
+                if not already_has_open_trade and can_send_signal_alert:
+                    send_telegram_message(
+                        format_pro_signal_message(
+                            ticker=ticker,
+                            signal=signal,
+                            trade_setup=trade_setup,
+                            last_row=last,
+                            ai_result=ai_result,
+                            risk_result=risk_result,
+                            regime=regime,
+                            technical_reason=technical_reason,
+                            session_result=session_result,
+                            volatility_result=volatility_result,
+                            context_result=context_result
+                        )
+                    )
+                else:
+                    if already_has_open_trade:
+                        print(f"ANTI-SPAM SIGNAL | {asset_name} | ya existe trade abierto")
+                    elif not can_send_signal_alert:
+                        print(f"ANTI-SPAM SIGNAL | {asset_name} | señal duplicada evitada")
 
             if signal in ["BUY", "SELL"] and not has_open_trade_for_ticker(ticker):
                 if trade_setup["position_size"] > 0:
@@ -330,8 +499,22 @@ def run_live_engine(interval_seconds=None):
         try:
             run_live_cycle()
         except Exception as e:
-            print(f"Error en ciclo live: {e}")
-            send_telegram_message(f"❌ Error en ciclo live: {e}")
+            error_text = str(e)
+            print(f"Error en ciclo live: {error_text}")
+
+            error_signature = _build_error_signature("LIVE_CYCLE", error_text)
+
+            can_send_error = _should_send_runtime_alert(
+                memory_store=_ERROR_ALERT_MEMORY,
+                key="LIVE_CYCLE",
+                signature=error_signature,
+                cooldown_minutes=ERROR_ALERT_COOLDOWN_MINUTES
+            )
+
+            if can_send_error:
+                send_telegram_message(f"❌ Error en ciclo live: {error_text}")
+            else:
+                print("ANTI-SPAM ERROR | error repetido no enviado a Telegram")
 
         print(f"Esperando {interval_seconds} segundos para el próximo ciclo...\n")
         time.sleep(interval_seconds)

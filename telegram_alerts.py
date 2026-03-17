@@ -9,6 +9,15 @@ def send_telegram_message(message):
         print("Telegram no configurado.")
         return
 
+    if message is None:
+        print("Mensaje Telegram vacío.")
+        return
+
+    message = str(message).strip()
+    if not message:
+        print("Mensaje Telegram vacío.")
+        return
+
     url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
 
     payload = {
@@ -17,7 +26,7 @@ def send_telegram_message(message):
     }
 
     try:
-        response = requests.post(url, data=payload)
+        response = requests.post(url, data=payload, timeout=15)
 
         if response.status_code != 200:
             print("Error enviando mensaje Telegram:", response.text)
@@ -71,7 +80,7 @@ Regime: {regime}
 
 Motivo:
 {setup_info['reason']}
-"""
+""".strip()
 
 
 def format_pro_signal_message(
@@ -157,7 +166,7 @@ Capital Alloc: {capital_factor:.2f}
 Motivo:
 {technical_reason}
 """
-    return msg
+    return msg.strip()
 
 
 def format_open_trade_message(ticker, signal, trade_setup, capital):
@@ -176,7 +185,7 @@ TP: {format_price_for_asset(float(trade_setup['take_profit']), ticker, get_asset
 Size: {trade_setup['position_size']:.4f}
 R:R: {trade_setup['rr_ratio']:.2f}
 Capital actual: {capital:.2f} €
-"""
+""".strip()
 
 
 def format_close_trade_message(ticker, signal, exit_price, pnl, capital):
@@ -191,4 +200,4 @@ Dirección: {signal}
 Exit: {format_price_for_asset(float(exit_price), ticker, get_asset_quote_currency)}
 PnL: {pnl:.2f}
 Capital actual: {capital:.2f} €
-"""
+""".strip()
