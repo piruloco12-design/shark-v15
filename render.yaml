@@ -9,12 +9,3 @@ services:
         value: /var/data/shark_v8.db
       - key: PRIMARY_PROVIDER
         value: yfinance
-
-  - type: web
-    name: shark-dashboard
-    env: python
-    buildCommand: pip install -r requirements.txt
-    startCommand: streamlit run dashboard.py --server.port=$PORT --server.address=0.0.0.0
-    envVars:
-      - key: DATABASE_NAME
-        value: /var/data/shark_v8.db
