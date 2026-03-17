@@ -3,10 +3,30 @@ from datetime import date, datetime, timedelta
 from config import DATABASE_NAME, CAPITAL
 
 
+def _get_connection():
+    conn = sqlite3.connect(DATABASE_NAME)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def _safe_float(value, default=0.0):
+    try:
+        return float(value)
+    except Exception:
+        return default
+
+
+def _safe_int(value, default=0):
+    try:
+        return int(value)
+    except Exception:
+        return default
+
+
 def _column_exists(cursor, table_name, column_name):
     cursor.execute(f"PRAGMA table_info({table_name})")
     columns = cursor.fetchall()
-    return any(col[1] == column_name for col in columns)
+    return any(col["name"] == column_name for col in columns)
 
 
 def _ensure_column(cursor, table_name, column_name, column_type):
@@ -17,7 +37,7 @@ def _ensure_column(cursor, table_name, column_name, column_type):
 
 
 def init_db():
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -99,17 +119,42 @@ def init_db():
     cursor.execute("""
     INSERT OR IGNORE INTO paper_state (id, capital)
     VALUES (1, ?)
-    """, (float(CAPITAL),))
+    """, (_safe_float(CAPITAL),))
 
     _ensure_column(cursor, "signals", "regime", "TEXT")
     _ensure_column(cursor, "paper_trades", "regime", "TEXT")
+
+    cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_signals_ticker_timestamp
+    ON signals (ticker, timestamp)
+    """)
+
+    cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_paper_trades_status_ticker
+    ON paper_trades (status, ticker)
+    """)
+
+    cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_risk_events_ticker_timestamp
+    ON risk_events (ticker, timestamp)
+    """)
+
+    cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_feed_audit_ticker_timestamp
+    ON feed_audit (ticker, timestamp)
+    """)
+
+    cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_setup_alerts_ticker_type_timestamp
+    ON setup_alerts (ticker, alert_type, timestamp)
+    """)
 
     conn.commit()
     conn.close()
 
 
 def log_feed_event(timestamp, ticker, provider, timeframe, period, rows_count, status, message):
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -122,9 +167,9 @@ def log_feed_event(timestamp, ticker, provider, timeframe, period, rows_count, s
         provider,
         timeframe,
         period,
-        int(rows_count),
+        _safe_int(rows_count),
         status,
-        message
+        str(message)
     ))
 
     conn.commit()
@@ -132,7 +177,7 @@ def log_feed_event(timestamp, ticker, provider, timeframe, period, rows_count, s
 
 
 def log_setup_alert(timestamp, ticker, alert_type, reason):
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -143,7 +188,7 @@ def log_setup_alert(timestamp, ticker, alert_type, reason):
         timestamp,
         ticker,
         alert_type,
-        reason
+        str(reason)
     ))
 
     conn.commit()
@@ -151,7 +196,7 @@ def log_setup_alert(timestamp, ticker, alert_type, reason):
 
 
 def has_recent_setup_alert(ticker, alert_type, within_minutes=180):
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -166,21 +211,24 @@ def has_recent_setup_alert(ticker, alert_type, within_minutes=180):
     row = cursor.fetchone()
     conn.close()
 
-    if not row or not row[0]:
+    if not row or not row["timestamp"]:
         return False
 
     try:
-        last_ts = datetime.fromisoformat(row[0])
+        last_ts = datetime.fromisoformat(row["timestamp"])
     except Exception:
         return False
 
-    return last_ts >= datetime.now() - timedelta(minutes=int(within_minutes))
+    return last_ts >= datetime.now() - timedelta(minutes=_safe_int(within_minutes, 180))
 
 
 def save_signal(timestamp, ticker, signal, regime, df, trade):
     last = df.iloc[-1]
 
-    conn = sqlite3.connect(DATABASE_NAME)
+    stop_loss = trade.get("stop_loss") if isinstance(trade, dict) else None
+    take_profit = trade.get("take_profit") if isinstance(trade, dict) else None
+
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -193,14 +241,14 @@ def save_signal(timestamp, ticker, signal, regime, df, trade):
         ticker,
         signal,
         regime,
-        float(last["Close"]),
-        float(last["ema200"]),
-        float(last["rsi"]),
-        float(last["macd"]),
-        float(last["macd_signal"]),
-        float(last["atr"]),
-        float(trade["stop_loss"]) if trade["stop_loss"] is not None else None,
-        float(trade["take_profit"]) if trade["take_profit"] is not None else None
+        _safe_float(last.get("Close")),
+        _safe_float(last.get("ema200")),
+        _safe_float(last.get("rsi")),
+        _safe_float(last.get("macd")),
+        _safe_float(last.get("macd_signal")),
+        _safe_float(last.get("atr")),
+        _safe_float(stop_loss) if stop_loss is not None else None,
+        _safe_float(take_profit) if take_profit is not None else None
     ))
 
     conn.commit()
@@ -208,32 +256,32 @@ def save_signal(timestamp, ticker, signal, regime, df, trade):
 
 
 def get_paper_capital():
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("SELECT capital FROM paper_state WHERE id = 1")
     row = cursor.fetchone()
 
     conn.close()
-    return float(row[0]) if row else float(CAPITAL)
+    return _safe_float(row["capital"], _safe_float(CAPITAL)) if row else _safe_float(CAPITAL)
 
 
 def update_paper_capital(new_capital):
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
     UPDATE paper_state
     SET capital = ?
     WHERE id = 1
-    """, (float(new_capital),))
+    """, (_safe_float(new_capital),))
 
     conn.commit()
     conn.close()
 
 
 def get_open_paper_trades():
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -241,6 +289,7 @@ def get_open_paper_trades():
            stop_loss, take_profit, position_size
     FROM paper_trades
     WHERE status = 'OPEN'
+    ORDER BY id ASC
     """)
 
     rows = cursor.fetchall()
@@ -249,15 +298,15 @@ def get_open_paper_trades():
     trades = []
     for row in rows:
         trades.append({
-            "id": row[0],
-            "timestamp_open": row[1],
-            "ticker": row[2],
-            "signal": row[3],
-            "regime": row[4],
-            "entry_price": float(row[5]),
-            "stop_loss": float(row[6]),
-            "take_profit": float(row[7]),
-            "position_size": float(row[8]),
+            "id": row["id"],
+            "timestamp_open": row["timestamp_open"],
+            "ticker": row["ticker"],
+            "signal": row["signal"],
+            "regime": row["regime"],
+            "entry_price": _safe_float(row["entry_price"]),
+            "stop_loss": _safe_float(row["stop_loss"]),
+            "take_profit": _safe_float(row["take_profit"]),
+            "position_size": _safe_float(row["position_size"]),
         })
 
     return trades
@@ -273,7 +322,7 @@ def create_paper_trade(
     take_profit,
     position_size
 ):
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -297,11 +346,11 @@ def create_paper_trade(
         ticker,
         signal,
         regime,
-        float(entry_price),
+        _safe_float(entry_price),
         None,
-        float(stop_loss),
-        float(take_profit),
-        float(position_size),
+        _safe_float(stop_loss),
+        _safe_float(take_profit),
+        _safe_float(position_size),
         None,
         "OPEN"
     ))
@@ -311,7 +360,7 @@ def create_paper_trade(
 
 
 def close_paper_trade(trade_id, timestamp_close, exit_price, pnl):
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -324,9 +373,9 @@ def close_paper_trade(trade_id, timestamp_close, exit_price, pnl):
     WHERE id = ?
     """, (
         timestamp_close,
-        float(exit_price),
-        float(pnl),
-        int(trade_id)
+        _safe_float(exit_price),
+        _safe_float(pnl),
+        _safe_int(trade_id)
     ))
 
     conn.commit()
@@ -334,7 +383,7 @@ def close_paper_trade(trade_id, timestamp_close, exit_price, pnl):
 
 
 def get_closed_trade_stats(ticker=None, signal=None, limit=100):
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     query = """
@@ -353,20 +402,24 @@ def get_closed_trade_stats(ticker=None, signal=None, limit=100):
         params.append(signal)
 
     query += " ORDER BY id DESC LIMIT ?"
-    params.append(limit)
+    params.append(_safe_int(limit, 100))
 
     cursor.execute(query, params)
     rows = cursor.fetchall()
     conn.close()
 
     return [
-        {"ticker": row[0], "signal": row[1], "pnl": float(row[2])}
+        {
+            "ticker": row["ticker"],
+            "signal": row["signal"],
+            "pnl": _safe_float(row["pnl"])
+        }
         for row in rows
     ]
 
 
 def count_open_trades():
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -375,17 +428,21 @@ def count_open_trades():
     WHERE status = 'OPEN'
     """)
 
-    count = cursor.fetchone()[0]
+    row = cursor.fetchone()
     conn.close()
-    return int(count)
+
+    if not row:
+        return 0
+
+    return _safe_int(row[0], 0)
 
 
 def get_latest_trade_timestamp_for_ticker(ticker):
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT MAX(ts) FROM (
+    SELECT MAX(ts) AS latest_ts FROM (
         SELECT timestamp_open AS ts
         FROM paper_trades
         WHERE ticker = ?
@@ -399,8 +456,9 @@ def get_latest_trade_timestamp_for_ticker(ticker):
     row = cursor.fetchone()
     conn.close()
 
-    if row and row[0]:
-        return row[0]
+    if row and row["latest_ts"]:
+        return row["latest_ts"]
+
     return None
 
 
@@ -408,23 +466,27 @@ def get_daily_closed_pnl(target_date=None):
     if target_date is None:
         target_date = date.today().isoformat()
 
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
-    SELECT COALESCE(SUM(pnl), 0)
+    SELECT COALESCE(SUM(pnl), 0) AS total_pnl
     FROM paper_trades
     WHERE status = 'CLOSED'
       AND DATE(timestamp_close) = ?
     """, (target_date,))
 
-    value = cursor.fetchone()[0]
+    row = cursor.fetchone()
     conn.close()
-    return float(value or 0.0)
+
+    if not row:
+        return 0.0
+
+    return _safe_float(row["total_pnl"], 0.0)
 
 
 def log_risk_event(timestamp, ticker, signal, event_type, reason):
-    conn = sqlite3.connect(DATABASE_NAME)
+    conn = _get_connection()
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -436,7 +498,7 @@ def log_risk_event(timestamp, ticker, signal, event_type, reason):
         ticker,
         signal,
         event_type,
-        reason
+        str(reason)
     ))
 
     conn.commit()
