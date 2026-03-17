@@ -35,7 +35,6 @@ BLOCK_DUPLICATE_SIGNALS = os.getenv("BLOCK_DUPLICATE_SIGNALS", "true").strip().l
 
 TIMEFRAME = os.getenv("TIMEFRAME", "30m").strip()
 
-# yfinance limita timeframes intradía a ventanas más cortas
 if TIMEFRAME in ["1m", "5m", "15m", "30m"]:
     PERIOD = "60d"
 elif TIMEFRAME in ["60m", "1h"]:
@@ -103,7 +102,7 @@ ERROR_ALERT_COOLDOWN_MINUTES = int(os.getenv("ERROR_ALERT_COOLDOWN_MINUTES", "30
 STARTUP_MESSAGE_ENABLED = os.getenv("STARTUP_MESSAGE_ENABLED", "true").strip().lower() == "true"
 
 # ==========================================
-# SNIPER FILTERS
+# SNIPER FILTERS (AJUSTADOS PARA AUDITORÍA)
 # ==========================================
 
 SNIPER_MODE = os.getenv("SNIPER_MODE", "true").strip().lower() == "true"
@@ -114,10 +113,11 @@ SNIPER_ALLOWED_REGIMES = [
     "TREND"
 ]
 
-SNIPER_MIN_ADX = float(os.getenv("SNIPER_MIN_ADX", "24"))
-SNIPER_MIN_AI_SCORE = float(os.getenv("SNIPER_MIN_AI_SCORE", "60"))
-SNIPER_MIN_CONTEXT_SCORE = float(os.getenv("SNIPER_MIN_CONTEXT_SCORE", "58"))
-SNIPER_MIN_FINAL_SCORE = float(os.getenv("SNIPER_MIN_FINAL_SCORE", "60"))
+# 🔥 AJUSTES TEMPORALES PARA GENERAR MÁS DATA
+SNIPER_MIN_ADX = float(os.getenv("SNIPER_MIN_ADX", "20"))
+SNIPER_MIN_AI_SCORE = float(os.getenv("SNIPER_MIN_AI_SCORE", "55"))
+SNIPER_MIN_CONTEXT_SCORE = float(os.getenv("SNIPER_MIN_CONTEXT_SCORE", "55"))
+SNIPER_MIN_FINAL_SCORE = float(os.getenv("SNIPER_MIN_FINAL_SCORE", "55"))
 
 # ==========================================
 # NORMAL MODE FILTERS
@@ -157,18 +157,3 @@ if REQUEST_TIMEOUT < 5:
 
 if MAX_OPEN_TRADES < 1:
     raise ValueError("MAX_OPEN_TRADES debe ser al menos 1")
-
-if SNIPER_MIN_ADX < 0:
-    raise ValueError("SNIPER_MIN_ADX no puede ser negativo")
-
-if SNIPER_MIN_AI_SCORE < 0 or SNIPER_MIN_AI_SCORE > 100:
-    raise ValueError("SNIPER_MIN_AI_SCORE debe estar entre 0 y 100")
-
-if SNIPER_MIN_CONTEXT_SCORE < 0 or SNIPER_MIN_CONTEXT_SCORE > 100:
-    raise ValueError("SNIPER_MIN_CONTEXT_SCORE debe estar entre 0 y 100")
-
-if SNIPER_MIN_FINAL_SCORE < 0 or SNIPER_MIN_FINAL_SCORE > 100:
-    raise ValueError("SNIPER_MIN_FINAL_SCORE debe estar entre 0 y 100")
-
-if NORMAL_MIN_FINAL_SCORE < 0 or NORMAL_MIN_FINAL_SCORE > 100:
-    raise ValueError("NORMAL_MIN_FINAL_SCORE debe estar entre 0 y 100")
