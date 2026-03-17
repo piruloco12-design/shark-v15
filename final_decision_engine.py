@@ -8,6 +8,112 @@ from config import (
 )
 
 
+def _safe_float(value, default=0.0):
+    try:
+        return float(value)
+    except Exception:
+        return default
+
+
+def _safe_bool(value, default=False):
+    try:
+        return bool(value)
+    except Exception:
+        return default
+
+
+def _normalize_reason(value, default="N/A"):
+    if value is None:
+        return default
+    text = str(value).strip()
+    return text if text else default
+
+
+def _clamp(value, min_value=0.0, max_value=100.0):
+    return max(min_value, min(max_value, value))
+
+
+def _build_base_score(ai_score, context_score, adx):
+    """
+    Score central V15:
+    - AI quality
+    - Context quality
+    - Trend strength via ADX
+
+    ADX se transforma a score 0-100 usando cap en 40.
+    """
+    trend_score = (_clamp(min(adx, 40.0), 0.0, 40.0) / 40.0) * 100.0
+
+    score = (
+        ai_score * 0.35 +
+        context_score * 0.40 +
+        trend_score * 0.25
+    )
+
+    return round(_clamp(score), 2)
+
+
+def _collect_hard_block_reasons(
+    ai_decision,
+    context_decision,
+    session_allow,
+    volatility_allow,
+    risk_allow,
+    session_result,
+    volatility_result,
+    risk_result
+):
+    reasons = []
+
+    if ai_decision == "BLOCK":
+        reasons.append(
+            f"AI bloqueó la señal: {_normalize_reason(ai_decision)}"
+        )
+
+    if context_decision == "BLOCK":
+        reasons.append(
+            f"Trade intelligence bloqueó el contexto: {_normalize_reason(context_decision)}"
+        )
+
+    if not session_allow:
+        reasons.append(
+            f"Sesión no válida: {_normalize_reason(session_result.get('reason'))}"
+        )
+
+    if not volatility_allow:
+        reasons.append(
+            f"Volatilidad no válida: {_normalize_reason(volatility_result.get('reason'))}"
+        )
+
+    if not risk_allow:
+        reasons.append(
+            f"Riesgo bloqueado: {_normalize_reason(risk_result.get('reason'))}"
+        )
+
+    return reasons
+
+
+def _collect_sniper_block_reasons(regime, adx, ai_score, context_score, final_score):
+    reasons = []
+
+    if regime not in SNIPER_ALLOWED_REGIMES:
+        reasons.append(f"Regime no permitido para sniper: {regime}")
+
+    if adx < SNIPER_MIN_ADX:
+        reasons.append(f"ADX insuficiente para sniper: {adx:.2f} < {SNIPER_MIN_ADX}")
+
+    if ai_score < SNIPER_MIN_AI_SCORE:
+        reasons.append(f"AI score insuficiente para sniper: {ai_score:.2f} < {SNIPER_MIN_AI_SCORE}")
+
+    if context_score < SNIPER_MIN_CONTEXT_SCORE:
+        reasons.append(f"Context score insuficiente para sniper: {context_score:.2f} < {SNIPER_MIN_CONTEXT_SCORE}")
+
+    if final_score < SNIPER_MIN_FINAL_SCORE:
+        reasons.append(f"Score final insuficiente para sniper: {final_score:.2f} < {SNIPER_MIN_FINAL_SCORE}")
+
+    return reasons
+
+
 def evaluate_final_decision(
     ai_result,
     context_result,
@@ -18,107 +124,128 @@ def evaluate_final_decision(
     regime
 ):
     """
-    Semáforo final V15 Sniper.
+    CEREBRO FINAL V15 SNIPER
+
+    Filosofía:
+    1. Primero validar hard blocks operativos
+    2. Luego calcular score unificado de calidad
+    3. Luego aplicar exigencia sniper
+    4. Finalmente decidir ALLOW o BLOCK
     """
 
-    ai_decision = ai_result.get("decision", "NEUTRAL")
-    ai_score = float(ai_result.get("score", 50))
+    ai_decision = str(ai_result.get("decision", "NEUTRAL")).upper()
+    ai_score = _clamp(_safe_float(ai_result.get("score", 50.0), 50.0))
 
-    context_decision = context_result.get("decision", "NEUTRAL")
-    context_score = float(context_result.get("final_score", 50))
+    context_decision = str(context_result.get("decision", "NEUTRAL")).upper()
+    context_score = _clamp(_safe_float(context_result.get("final_score", 50.0), 50.0))
 
-    session_allow = bool(session_result.get("allow", False))
-    volatility_allow = bool(volatility_result.get("allow", False))
-    risk_allow = bool(risk_result.get("allow", False))
+    session_allow = _safe_bool(session_result.get("allow", False), False)
+    volatility_allow = _safe_bool(volatility_result.get("allow", False), False)
+    risk_allow = _safe_bool(risk_result.get("allow", False), False)
 
-    adx = float(adx)
-    regime = str(regime)
+    adx = _safe_float(adx, 0.0)
+    regime = str(regime).strip().upper()
 
-    reasons = []
+    base_score = _build_base_score(
+        ai_score=ai_score,
+        context_score=context_score,
+        adx=adx
+    )
 
-    if ai_decision == "BLOCK":
-        reasons.append("AI bloqueó la señal")
+    hard_block_reasons = _collect_hard_block_reasons(
+        ai_decision=ai_decision,
+        context_decision=context_decision,
+        session_allow=session_allow,
+        volatility_allow=volatility_allow,
+        risk_allow=risk_allow,
+        session_result=session_result,
+        volatility_result=volatility_result,
+        risk_result=risk_result
+    )
 
-    if context_decision == "BLOCK":
-        reasons.append("Trade intelligence bloqueó el contexto")
-
-    if not session_allow:
-        reasons.append(f"Sesión no válida: {session_result.get('reason', 'N/A')}")
-
-    if not volatility_allow:
-        reasons.append(f"Volatilidad no válida: {volatility_result.get('reason', 'N/A')}")
-
-    if not risk_allow:
-        reasons.append(f"Riesgo bloqueado: {risk_result.get('reason', 'N/A')}")
-
-    if reasons:
-        score = (ai_score * 0.40) + (context_score * 0.35) + ((min(adx, 40) / 40.0) * 25.0)
+    if hard_block_reasons:
         return {
             "decision": "BLOCK",
-            "score": round(score, 2),
-            "reason": " | ".join(reasons)
+            "score": base_score,
+            "reason": " | ".join(hard_block_reasons),
+            "debug": {
+                "mode": "SNIPER" if SNIPER_MODE else "NORMAL",
+                "ai_score": round(ai_score, 2),
+                "context_score": round(context_score, 2),
+                "adx": round(adx, 2),
+                "regime": regime,
+                "hard_block": True,
+                "sniper_checks_passed": False
+            }
         }
-
-    trend_score = (min(adx, 40) / 40.0) * 100.0
-
-    score = (
-        ai_score * 0.35 +
-        context_score * 0.35 +
-        trend_score * 0.30
-    )
-    score = round(score, 2)
 
     if SNIPER_MODE:
-        if regime not in SNIPER_ALLOWED_REGIMES:
-            return {
-                "decision": "BLOCK",
-                "score": score,
-                "reason": f"Regime no permitido para sniper: {regime}"
-            }
+        sniper_block_reasons = _collect_sniper_block_reasons(
+            regime=regime,
+            adx=adx,
+            ai_score=ai_score,
+            context_score=context_score,
+            final_score=base_score
+        )
 
-        if adx < SNIPER_MIN_ADX:
+        if sniper_block_reasons:
             return {
                 "decision": "BLOCK",
-                "score": score,
-                "reason": f"ADX insuficiente para sniper: {adx:.2f}"
-            }
-
-        if ai_score < SNIPER_MIN_AI_SCORE:
-            return {
-                "decision": "BLOCK",
-                "score": score,
-                "reason": f"AI score insuficiente para sniper: {ai_score:.2f}"
-            }
-
-        if context_score < SNIPER_MIN_CONTEXT_SCORE:
-            return {
-                "decision": "BLOCK",
-                "score": score,
-                "reason": f"Context score insuficiente para sniper: {context_score:.2f}"
-            }
-
-        if score < SNIPER_MIN_FINAL_SCORE:
-            return {
-                "decision": "BLOCK",
-                "score": score,
-                "reason": f"Score final insuficiente para sniper: {score:.2f}"
+                "score": base_score,
+                "reason": " | ".join(sniper_block_reasons),
+                "debug": {
+                    "mode": "SNIPER",
+                    "ai_score": round(ai_score, 2),
+                    "context_score": round(context_score, 2),
+                    "adx": round(adx, 2),
+                    "regime": regime,
+                    "hard_block": False,
+                    "sniper_checks_passed": False
+                }
             }
 
         return {
             "decision": "ALLOW",
-            "score": score,
-            "reason": "Sniper trade aprobado"
+            "score": base_score,
+            "reason": "Sniper trade aprobado: filtros duros y score alineados",
+            "debug": {
+                "mode": "SNIPER",
+                "ai_score": round(ai_score, 2),
+                "context_score": round(context_score, 2),
+                "adx": round(adx, 2),
+                "regime": regime,
+                "hard_block": False,
+                "sniper_checks_passed": True
+            }
         }
 
-    if score >= 58:
+    if base_score >= 58:
         return {
             "decision": "ALLOW",
-            "score": score,
-            "reason": "Todos los filtros alineados"
+            "score": base_score,
+            "reason": "Todos los filtros alineados",
+            "debug": {
+                "mode": "NORMAL",
+                "ai_score": round(ai_score, 2),
+                "context_score": round(context_score, 2),
+                "adx": round(adx, 2),
+                "regime": regime,
+                "hard_block": False,
+                "sniper_checks_passed": None
+            }
         }
 
     return {
         "decision": "BLOCK",
-        "score": score,
-        "reason": "Score final insuficiente"
+        "score": base_score,
+        "reason": "Score final insuficiente",
+        "debug": {
+            "mode": "NORMAL",
+            "ai_score": round(ai_score, 2),
+            "context_score": round(context_score, 2),
+            "adx": round(adx, 2),
+            "regime": regime,
+            "hard_block": False,
+            "sniper_checks_passed": None
+        }
     }
