@@ -60,6 +60,9 @@ _SIGNAL_ALERT_MEMORY = {}
 _SETUP_ALERT_MEMORY = {}
 _ERROR_ALERT_MEMORY = {}
 
+# Para confirmar una sola vez que el loop real arrancó
+_FIRST_CYCLE_TELEGRAM_SENT = False
+
 
 def _now():
     return datetime.now()
@@ -214,7 +217,14 @@ def run_live_cycle():
 
         try:
             df, provider_used = get_data(ticker, TIMEFRAME, PERIOD)
+
+            if df is None or len(df) < 50:
+                raise ValueError("Data insuficiente para análisis")
+
             df = add_indicators(df)
+
+            if df is None or len(df) < 50:
+                raise ValueError("Data insuficiente luego de indicadores")
 
             market_data[ticker] = df
             latest_prices[ticker] = float(df.iloc[-1]["Close"])
@@ -236,14 +246,16 @@ def run_live_cycle():
             log_feed_event(
                 timestamp=datetime.now().isoformat(),
                 ticker=ticker,
-                provider="NONE",
+                provider="ERROR",
                 timeframe=TIMEFRAME,
                 period=PERIOD,
                 rows_count=0,
                 status="FAIL",
                 message=str(e)
             )
-            print(f"Error cargando {asset_name}: {e}")
+
+            print(f"⚠️ Error en data feed {asset_name}: {e}")
+            continue
 
     check_and_close_trades(latest_prices)
 
@@ -483,22 +495,36 @@ def run_live_cycle():
 
         except Exception as e:
             print(f"Error analizando {asset_name}: {e}")
+            continue
 
 
 def run_live_engine(interval_seconds=None):
+    global _FIRST_CYCLE_TELEGRAM_SENT
+
     init_db()
 
     if interval_seconds is None:
         interval_seconds = LOOP_INTERVAL
 
     if STARTUP_MESSAGE_ENABLED:
-        send_telegram_message("🤖 SHARK V15 SNIPER INICIADO")
+        send_telegram_message("🤖 SHARK V15 SNIPER INICIADO EN RENDER")
 
     print("=== SHARK V15 SNIPER INICIADO ===")
 
     while True:
         try:
             run_live_cycle()
+
+            if not _FIRST_CYCLE_TELEGRAM_SENT:
+                send_telegram_message(
+                    f"✅ SHARK V15 SNIPER ACTIVO\n"
+                    f"Loop ejecutado correctamente.\n"
+                    f"Timeframe: {TIMEFRAME}\n"
+                    f"Loop: {interval_seconds}s\n"
+                    f"Activos: {len(ASSETS)}"
+                )
+                _FIRST_CYCLE_TELEGRAM_SENT = True
+
         except Exception as e:
             error_text = str(e)
             print(f"Error en ciclo live: {error_text}")
