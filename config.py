@@ -73,13 +73,13 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 # DATA PROVIDERS
 # ==========================================
 
-PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "yfinance").strip()
+PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "twelve_data").strip().lower()
 
 DATA_PROVIDER_ORDER = [
-    "yfinance",
     "twelve_data",
-    "alpha_vantage",
-    "finnhub"
+    "yfinance",
+    "finnhub",
+    "alpha_vantage"
 ]
 
 TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY", "").strip()

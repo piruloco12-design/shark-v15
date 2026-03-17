@@ -98,9 +98,24 @@ def _normalize_df(df):
     df = df.dropna(subset=["Open", "High", "Low", "Close"])
 
     if len(df) < 50:
-        raise ValueError("Muy pocas velas descargadas")
+        raise ValueError(f"Muy pocas velas descargadas: {len(df)}")
 
     return df
+
+
+def _is_rate_limit_error(error_text):
+    text = str(error_text).lower()
+    patterns = [
+        "too many requests",
+        "rate limited",
+        "rate limit",
+        "429"
+    ]
+    return any(p in text for p in patterns)
+
+
+def _provider_pause(seconds=1.0):
+    time.sleep(seconds)
 
 
 def _yf_download(symbol, timeframe, period):
@@ -139,6 +154,9 @@ def _twelve_data_download(symbol, timeframe, period):
     response.raise_for_status()
     data = response.json()
 
+    if "code" in data and "message" in data:
+        raise ValueError(f"Twelve Data error para {symbol}: {data.get('message')}")
+
     if "values" not in data:
         raise ValueError(f"Twelve Data sin values para {symbol}: {data}")
 
@@ -160,17 +178,22 @@ def _alpha_vantage_download(symbol, timeframe, period):
     if not ALPHA_VANTAGE_API_KEY:
         raise ValueError("ALPHA_VANTAGE_API_KEY no configurada")
 
+    url = "https://www.alphavantage.co/query"
+
     if timeframe in ["1d"]:
-        url = "https://www.alphavantage.co/query"
         params = {
             "function": "TIME_SERIES_DAILY",
             "symbol": symbol,
             "outputsize": "full",
             "apikey": ALPHA_VANTAGE_API_KEY
         }
+
         response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
         data = response.json()
+
+        if "Note" in data:
+            raise ValueError(f"Alpha Vantage rate limit para {symbol}: {data['Note']}")
 
         key = "Time Series (Daily)"
         if key not in data:
@@ -196,7 +219,6 @@ def _alpha_vantage_download(symbol, timeframe, period):
     if interval is None:
         raise ValueError(f"Timeframe no soportado en Alpha Vantage: {timeframe}")
 
-    url = "https://www.alphavantage.co/query"
     params = {
         "function": "TIME_SERIES_INTRADAY",
         "symbol": symbol,
@@ -208,6 +230,9 @@ def _alpha_vantage_download(symbol, timeframe, period):
     response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()
     data = response.json()
+
+    if "Note" in data:
+        raise ValueError(f"Alpha Vantage rate limit para {symbol}: {data['Note']}")
 
     key = f"Time Series ({interval})"
     if key not in data:
@@ -241,7 +266,7 @@ def _finnhub_download(symbol, timeframe, period):
 
     now_ts = int(time.time())
 
-    if timeframe in ["1m"]:
+    if timeframe == "1m":
         from_ts = now_ts - 60 * 60 * 24 * 7
     elif timeframe in ["5m", "15m", "30m", "60m", "1h"]:
         from_ts = now_ts - 60 * 60 * 24 * 180
@@ -260,6 +285,9 @@ def _finnhub_download(symbol, timeframe, period):
     response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()
     data = response.json()
+
+    if data.get("error"):
+        raise ValueError(f"Finnhub error para {symbol}: {data.get('error')}")
 
     if data.get("s") != "ok":
         raise ValueError(f"Finnhub sin datos para {symbol}: {data}")
@@ -280,20 +308,44 @@ def get_data(symbol, timeframe="1h", period="6mo"):
     errors = []
 
     for provider in DATA_PROVIDER_ORDER:
+        provider = str(provider).strip().lower()
+
         try:
             if provider == "yfinance":
-                return _yf_download(symbol, timeframe, period)
+                result = _yf_download(symbol, timeframe, period)
+                print(f"DATA FEED OK | {symbol} | provider=yfinance")
+                return result
 
             if provider == "twelve_data":
-                return _twelve_data_download(symbol, timeframe, period)
+                result = _twelve_data_download(symbol, timeframe, period)
+                print(f"DATA FEED OK | {symbol} | provider=twelve_data")
+                return result
 
             if provider == "alpha_vantage":
-                return _alpha_vantage_download(symbol, timeframe, period)
+                result = _alpha_vantage_download(symbol, timeframe, period)
+                print(f"DATA FEED OK | {symbol} | provider=alpha_vantage")
+                return result
 
             if provider == "finnhub":
-                return _finnhub_download(symbol, timeframe, period)
+                result = _finnhub_download(symbol, timeframe, period)
+                print(f"DATA FEED OK | {symbol} | provider=finnhub")
+                return result
+
+            errors.append(f"{provider}: provider desconocido")
 
         except Exception as e:
-            errors.append(f"{provider}: {e}")
+            error_text = str(e)
+            errors.append(f"{provider}: {error_text}")
 
-    raise ValueError(f"No se pudo descargar {symbol} con ningún provider. Detalles: {errors}")
+            print(f"DATA FEED FAIL | {symbol} | provider={provider} | error={error_text}")
+
+            if _is_rate_limit_error(error_text):
+                _provider_pause(2.0)
+            else:
+                _provider_pause(0.75)
+
+            continue
+
+    raise ValueError(
+        f"No se pudo descargar {symbol} con ningún provider. Detalles: {errors}"
+    )
