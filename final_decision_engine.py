@@ -4,7 +4,8 @@ from config import (
     SNIPER_MIN_ADX,
     SNIPER_MIN_AI_SCORE,
     SNIPER_MIN_CONTEXT_SCORE,
-    SNIPER_MIN_FINAL_SCORE
+    SNIPER_MIN_FINAL_SCORE,
+    NORMAL_MIN_FINAL_SCORE
 )
 
 
@@ -39,8 +40,6 @@ def _build_base_score(ai_score, context_score, adx):
     - AI quality
     - Context quality
     - Trend strength via ADX
-
-    ADX se transforma a score 0-100 usando cap en 40.
     """
     trend_score = (_clamp(min(adx, 40.0), 0.0, 40.0) / 40.0) * 100.0
 
@@ -66,14 +65,10 @@ def _collect_hard_block_reasons(
     reasons = []
 
     if ai_decision == "BLOCK":
-        reasons.append(
-            f"AI bloqueó la señal: {_normalize_reason(ai_decision)}"
-        )
+        reasons.append("AI bloqueó la señal")
 
     if context_decision == "BLOCK":
-        reasons.append(
-            f"Trade intelligence bloqueó el contexto: {_normalize_reason(context_decision)}"
-        )
+        reasons.append("Trade intelligence bloqueó el contexto")
 
     if not session_allow:
         reasons.append(
@@ -126,11 +121,11 @@ def evaluate_final_decision(
     """
     CEREBRO FINAL V15 SNIPER
 
-    Filosofía:
-    1. Primero validar hard blocks operativos
-    2. Luego calcular score unificado de calidad
-    3. Luego aplicar exigencia sniper
-    4. Finalmente decidir ALLOW o BLOCK
+    Flujo:
+    1. Validar hard blocks operativos
+    2. Calcular score unificado
+    3. Aplicar filtros sniper
+    4. Decidir ALLOW o BLOCK
     """
 
     ai_decision = str(ai_result.get("decision", "NEUTRAL")).upper()
@@ -207,7 +202,7 @@ def evaluate_final_decision(
         return {
             "decision": "ALLOW",
             "score": base_score,
-            "reason": "Sniper trade aprobado: filtros duros y score alineados",
+            "reason": "Sniper trade aprobado: filtros y score alineados",
             "debug": {
                 "mode": "SNIPER",
                 "ai_score": round(ai_score, 2),
@@ -219,7 +214,7 @@ def evaluate_final_decision(
             }
         }
 
-    if base_score >= 58:
+    if base_score >= NORMAL_MIN_FINAL_SCORE:
         return {
             "decision": "ALLOW",
             "score": base_score,
@@ -238,7 +233,7 @@ def evaluate_final_decision(
     return {
         "decision": "BLOCK",
         "score": base_score,
-        "reason": "Score final insuficiente",
+        "reason": f"Score final insuficiente: {base_score:.2f} < {NORMAL_MIN_FINAL_SCORE}",
         "debug": {
             "mode": "NORMAL",
             "ai_score": round(ai_score, 2),

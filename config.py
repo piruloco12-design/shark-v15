@@ -42,7 +42,7 @@ elif TIMEFRAME in ["60m", "1h"]:
 else:
     PERIOD = "6mo"
 
-LOOP_INTERVAL = int(os.getenv("LOOP_INTERVAL", "120"))
+LOOP_INTERVAL = int(os.getenv("LOOP_INTERVAL", "300"))
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
 
 # ==========================================
@@ -102,7 +102,7 @@ ERROR_ALERT_COOLDOWN_MINUTES = int(os.getenv("ERROR_ALERT_COOLDOWN_MINUTES", "30
 STARTUP_MESSAGE_ENABLED = os.getenv("STARTUP_MESSAGE_ENABLED", "true").strip().lower() == "true"
 
 # ==========================================
-# SNIPER FILTERS (AJUSTADOS PARA AUDITORÍA)
+# SNIPER FILTERS (MODO AUDITORÍA CONTROLADA)
 # ==========================================
 
 SNIPER_MODE = os.getenv("SNIPER_MODE", "true").strip().lower() == "true"
@@ -110,20 +110,20 @@ SNIPER_MODE = os.getenv("SNIPER_MODE", "true").strip().lower() == "true"
 SNIPER_ALLOWED_REGIMES = [
     "BULL_TREND",
     "BEAR_TREND",
-    "TREND"
+    "TREND",
+    "RANGE"
 ]
 
-# 🔥 AJUSTES TEMPORALES PARA GENERAR MÁS DATA
-SNIPER_MIN_ADX = float(os.getenv("SNIPER_MIN_ADX", "20"))
-SNIPER_MIN_AI_SCORE = float(os.getenv("SNIPER_MIN_AI_SCORE", "55"))
-SNIPER_MIN_CONTEXT_SCORE = float(os.getenv("SNIPER_MIN_CONTEXT_SCORE", "55"))
-SNIPER_MIN_FINAL_SCORE = float(os.getenv("SNIPER_MIN_FINAL_SCORE", "55"))
+SNIPER_MIN_ADX = float(os.getenv("SNIPER_MIN_ADX", "18"))
+SNIPER_MIN_AI_SCORE = float(os.getenv("SNIPER_MIN_AI_SCORE", "50"))
+SNIPER_MIN_CONTEXT_SCORE = float(os.getenv("SNIPER_MIN_CONTEXT_SCORE", "50"))
+SNIPER_MIN_FINAL_SCORE = float(os.getenv("SNIPER_MIN_FINAL_SCORE", "50"))
 
 # ==========================================
 # NORMAL MODE FILTERS
 # ==========================================
 
-NORMAL_MIN_FINAL_SCORE = float(os.getenv("NORMAL_MIN_FINAL_SCORE", "58"))
+NORMAL_MIN_FINAL_SCORE = float(os.getenv("NORMAL_MIN_FINAL_SCORE", "50"))
 
 # ==========================================
 # DASHBOARD / SERVER
