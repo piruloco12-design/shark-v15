@@ -3,6 +3,7 @@ import traceback
 from datetime import datetime
 
 from config import LOOP_INTERVAL, APP_NAME, APP_ENV
+from live_engine import run_live_engine
 from telegram_alerts import send_telegram_message
 
 
@@ -26,21 +27,6 @@ def log_shutdown():
 def main():
     try:
         log_startup()
-
-        print("TEST 1 | main.py arrancó correctamente", flush=True)
-
-        # Test Telegram ANTES de importar live_engine
-        send_telegram_message("🧪 TEST SHARK V15: main.py arrancó en Render")
-        print("TEST 2 | Telegram intentado", flush=True)
-
-        # Import diferido para detectar si el crash está en live_engine o sus módulos
-        print("TEST 3 | Importando live_engine...", flush=True)
-        from live_engine import run_live_engine
-        print("TEST 4 | live_engine importado correctamente", flush=True)
-
-        send_telegram_message("✅ SHARK V15: live_engine importado correctamente")
-        print("TEST 5 | Entrando a run_live_engine()", flush=True)
-
         run_live_engine(interval_seconds=LOOP_INTERVAL)
 
     except KeyboardInterrupt:
