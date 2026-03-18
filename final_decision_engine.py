@@ -37,9 +37,9 @@ def _clamp(value, min_value=0.0, max_value=100.0):
 def _build_base_score(ai_score, context_score, adx):
     """
     Score central V15:
-    - AI quality
-    - Context quality
-    - Trend strength via ADX
+    - AI quality: 35%
+    - Context quality: 40%
+    - Trend strength (ADX): 25%
     """
     trend_score = (_clamp(min(adx, 40.0), 0.0, 40.0) / 40.0) * 100.0
 
@@ -92,7 +92,7 @@ def _collect_sniper_block_reasons(regime, adx, ai_score, context_score, final_sc
     reasons = []
 
     if regime not in SNIPER_ALLOWED_REGIMES:
-        reasons.append(f"Regime no permitido para sniper: {regime}")
+        reasons.append(f"Regime no permitido para entrada sniper: {regime}")
 
     if adx < SNIPER_MIN_ADX:
         reasons.append(f"ADX insuficiente para sniper: {adx:.2f} < {SNIPER_MIN_ADX}")
@@ -119,13 +119,13 @@ def evaluate_final_decision(
     regime
 ):
     """
-    CEREBRO FINAL V15 SNIPER
+    CEREBRO FINAL V15 SNIPER OPTIMIZADO
 
-    Flujo:
-    1. Validar hard blocks operativos
-    2. Calcular score unificado
-    3. Aplicar filtros sniper
-    4. Decidir ALLOW o BLOCK
+    Filosofía:
+    1. Primero bloquear problemas operativos reales
+    2. Luego calcular score unificado
+    3. En sniper, aceptar solo contextos con tendencia útil
+    4. RANGE queda fuera para entradas reales tras auditoría
     """
 
     ai_decision = str(ai_result.get("decision", "NEUTRAL")).upper()
@@ -202,7 +202,7 @@ def evaluate_final_decision(
         return {
             "decision": "ALLOW",
             "score": base_score,
-            "reason": "Sniper trade aprobado: filtros y score alineados",
+            "reason": "Sniper trade aprobado: tendencia útil, contexto y score alineados",
             "debug": {
                 "mode": "SNIPER",
                 "ai_score": round(ai_score, 2),
@@ -211,6 +211,22 @@ def evaluate_final_decision(
                 "regime": regime,
                 "hard_block": False,
                 "sniper_checks_passed": True
+            }
+        }
+
+    if regime == "RANGE":
+        return {
+            "decision": "BLOCK",
+            "score": base_score,
+            "reason": "Modo normal bloqueó entrada en RANGE",
+            "debug": {
+                "mode": "NORMAL",
+                "ai_score": round(ai_score, 2),
+                "context_score": round(context_score, 2),
+                "adx": round(adx, 2),
+                "regime": regime,
+                "hard_block": False,
+                "sniper_checks_passed": None
             }
         }
 

@@ -102,28 +102,29 @@ ERROR_ALERT_COOLDOWN_MINUTES = int(os.getenv("ERROR_ALERT_COOLDOWN_MINUTES", "30
 STARTUP_MESSAGE_ENABLED = os.getenv("STARTUP_MESSAGE_ENABLED", "true").strip().lower() == "true"
 
 # ==========================================
-# SNIPER FILTERS (MODO AUDITORÍA CONTROLADA)
+# SNIPER FILTERS (OPTIMIZADOS POR AUDITORÍA)
 # ==========================================
 
 SNIPER_MODE = os.getenv("SNIPER_MODE", "true").strip().lower() == "true"
 
+# RANGE queda fuera de entradas reales.
 SNIPER_ALLOWED_REGIMES = [
     "BULL_TREND",
     "BEAR_TREND",
-    "TREND",
-    "RANGE"
+    "TREND"
 ]
 
-SNIPER_MIN_ADX = float(os.getenv("SNIPER_MIN_ADX", "18"))
-SNIPER_MIN_AI_SCORE = float(os.getenv("SNIPER_MIN_AI_SCORE", "50"))
-SNIPER_MIN_CONTEXT_SCORE = float(os.getenv("SNIPER_MIN_CONTEXT_SCORE", "50"))
-SNIPER_MIN_FINAL_SCORE = float(os.getenv("SNIPER_MIN_FINAL_SCORE", "50"))
+# Exigencia restaurada a un nivel más sano
+SNIPER_MIN_ADX = float(os.getenv("SNIPER_MIN_ADX", "24"))
+SNIPER_MIN_AI_SCORE = float(os.getenv("SNIPER_MIN_AI_SCORE", "55"))
+SNIPER_MIN_CONTEXT_SCORE = float(os.getenv("SNIPER_MIN_CONTEXT_SCORE", "55"))
+SNIPER_MIN_FINAL_SCORE = float(os.getenv("SNIPER_MIN_FINAL_SCORE", "58"))
 
 # ==========================================
 # NORMAL MODE FILTERS
 # ==========================================
 
-NORMAL_MIN_FINAL_SCORE = float(os.getenv("NORMAL_MIN_FINAL_SCORE", "50"))
+NORMAL_MIN_FINAL_SCORE = float(os.getenv("NORMAL_MIN_FINAL_SCORE", "58"))
 
 # ==========================================
 # DASHBOARD / SERVER
