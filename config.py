@@ -73,13 +73,13 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 # DATA PROVIDERS
 # ==========================================
 
-PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "twelve_data").strip().lower()
+PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "finnhub").strip().lower()
 
 DATA_PROVIDER_ORDER = [
-    "twelve_data",
-    "yfinance",
     "finnhub",
-    "alpha_vantage"
+    "yfinance",
+    "alpha_vantage",
+    "twelve_data"
 ]
 
 TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY", "").strip()
@@ -107,14 +107,12 @@ STARTUP_MESSAGE_ENABLED = os.getenv("STARTUP_MESSAGE_ENABLED", "true").strip().l
 
 SNIPER_MODE = os.getenv("SNIPER_MODE", "true").strip().lower() == "true"
 
-# RANGE queda fuera de entradas reales.
 SNIPER_ALLOWED_REGIMES = [
     "BULL_TREND",
     "BEAR_TREND",
     "TREND"
 ]
 
-# Exigencia restaurada a un nivel más sano
 SNIPER_MIN_ADX = float(os.getenv("SNIPER_MIN_ADX", "24"))
 SNIPER_MIN_AI_SCORE = float(os.getenv("SNIPER_MIN_AI_SCORE", "55"))
 SNIPER_MIN_CONTEXT_SCORE = float(os.getenv("SNIPER_MIN_CONTEXT_SCORE", "55"))
