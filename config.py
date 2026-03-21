@@ -73,11 +73,11 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 # DATA PROVIDERS
 # ==========================================
 
-PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "finnhub").strip().lower()
+PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "yfinance").strip().lower()
 
 DATA_PROVIDER_ORDER = [
-    "finnhub",
     "yfinance",
+    "finnhub",
     "alpha_vantage",
     "twelve_data"
 ]
@@ -102,7 +102,7 @@ ERROR_ALERT_COOLDOWN_MINUTES = int(os.getenv("ERROR_ALERT_COOLDOWN_MINUTES", "30
 STARTUP_MESSAGE_ENABLED = os.getenv("STARTUP_MESSAGE_ENABLED", "true").strip().lower() == "true"
 
 # ==========================================
-# SNIPER FILTERS (OPTIMIZADOS POR AUDITORÍA)
+# SNIPER FILTERS
 # ==========================================
 
 SNIPER_MODE = os.getenv("SNIPER_MODE", "true").strip().lower() == "true"
@@ -114,9 +114,9 @@ SNIPER_ALLOWED_REGIMES = [
 ]
 
 SNIPER_MIN_ADX = float(os.getenv("SNIPER_MIN_ADX", "24"))
-SNIPER_MIN_AI_SCORE = float(os.getenv("SNIPER_MIN_AI_SCORE", "55"))
+SNIPER_MIN_AI_SCORE = float(os.getenv("SNIPER_MIN_AI_SCORE", "50"))
 SNIPER_MIN_CONTEXT_SCORE = float(os.getenv("SNIPER_MIN_CONTEXT_SCORE", "55"))
-SNIPER_MIN_FINAL_SCORE = float(os.getenv("SNIPER_MIN_FINAL_SCORE", "58"))
+SNIPER_MIN_FINAL_SCORE = float(os.getenv("SNIPER_MIN_FINAL_SCORE", "55"))
 
 # ==========================================
 # NORMAL MODE FILTERS

@@ -53,14 +53,9 @@ from setup_alert_engine import detect_setup_watch
 from asset_labels import get_asset_label_with_ticker
 
 
-# =========================================================
-# ANTI-SPAM RUNTIME MEMORY
-# =========================================================
 _SIGNAL_ALERT_MEMORY = {}
 _SETUP_ALERT_MEMORY = {}
 _ERROR_ALERT_MEMORY = {}
-
-# Para confirmar una sola vez que el loop real arrancó
 _FIRST_CYCLE_TELEGRAM_SENT = False
 
 
@@ -82,13 +77,6 @@ def _round_safe(value, digits=4):
 
 
 def _should_send_runtime_alert(memory_store, key, signature, cooldown_minutes):
-    """
-    Regla anti-spam:
-    - Si nunca se envió -> enviar
-    - Si la firma cambió -> enviar inmediatamente
-    - Si la firma es igual y sigue dentro del cooldown -> NO enviar
-    - Si la firma es igual pero el cooldown expiró -> enviar
-    """
     now = _now()
     existing = memory_store.get(key)
 
@@ -478,8 +466,11 @@ def run_live_cycle():
                     elif not can_send_signal_alert:
                         print(f"ANTI-SPAM SIGNAL | {asset_name} | señal duplicada evitada")
 
-            if signal in ["BUY", "SELL"] and not has_open_trade_for_ticker(ticker):
-                if trade_setup["position_size"] > 0:
+                if (
+                    final_result["decision"] == "ALLOW" and
+                    not has_open_trade_for_ticker(ticker) and
+                    trade_setup["position_size"] > 0
+                ):
                     open_trade(ticker, signal, regime, trade_setup)
 
                     print(
