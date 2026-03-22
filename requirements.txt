@@ -1,8 +1,7 @@
 pandas
-numpy
 requests
-python-dotenv
 yfinance
-ta
-plotly
+python-dotenv
+numpy
 streamlit
+matplotlib

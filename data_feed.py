@@ -1,16 +1,19 @@
 import time
-import requests
+from datetime import datetime, timedelta, timezone
+
 import pandas as pd
+import requests
 import yfinance as yf
 
 from config import (
     REQUEST_TIMEOUT,
     DATA_PROVIDER_ORDER,
+    POLYGON_API_KEY,
+    POLYGON_BASE_URL,
     TWELVE_DATA_API_KEY,
     ALPHA_VANTAGE_API_KEY,
-    FINNHUB_API_KEY
+    FINNHUB_API_KEY,
 )
-
 
 YF_INTERVAL_MAP = {
     "1m": "1m",
@@ -19,7 +22,7 @@ YF_INTERVAL_MAP = {
     "30m": "30m",
     "60m": "60m",
     "1h": "60m",
-    "1d": "1d"
+    "1d": "1d",
 }
 
 TWELVE_INTERVAL_MAP = {
@@ -29,7 +32,7 @@ TWELVE_INTERVAL_MAP = {
     "30m": "30min",
     "60m": "1h",
     "1h": "1h",
-    "1d": "1day"
+    "1d": "1day",
 }
 
 ALPHA_INTERVAL_MAP = {
@@ -38,7 +41,7 @@ ALPHA_INTERVAL_MAP = {
     "15m": "15min",
     "30m": "30min",
     "60m": "60min",
-    "1h": "60min"
+    "1h": "60min",
 }
 
 FINNHUB_RESOLUTION_MAP = {
@@ -48,11 +51,21 @@ FINNHUB_RESOLUTION_MAP = {
     "30m": "30",
     "60m": "60",
     "1h": "60",
-    "1d": "D"
+    "1d": "D",
+}
+
+POLYGON_TIMESPAN_MAP = {
+    "1m": (1, "minute"),
+    "5m": (5, "minute"),
+    "15m": (15, "minute"),
+    "30m": (30, "minute"),
+    "60m": (1, "hour"),
+    "1h": (1, "hour"),
+    "1d": (1, "day"),
 }
 
 
-def _normalize_df(df):
+def _normalize_df(df: pd.DataFrame) -> pd.DataFrame:
     if df is None or df.empty:
         raise ValueError("DataFrame vacío")
 
@@ -68,7 +81,8 @@ def _normalize_df(df):
         "close": "Close",
         "volume": "Volume",
         "datetime": "Datetime",
-        "date": "Datetime"
+        "date": "Datetime",
+        "timestamp": "Datetime",
     }
 
     df.columns = [rename_map.get(str(c).lower(), c) for c in df.columns]
@@ -98,27 +112,77 @@ def _normalize_df(df):
     df = df.dropna(subset=["Open", "High", "Low", "Close"])
 
     if len(df) < 50:
-        raise ValueError(f"Muy pocas velas descargadas: {len(df)}")
+        raise ValueError("Muy pocas velas descargadas")
 
     return df
 
 
-def _is_rate_limit_error(error_text):
-    text = str(error_text).lower()
-    patterns = [
-        "too many requests",
-        "rate limited",
-        "rate limit",
-        "429"
-    ]
-    return any(p in text for p in patterns)
+def _period_to_date_range(period: str):
+    now = datetime.now(timezone.utc)
+    period = (period or "60d").strip().lower()
+
+    if period.endswith("d"):
+        days = int(period[:-1])
+        start = now - timedelta(days=days)
+    elif period.endswith("mo"):
+        months = int(period[:-2])
+        start = now - timedelta(days=months * 30)
+    elif period.endswith("y"):
+        years = int(period[:-1])
+        start = now - timedelta(days=years * 365)
+    else:
+        start = now - timedelta(days=60)
+
+    return start.date().isoformat(), now.date().isoformat()
 
 
-def _provider_pause(seconds=1.0):
-    time.sleep(seconds)
+def _polygon_download(symbol: str, timeframe: str, period: str):
+    if not POLYGON_API_KEY:
+        raise ValueError("POLYGON_API_KEY no configurada")
+
+    spec = POLYGON_TIMESPAN_MAP.get(timeframe)
+    if spec is None:
+        raise ValueError(f"Timeframe no soportado en Polygon: {timeframe}")
+
+    multiplier, timespan = spec
+    date_from, date_to = _period_to_date_range(period)
+
+    url = (
+        f"{POLYGON_BASE_URL}/v2/aggs/ticker/{symbol}/range/"
+        f"{multiplier}/{timespan}/{date_from}/{date_to}"
+    )
+
+    params = {
+        "adjusted": "true",
+        "sort": "asc",
+        "limit": 50000,
+        "apiKey": POLYGON_API_KEY,
+    }
+
+    response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    response.raise_for_status()
+    data = response.json()
+
+    results = data.get("results", [])
+    if not results:
+        raise ValueError(f"Polygon sin datos para {symbol}: {data}")
+
+    rows = []
+    for item in results:
+        rows.append({
+            "Datetime": pd.to_datetime(item["t"], unit="ms", utc=True),
+            "Open": item["o"],
+            "High": item["h"],
+            "Low": item["l"],
+            "Close": item["c"],
+            "Volume": item.get("v", 0),
+        })
+
+    df = pd.DataFrame(rows).set_index("Datetime")
+    return _normalize_df(df), "polygon"
 
 
-def _yf_download(symbol, timeframe, period):
+def _yf_download(symbol: str, timeframe: str, period: str):
     interval = YF_INTERVAL_MAP.get(timeframe, "60m")
 
     df = yf.download(
@@ -127,13 +191,13 @@ def _yf_download(symbol, timeframe, period):
         interval=interval,
         auto_adjust=False,
         progress=False,
-        threads=False
+        threads=False,
     )
 
     return _normalize_df(df), "yfinance"
 
 
-def _twelve_data_download(symbol, timeframe, period):
+def _twelve_data_download(symbol: str, timeframe: str, period: str):
     if not TWELVE_DATA_API_KEY:
         raise ValueError("TWELVE_DATA_API_KEY no configurada")
 
@@ -147,15 +211,12 @@ def _twelve_data_download(symbol, timeframe, period):
         "interval": interval,
         "outputsize": 500,
         "apikey": TWELVE_DATA_API_KEY,
-        "format": "JSON"
+        "format": "JSON",
     }
 
     response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()
     data = response.json()
-
-    if "code" in data and "message" in data:
-        raise ValueError(f"Twelve Data error para {symbol}: {data.get('message')}")
 
     if "values" not in data:
         raise ValueError(f"Twelve Data sin values para {symbol}: {data}")
@@ -167,33 +228,28 @@ def _twelve_data_download(symbol, timeframe, period):
         "high": "High",
         "low": "Low",
         "close": "Close",
-        "volume": "Volume"
+        "volume": "Volume",
     })
     df = df.set_index("datetime")
 
     return _normalize_df(df), "twelve_data"
 
 
-def _alpha_vantage_download(symbol, timeframe, period):
+def _alpha_vantage_download(symbol: str, timeframe: str, period: str):
     if not ALPHA_VANTAGE_API_KEY:
         raise ValueError("ALPHA_VANTAGE_API_KEY no configurada")
 
-    url = "https://www.alphavantage.co/query"
-
     if timeframe in ["1d"]:
+        url = "https://www.alphavantage.co/query"
         params = {
             "function": "TIME_SERIES_DAILY",
             "symbol": symbol,
             "outputsize": "full",
-            "apikey": ALPHA_VANTAGE_API_KEY
+            "apikey": ALPHA_VANTAGE_API_KEY,
         }
-
         response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
         response.raise_for_status()
         data = response.json()
-
-        if "Note" in data:
-            raise ValueError(f"Alpha Vantage rate limit para {symbol}: {data['Note']}")
 
         key = "Time Series (Daily)"
         if key not in data:
@@ -207,7 +263,7 @@ def _alpha_vantage_download(symbol, timeframe, period):
                 "High": row["2. high"],
                 "Low": row["3. low"],
                 "Close": row["4. close"],
-                "Volume": row["5. volume"]
+                "Volume": row["5. volume"],
             })
 
         df = pd.DataFrame(rows)
@@ -219,20 +275,18 @@ def _alpha_vantage_download(symbol, timeframe, period):
     if interval is None:
         raise ValueError(f"Timeframe no soportado en Alpha Vantage: {timeframe}")
 
+    url = "https://www.alphavantage.co/query"
     params = {
         "function": "TIME_SERIES_INTRADAY",
         "symbol": symbol,
         "interval": interval,
         "outputsize": "full",
-        "apikey": ALPHA_VANTAGE_API_KEY
+        "apikey": ALPHA_VANTAGE_API_KEY,
     }
 
     response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()
     data = response.json()
-
-    if "Note" in data:
-        raise ValueError(f"Alpha Vantage rate limit para {symbol}: {data['Note']}")
 
     key = f"Time Series ({interval})"
     if key not in data:
@@ -246,7 +300,7 @@ def _alpha_vantage_download(symbol, timeframe, period):
             "High": row["2. high"],
             "Low": row["3. low"],
             "Close": row["4. close"],
-            "Volume": row["5. volume"]
+            "Volume": row["5. volume"],
         })
 
     df = pd.DataFrame(rows)
@@ -256,7 +310,7 @@ def _alpha_vantage_download(symbol, timeframe, period):
     return _normalize_df(df), "alpha_vantage"
 
 
-def _finnhub_download(symbol, timeframe, period):
+def _finnhub_download(symbol: str, timeframe: str, period: str):
     if not FINNHUB_API_KEY:
         raise ValueError("FINNHUB_API_KEY no configurada")
 
@@ -266,7 +320,7 @@ def _finnhub_download(symbol, timeframe, period):
 
     now_ts = int(time.time())
 
-    if timeframe == "1m":
+    if timeframe in ["1m"]:
         from_ts = now_ts - 60 * 60 * 24 * 7
     elif timeframe in ["5m", "15m", "30m", "60m", "1h"]:
         from_ts = now_ts - 60 * 60 * 24 * 180
@@ -279,15 +333,12 @@ def _finnhub_download(symbol, timeframe, period):
         "resolution": resolution,
         "from": from_ts,
         "to": now_ts,
-        "token": FINNHUB_API_KEY
+        "token": FINNHUB_API_KEY,
     }
 
     response = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
     response.raise_for_status()
     data = response.json()
-
-    if data.get("error"):
-        raise ValueError(f"Finnhub error para {symbol}: {data.get('error')}")
 
     if data.get("s") != "ok":
         raise ValueError(f"Finnhub sin datos para {symbol}: {data}")
@@ -298,54 +349,33 @@ def _finnhub_download(symbol, timeframe, period):
         "High": data["h"],
         "Low": data["l"],
         "Close": data["c"],
-        "Volume": data["v"]
+        "Volume": data["v"],
     }).set_index("Datetime")
 
     return _normalize_df(df), "finnhub"
 
 
-def get_data(symbol, timeframe="1h", period="6mo"):
+def get_data(symbol: str, timeframe: str = "1h", period: str = "6mo"):
     errors = []
 
     for provider in DATA_PROVIDER_ORDER:
-        provider = str(provider).strip().lower()
-
         try:
+            if provider == "polygon":
+                return _polygon_download(symbol, timeframe, period)
+
             if provider == "yfinance":
-                result = _yf_download(symbol, timeframe, period)
-                print(f"DATA FEED OK | {symbol} | provider=yfinance")
-                return result
+                return _yf_download(symbol, timeframe, period)
 
             if provider == "twelve_data":
-                result = _twelve_data_download(symbol, timeframe, period)
-                print(f"DATA FEED OK | {symbol} | provider=twelve_data")
-                return result
+                return _twelve_data_download(symbol, timeframe, period)
 
             if provider == "alpha_vantage":
-                result = _alpha_vantage_download(symbol, timeframe, period)
-                print(f"DATA FEED OK | {symbol} | provider=alpha_vantage")
-                return result
+                return _alpha_vantage_download(symbol, timeframe, period)
 
             if provider == "finnhub":
-                result = _finnhub_download(symbol, timeframe, period)
-                print(f"DATA FEED OK | {symbol} | provider=finnhub")
-                return result
-
-            errors.append(f"{provider}: provider desconocido")
+                return _finnhub_download(symbol, timeframe, period)
 
         except Exception as e:
-            error_text = str(e)
-            errors.append(f"{provider}: {error_text}")
+            errors.append(f"{provider}: {e}")
 
-            print(f"DATA FEED FAIL | {symbol} | provider={provider} | error={error_text}")
-
-            if _is_rate_limit_error(error_text):
-                _provider_pause(2.0)
-            else:
-                _provider_pause(0.75)
-
-            continue
-
-    raise ValueError(
-        f"No se pudo descargar {symbol} con ningún provider. Detalles: {errors}"
-    )
+    raise ValueError(f"No se pudo descargar {symbol} con ningún provider. Detalles: {errors}")

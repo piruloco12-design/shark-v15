@@ -46,7 +46,7 @@ LOOP_INTERVAL = int(os.getenv("LOOP_INTERVAL", "300"))
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
 
 # ==========================================
-# ACTIVOS CORE FINALES LIVE
+# ACTIVOS LIVE
 # ==========================================
 
 ASSETS = [
@@ -68,14 +68,18 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 # DATA PROVIDERS
 # ==========================================
 
-PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "yfinance").strip().lower()
+PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "polygon").strip().lower()
 
 DATA_PROVIDER_ORDER = [
+    "polygon",
     "yfinance",
     "finnhub",
     "alpha_vantage",
-    "twelve_data"
+    "twelve_data",
 ]
+
+POLYGON_API_KEY = os.getenv("POLYGON_API_KEY", "").strip()
+POLYGON_BASE_URL = os.getenv("POLYGON_BASE_URL", "https://api.polygon.io").strip().rstrip("/")
 
 TWELVE_DATA_API_KEY = os.getenv("TWELVE_DATA_API_KEY", "").strip()
 ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY", "").strip()
