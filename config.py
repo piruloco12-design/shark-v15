@@ -46,19 +46,14 @@ LOOP_INTERVAL = int(os.getenv("LOOP_INTERVAL", "300"))
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
 
 # ==========================================
-# ACTIVOS CORE
+# ACTIVOS CORE FINALES LIVE
 # ==========================================
 
 ASSETS = [
-    "SPY",
-    "QQQ",
-    "DIA",
     "IWM",
-    "MSFT",
     "NVDA",
     "AMZN",
     "META",
-    "TSLA",
 ]
 
 # ==========================================
@@ -113,7 +108,7 @@ SNIPER_ALLOWED_REGIMES = [
     "TREND"
 ]
 
-SNIPER_MIN_ADX = float(os.getenv("SNIPER_MIN_ADX", "24"))
+SNIPER_MIN_ADX = float(os.getenv("SNIPER_MIN_ADX", "22"))
 SNIPER_MIN_AI_SCORE = float(os.getenv("SNIPER_MIN_AI_SCORE", "50"))
 SNIPER_MIN_CONTEXT_SCORE = float(os.getenv("SNIPER_MIN_CONTEXT_SCORE", "55"))
 SNIPER_MIN_FINAL_SCORE = float(os.getenv("SNIPER_MIN_FINAL_SCORE", "55"))
