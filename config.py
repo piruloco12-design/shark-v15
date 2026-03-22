@@ -4,12 +4,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ==========================================
-# SHARK V15 SNIPER — CONFIGURACIÓN DEFINITIVA
-# Basada en la versión que demostró edge positivo
-# en backtest out-of-sample (TEST PF 1.29, Exp +0.72)
+# SHARK V15/V16 SIMPLE + POLYGON
 # ==========================================
 
-APP_NAME = "SHARK V15 SNIPER"
+APP_NAME = "SHARK V16 SNIPER"
 APP_ENV = os.getenv("APP_ENV", "production").strip().lower()
 
 # ==========================================
@@ -48,7 +46,7 @@ LOOP_INTERVAL = int(os.getenv("LOOP_INTERVAL", "300"))
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
 
 # ==========================================
-# ACTIVOS — los 4 que mostraron edge en backtest
+# ACTIVOS CORE
 # ==========================================
 
 ASSETS = [
@@ -68,7 +66,6 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 
 # ==========================================
 # DATA PROVIDERS
-# Polygon primario (ya comprado), yfinance como fallback
 # ==========================================
 
 PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "polygon").strip().lower()
@@ -104,8 +101,7 @@ ERROR_ALERT_COOLDOWN_MINUTES = int(os.getenv("ERROR_ALERT_COOLDOWN_MINUTES", "30
 STARTUP_MESSAGE_ENABLED = os.getenv("STARTUP_MESSAGE_ENABLED", "true").strip().lower() == "true"
 
 # ==========================================
-# SNIPER FILTERS — umbrales que dieron edge positivo
-# NO subir estos valores sin datos de paper live que lo justifiquen
+# SNIPER FILTERS
 # ==========================================
 
 SNIPER_MODE = os.getenv("SNIPER_MODE", "true").strip().lower() == "true"
@@ -116,6 +112,7 @@ SNIPER_ALLOWED_REGIMES = [
     "TREND",
 ]
 
+# Volvemos a la calibración simple
 SNIPER_MIN_ADX = float(os.getenv("SNIPER_MIN_ADX", "22"))
 SNIPER_MIN_AI_SCORE = float(os.getenv("SNIPER_MIN_AI_SCORE", "50"))
 SNIPER_MIN_CONTEXT_SCORE = float(os.getenv("SNIPER_MIN_CONTEXT_SCORE", "55"))
