@@ -1,62 +1,77 @@
 """
-SHARK V15 SNIPER — Backtester Fiel
+SHARK V16 SNIPER — Backtester Fiel
 
-Usa la misma lógica que live_engine.py, pero simulando histórico barra por barra.
+Usa la misma lógica que live_engine.py:
+- market_regime.py
+- signals.py
+- opportunity_scanner.py
+- session_volatility_intelligence.py
+- risk_management.py
+- final_decision_engine.py
+- asset_guard.py
+- market_quality_filter.py
+
+No usa historial real de trades previo:
+- ai_filter simulado sin historial
+- trade_intelligence simulado sin historial
 """
 
+import os
 import sys
-from pathlib import Path
+from collections import Counter
 
-import pandas as pd
+# =========================================================
+# FIX DE PATH
+# =========================================================
+CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+PROJECT_ROOT = os.path.dirname(CURRENT_DIR)
 
-CURRENT_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = CURRENT_DIR.parent
-
-if str(PROJECT_ROOT) not in sys.path:
-    sys.path.insert(0, str(PROJECT_ROOT))
+if PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, PROJECT_ROOT)
 
 from config import (
     ASSETS,
     TIMEFRAME,
+    PERIOD,
     CAPITAL,
     RISK_PER_TRADE,
     SNIPER_MODE,
     SNIPER_MIN_ADX,
     SNIPER_MIN_AI_SCORE,
+    SNIPER_MIN_CONTEXT_SCORE,
     SNIPER_MIN_FINAL_SCORE,
 )
+
 from data_feed import get_data
 from indicators import add_indicators
 from market_regime import detect_market_regime
 from signals import check_signal
 from opportunity_scanner import scan_smart_opportunity
 from risk_management import calculate_trade_levels
+
 from session_volatility_intelligence import (
     evaluate_session_filter,
     evaluate_volatility_filter,
 )
+
 from final_decision_engine import evaluate_final_decision
 
 
 # =========================================================
-# CONFIGURACIÓN DEL BACKTEST
+# CONFIG BACKTEST
 # =========================================================
-BACKTEST_PERIOD = "60d"          # yfinance intradía 30m funciona bien con 60d
+
+BACKTEST_PERIOD = PERIOD
 BACKTEST_TIMEFRAME = TIMEFRAME
-
 MIN_WARMUP_BARS = 200
-
-# 0.08% TOTAL ida+vuelta
-TRADING_COST_PCT = 0.0008
-ENTRY_COST_PCT = TRADING_COST_PCT / 2
-EXIT_COST_PCT = TRADING_COST_PCT / 2
-
+TRADING_COST_PCT = 0.0008   # 0.08%
 TRAIN_RATIO = 0.70
 
 
 # =========================================================
-# SIMULACIÓN DE CAPAS SIN HISTORIAL
+# SIMULACIONES
 # =========================================================
+
 def _simulate_ai_result():
     return {
         "score": 55.0,
@@ -87,26 +102,10 @@ def _simulate_risk_result():
 
 
 # =========================================================
-# MOTOR DE BACKTEST PRINCIPAL
+# MOTOR BACKTEST
 # =========================================================
-def run_v15_backtest_single_asset(
-    ticker,
-    df,
-    capital_start,
-    label="FULL",
-    start_eval_index=None,
-):
-    """
-    Corre el backtest V15 completo para un solo activo.
 
-    start_eval_index:
-    - permite usar warmup previo
-    - pero contar señales/trades solo desde cierto punto
-    """
-
-    if start_eval_index is None:
-        start_eval_index = MIN_WARMUP_BARS
-
+def run_v16_backtest_single_asset(ticker, df, capital_start, label="FULL"):
     capital = capital_start
     open_position = None
     closed_trades = []
@@ -115,7 +114,7 @@ def run_v15_backtest_single_asset(
     total_signals = 0
     total_allowed = 0
     total_blocked = 0
-    block_reasons = {}
+    block_reasons = Counter()
 
     for i in range(MIN_WARMUP_BARS, len(df)):
         data = df.iloc[: i + 1].copy()
@@ -123,86 +122,77 @@ def run_v15_backtest_single_asset(
         price = float(last["Close"])
 
         # -------------------------------------------------
-        # 1) CERRAR posición abierta si toca SL o TP
+        # CIERRE DE TRADE ABIERTO
         # -------------------------------------------------
         if open_position is not None:
             entry = open_position["entry"]
             sl = open_position["stop_loss"]
             tp = open_position["take_profit"]
             size = open_position["position_size"]
-            sig = open_position["signal"]
+            signal = open_position["signal"]
 
             bar_high = float(last["High"])
             bar_low = float(last["Low"])
 
             should_close = False
-            exit_price = 0.0
+            exit_price = None
             pnl = 0.0
-            close_reason = ""
 
-            if sig == "BUY":
+            if signal == "BUY":
                 hit_sl = bar_low <= sl
                 hit_tp = bar_high >= tp
 
                 if hit_sl and hit_tp:
                     exit_price = sl
                     pnl = (sl - entry) * size
-                    close_reason = "STOP_LOSS_SAME_BAR"
                     should_close = True
                 elif hit_sl:
                     exit_price = sl
                     pnl = (sl - entry) * size
-                    close_reason = "STOP_LOSS"
                     should_close = True
                 elif hit_tp:
                     exit_price = tp
                     pnl = (tp - entry) * size
-                    close_reason = "TAKE_PROFIT"
                     should_close = True
 
-            elif sig == "SELL":
+            elif signal == "SELL":
                 hit_sl = bar_high >= sl
                 hit_tp = bar_low <= tp
 
                 if hit_sl and hit_tp:
                     exit_price = sl
                     pnl = (entry - sl) * size
-                    close_reason = "STOP_LOSS_SAME_BAR"
                     should_close = True
                 elif hit_sl:
                     exit_price = sl
                     pnl = (entry - sl) * size
-                    close_reason = "STOP_LOSS"
                     should_close = True
                 elif hit_tp:
                     exit_price = tp
                     pnl = (entry - tp) * size
-                    close_reason = "TAKE_PROFIT"
                     should_close = True
 
             if should_close:
-                exit_cost = exit_price * EXIT_COST_PCT * size
+                exit_cost = exit_price * TRADING_COST_PCT * size
                 pnl -= exit_cost
                 capital += pnl
 
-                if open_position["count_for_stats"]:
-                    closed_trades.append({
-                        "ticker": ticker,
-                        "signal": sig,
-                        "regime": open_position["regime"],
-                        "entry": entry,
-                        "exit": exit_price,
-                        "pnl": pnl,
-                        "size": size,
-                        "bars_held": i - open_position["bar_index"],
-                        "timestamp": str(data.index[-1]),
-                        "close_reason": close_reason,
-                    })
+                closed_trades.append({
+                    "ticker": ticker,
+                    "signal": signal,
+                    "regime": open_position["regime"],
+                    "entry": entry,
+                    "exit": exit_price,
+                    "pnl": pnl,
+                    "size": size,
+                    "bars_held": i - open_position["bar_index"],
+                    "timestamp": str(data.index[-1]),
+                })
 
                 open_position = None
 
         # -------------------------------------------------
-        # 2) EVALUAR nueva señal
+        # APERTURA DE NUEVO TRADE
         # -------------------------------------------------
         if open_position is None:
             regime = detect_market_regime(data)
@@ -213,13 +203,12 @@ def run_v15_backtest_single_asset(
             scanner_info = {"signal": "NO_SIGNAL", "reason": "No usado"}
             if base_signal == "NO_SIGNAL":
                 scanner_info = scan_smart_opportunity(data)
-                if scanner_info["signal"] in ["BUY", "SELL"]:
+                if scanner_info.get("signal") in ["BUY", "SELL"]:
                     signal = scanner_info["signal"]
 
-            if signal in ["BUY", "SELL"] and i >= start_eval_index:
+            if signal in ["BUY", "SELL"]:
                 total_signals += 1
 
-            if signal in ["BUY", "SELL"]:
                 adx_value = float(last["adx"])
 
                 ai_result = _simulate_ai_result()
@@ -236,17 +225,13 @@ def run_v15_backtest_single_asset(
                     risk_result=risk_result,
                     adx=adx_value,
                     regime=regime,
+                    data=data,
+                    ticker=ticker,
                 )
 
-                if i >= start_eval_index:
-                    if final_result["decision"] == "ALLOW":
-                        total_allowed += 1
-                    else:
-                        total_blocked += 1
-                        reason = final_result.get("reason", "Unknown")
-                        block_reasons[reason] = block_reasons.get(reason, 0) + 1
-
                 if final_result["decision"] == "ALLOW":
+                    total_allowed += 1
+
                     trade_setup = calculate_trade_levels(
                         df=data,
                         signal=signal,
@@ -254,8 +239,8 @@ def run_v15_backtest_single_asset(
                         risk_per_trade=RISK_PER_TRADE,
                     )
 
-                    if trade_setup["position_size"] > 0:
-                        entry_cost = price * ENTRY_COST_PCT * trade_setup["position_size"]
+                    if float(trade_setup.get("position_size", 0)) > 0:
+                        entry_cost = price * TRADING_COST_PCT * trade_setup["position_size"]
                         capital -= entry_cost
 
                         open_position = {
@@ -266,11 +251,13 @@ def run_v15_backtest_single_asset(
                             "take_profit": trade_setup["take_profit"],
                             "position_size": trade_setup["position_size"],
                             "bar_index": i,
-                            "count_for_stats": i >= start_eval_index,
                         }
+                else:
+                    total_blocked += 1
+                    block_reasons[final_result.get("reason", "Unknown")] += 1
 
         # -------------------------------------------------
-        # 3) EQUITY CURVE
+        # EQUITY CURVE
         # -------------------------------------------------
         floating = 0.0
         if open_position is not None:
@@ -286,16 +273,16 @@ def run_v15_backtest_single_asset(
         equity_curve.append(capital + floating)
 
     # -------------------------------------------------
-    # ESTADÍSTICAS
+    # STATS
     # -------------------------------------------------
-    pnl_values = [t["pnl"] for t in closed_trades]
-    total_trades = len(pnl_values)
+    pnls = [t["pnl"] for t in closed_trades]
+    total_trades = len(pnls)
 
-    wins = [p for p in pnl_values if p > 0]
-    losses = [p for p in pnl_values if p <= 0]
+    wins = [p for p in pnls if p > 0]
+    losses = [p for p in pnls if p <= 0]
 
     winrate = (len(wins) / total_trades * 100) if total_trades > 0 else 0.0
-    avg_trade = sum(pnl_values) / total_trades if total_trades > 0 else 0.0
+    avg_trade = sum(pnls) / total_trades if total_trades > 0 else 0.0
 
     gross_profit = sum(wins) if wins else 0.0
     gross_loss = abs(sum(losses)) if losses else 0.0
@@ -317,26 +304,18 @@ def run_v15_backtest_single_asset(
             max_dd = dd
 
     max_dd_pct = (max_dd / capital_start * 100) if capital_start > 0 else 0.0
-
     bars_held = [t["bars_held"] for t in closed_trades]
     avg_bars = sum(bars_held) / len(bars_held) if bars_held else 0.0
 
-    regime_dist = {}
-    for t in closed_trades:
-        r = t["regime"]
-        regime_dist[r] = regime_dist.get(r, 0) + 1
-
-    signal_dist = {}
-    for t in closed_trades:
-        s = t["signal"]
-        signal_dist[s] = signal_dist.get(s, 0) + 1
+    regime_dist = Counter([t["regime"] for t in closed_trades])
+    signal_dist = Counter([t["signal"] for t in closed_trades])
 
     return {
         "ticker": ticker,
         "label": label,
         "capital_start": capital_start,
         "capital_final": capital,
-        "total_bars": max(len(df) - start_eval_index, 0),
+        "total_bars": len(df) - MIN_WARMUP_BARS,
         "total_signals": total_signals,
         "total_allowed": total_allowed,
         "total_blocked": total_blocked,
@@ -356,37 +335,36 @@ def run_v15_backtest_single_asset(
         "avg_bars_held": round(avg_bars, 1),
         "equity_curve": equity_curve,
         "closed_trades": closed_trades,
-        "block_reasons": block_reasons,
-        "regime_distribution": regime_dist,
-        "signal_distribution": signal_dist,
+        "block_reasons": dict(block_reasons),
+        "regime_distribution": dict(regime_dist),
+        "signal_distribution": dict(signal_dist),
     }
 
 
 # =========================================================
-# WALK-FORWARD
+# WALK FORWARD
 # =========================================================
-def run_walk_forward_v15(ticker, df, capital_start):
+
+def run_walk_forward_v16(ticker, df, capital_start):
     split_idx = int(len(df) * TRAIN_RATIO)
 
     train_df = df.iloc[:split_idx].copy()
-    train_result = run_v15_backtest_single_asset(
+
+    test_start = max(split_idx - MIN_WARMUP_BARS, 0)
+    test_df = df.iloc[test_start:].copy()
+
+    train_result = run_v16_backtest_single_asset(
         ticker=ticker,
         df=train_df,
         capital_start=capital_start,
         label="TRAIN",
-        start_eval_index=MIN_WARMUP_BARS,
     )
 
-    test_start = max(split_idx - MIN_WARMUP_BARS, 0)
-    test_df_slice = df.iloc[test_start:].copy()
-    test_eval_index = split_idx - test_start
-
-    test_result = run_v15_backtest_single_asset(
+    test_result = run_v16_backtest_single_asset(
         ticker=ticker,
-        df=test_df_slice,
+        df=test_df,
         capital_start=capital_start,
         label="TEST",
-        start_eval_index=test_eval_index,
     )
 
     return {
@@ -396,25 +374,17 @@ def run_walk_forward_v15(ticker, df, capital_start):
 
 
 # =========================================================
-# REPORTE
+# PRINT HELPERS
 # =========================================================
+
 def print_result(r, indent=""):
     p = indent
-    print(f"{p}{'=' * 60}")
+    print(f"{p}{'='*60}")
     print(f"{p}{r['ticker']} | {r['label']} | Bars: {r['total_bars']}")
-    print(f"{p}{'=' * 60}")
-    print(
-        f"{p}Capital:     {r['capital_start']:.2f} → {r['capital_final']:.2f}  "
-        f"({r['capital_final'] - r['capital_start']:+.2f})"
-    )
-    print(
-        f"{p}Señales:     {r['total_signals']} generadas | "
-        f"{r['total_allowed']} ALLOW | {r['total_blocked']} BLOCK"
-    )
-    print(
-        f"{p}Trades:      {r['total_trades']} cerrados | "
-        f"{r['wins']} wins | {r['losses']} losses"
-    )
+    print(f"{p}{'='*60}")
+    print(f"{p}Capital:     {r['capital_start']:.2f} → {r['capital_final']:.2f}  ({r['capital_final'] - r['capital_start']:+.2f})")
+    print(f"{p}Señales:     {r['total_signals']} generadas | {r['total_allowed']} ALLOW | {r['total_blocked']} BLOCK")
+    print(f"{p}Trades:      {r['total_trades']} cerrados | {r['wins']} wins | {r['losses']} losses")
     print(f"{p}Winrate:     {r['winrate']:.1f}%")
     print(f"{p}Avg Trade:   {r['avg_trade']:.2f}")
     print(f"{p}Avg Win:     {r['avg_win']:.2f}  |  Avg Loss: {r['avg_loss']:.2f}")
@@ -432,7 +402,7 @@ def print_result(r, indent=""):
         print(f"{p}Bloqueos principales:")
         sorted_blocks = sorted(r["block_reasons"].items(), key=lambda x: -x[1])
         for reason, count in sorted_blocks[:5]:
-            print(f"{p}  {count:>4}x  {reason[:80]}")
+            print(f"{p}  {count:>4}x  {reason[:90]}")
 
     print()
 
@@ -467,17 +437,11 @@ def print_consolidated(results, label):
 
     max_dd = max((r["max_drawdown"] for r in results), default=0.0)
 
-    print(f"\n{'#' * 65}")
+    print(f"\n{'#'*65}")
     print(f"  CONSOLIDADO {label} — {len(results)} activos")
-    print(f"{'#' * 65}")
-    print(
-        f"  Señales:     {total_signals} generadas | "
-        f"{total_allowed} ALLOW | {total_blocked} BLOCK"
-    )
-    print(
-        f"  Trades:      {total_trades} cerrados | "
-        f"{total_wins} wins | {total_losses} losses"
-    )
+    print(f"{'#'*65}")
+    print(f"  Señales:     {total_signals} generadas | {total_allowed} ALLOW | {total_blocked} BLOCK")
+    print(f"  Trades:      {total_trades} cerrados | {total_wins} wins | {total_losses} losses")
     print(f"  Winrate:     {winrate:.1f}%")
     print(f"  Avg Trade:   {avg_trade:.2f}")
     print(f"  Avg Win:     {avg_win:.2f}  |  Avg Loss: {avg_loss:.2f}")
@@ -485,12 +449,12 @@ def print_consolidated(results, label):
     print(f"  PF:          {pf:.2f}")
     print(f"  PnL total:   {total_pnl:+.2f}")
     print(f"  Peor DD:     {max_dd:.2f}")
-    print(f"{'#' * 65}\n")
+    print(f"{'#'*65}\n")
 
     print("  VEREDICTO:")
     if total_trades < 20:
         print("  ⚠️  Muy pocos trades para conclusiones fiables.")
-    elif expectancy > 0 and pf >= 1.2 and winrate >= 30:
+    elif expectancy > 0 and pf >= 1.20 and winrate >= 40:
         print("  ✅  HAY EDGE. Expectancy positiva, PF > 1.2, winrate razonable.")
     elif expectancy > 0:
         print("  🟡  Edge marginal. Positivo pero débil.")
@@ -502,14 +466,16 @@ def print_consolidated(results, label):
 # =========================================================
 # MAIN
 # =========================================================
+
 def main():
     print("\n" + "=" * 65)
-    print("  SHARK V15 SNIPER — BACKTESTER FIEL")
+    print("  SHARK V16 SNIPER — BACKTESTER FIEL")
     print("  Usa la misma lógica que live_engine.py")
     print(f"  Timeframe: {BACKTEST_TIMEFRAME} | Período: {BACKTEST_PERIOD}")
     print(f"  Capital: {CAPITAL} | Risk/trade: {RISK_PER_TRADE}")
     print(f"  Sniper mode: {SNIPER_MODE} | Min ADX: {SNIPER_MIN_ADX}")
-    print(f"  Min AI Score: {SNIPER_MIN_AI_SCORE} | Min Final Score: {SNIPER_MIN_FINAL_SCORE}")
+    print(f"  Min AI Score: {SNIPER_MIN_AI_SCORE} | Min Context Score: {SNIPER_MIN_CONTEXT_SCORE}")
+    print(f"  Min Final Score: {SNIPER_MIN_FINAL_SCORE}")
     print(f"  Trading cost total: {TRADING_COST_PCT * 100:.2f}%")
     print(f"  Activos: {ASSETS}")
     print("=" * 65 + "\n")
@@ -525,8 +491,7 @@ def main():
                 data_dict[ticker] = df
                 print(f"  OK | {provider} | {len(df)} velas")
             else:
-                count = len(df) if df is not None else 0
-                print(f"  SKIP | datos insuficientes ({count} velas)")
+                print("  SKIP | datos insuficientes")
         except Exception as e:
             print(f"  ERROR | {e}")
 
@@ -534,33 +499,32 @@ def main():
         print("\nNo se pudo descargar datos de ningún activo. Abortando.")
         sys.exit(1)
 
-    print(f"\n{'=' * 65}")
+    print(f"\n{'='*65}")
     print("  FASE 1: BACKTEST COMPLETO (todo el período)")
-    print(f"{'=' * 65}\n")
+    print(f"{'='*65}\n")
 
     full_results = []
     for ticker, df in data_dict.items():
-        result = run_v15_backtest_single_asset(
+        result = run_v16_backtest_single_asset(
             ticker=ticker,
             df=df,
             capital_start=CAPITAL,
             label="FULL",
-            start_eval_index=MIN_WARMUP_BARS,
         )
         full_results.append(result)
         print_result(result)
 
     print_consolidated(full_results, "FULL PERIOD")
 
-    print(f"\n{'=' * 65}")
-    print(f"  FASE 2: WALK-FORWARD ({TRAIN_RATIO * 100:.0f}% train / {(1 - TRAIN_RATIO) * 100:.0f}% test)")
-    print(f"{'=' * 65}\n")
+    print(f"\n{'='*65}")
+    print(f"  FASE 2: WALK-FORWARD ({TRAIN_RATIO*100:.0f}% train / {(1-TRAIN_RATIO)*100:.0f}% test)")
+    print(f"{'='*65}\n")
 
     train_results = []
     test_results = []
 
     for ticker, df in data_dict.items():
-        wf = run_walk_forward_v15(ticker, df, CAPITAL)
+        wf = run_walk_forward_v16(ticker, df, CAPITAL)
 
         print(f"--- {ticker} TRAIN ---")
         print_result(wf["train"], indent="  ")
@@ -573,9 +537,9 @@ def main():
     print_consolidated(train_results, "TRAIN (IN-SAMPLE)")
     print_consolidated(test_results, "TEST (OUT-OF-SAMPLE)")
 
-    print(f"\n{'=' * 65}")
+    print(f"\n{'='*65}")
     print("  COMPARACIÓN TRAIN vs TEST")
-    print(f"{'=' * 65}\n")
+    print(f"{'='*65}\n")
 
     for ticker in data_dict:
         train = next((r for r in train_results if r["ticker"] == ticker), None)
@@ -583,18 +547,8 @@ def main():
 
         if train and test:
             print(f"  {ticker}:")
-            print(
-                f"    TRAIN: {train['total_trades']} trades | "
-                f"WR {train['winrate']:.1f}% | "
-                f"PF {train['profit_factor']:.2f} | "
-                f"Exp {train['expectancy']:.2f}"
-            )
-            print(
-                f"    TEST:  {test['total_trades']} trades | "
-                f"WR {test['winrate']:.1f}% | "
-                f"PF {test['profit_factor']:.2f} | "
-                f"Exp {test['expectancy']:.2f}"
-            )
+            print(f"    TRAIN: {train['total_trades']} trades | WR {train['winrate']:.1f}% | PF {train['profit_factor']:.2f} | Exp {train['expectancy']:.2f}")
+            print(f"    TEST:  {test['total_trades']} trades | WR {test['winrate']:.1f}% | PF {test['profit_factor']:.2f} | Exp {test['expectancy']:.2f}")
 
             if train["total_trades"] > 5 and test["total_trades"] > 5:
                 wr_delta = test["winrate"] - train["winrate"]

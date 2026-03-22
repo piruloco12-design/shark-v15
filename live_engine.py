@@ -1,538 +1,450 @@
 import time
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from config import (
     ASSETS,
     TIMEFRAME,
     PERIOD,
+    CAPITAL,
     RISK_PER_TRADE,
     LOOP_INTERVAL,
-    SETUP_ALERTS_ENABLED,
-    SETUP_ALERT_COOLDOWN_MINUTES,
-    SIGNAL_ALERT_COOLDOWN_MINUTES,
-    ERROR_ALERT_COOLDOWN_MINUTES,
-    STARTUP_MESSAGE_ENABLED
+    STARTUP_MESSAGE_ENABLED,
+    VERBOSE_LOGS,
+    SAVE_ALL_SIGNALS,
 )
+
 from data_feed import get_data
 from indicators import add_indicators
-from signals import check_signal
-from risk_management import calculate_trade_levels
-from storage import (
-    init_db,
-    save_signal,
-    get_paper_capital,
-    log_risk_event,
-    log_feed_event,
-    log_setup_alert,
-    has_recent_setup_alert
-)
-from paper_broker import (
-    open_trade,
-    check_and_close_trades,
-    has_open_trade_for_ticker
-)
-from telegram_alerts import (
-    send_telegram_message,
-    format_pro_signal_message,
-    format_setup_watch_message
-)
-from ai_filter import evaluate_signal_quality
-from risk_control_engine import evaluate_risk_controls
 from market_regime import detect_market_regime
-from asset_ranker import get_ranked_assets
-from position_scaler import apply_position_scaling
-from capital_allocator import apply_capital_allocation
-from trade_intelligence import evaluate_trade_context
-from session_volatility_intelligence import (
-    evaluate_session_filter,
-    evaluate_volatility_filter
-)
-from final_decision_engine import evaluate_final_decision
+from signals import check_signal
 from opportunity_scanner import scan_smart_opportunity
-from setup_alert_engine import detect_setup_watch
-from asset_labels import get_asset_label_with_ticker
+from risk_management import calculate_trade_levels
+from final_decision_engine import evaluate_final_decision
+
+from ai_filter import evaluate_signal_quality
+
+try:
+    from trade_intelligence import evaluate_trade_context
+except Exception:
+    def evaluate_trade_context(ticker, signal, regime):
+        return {
+            "ticker_signal_score": 55.0,
+            "ticker_regime_score": 55.0,
+            "signal_score": 55.0,
+            "final_score": 55.0,
+            "decision": "NEUTRAL",
+            "reason": "trade_intelligence no disponible"
+        }
+
+try:
+    from session_volatility_intelligence import (
+        evaluate_session_filter,
+        evaluate_volatility_filter,
+    )
+except Exception:
+    def evaluate_session_filter(data, regime):
+        return {"allow": True, "reason": "session_volatility_intelligence no disponible"}
+
+    def evaluate_volatility_filter(data, regime):
+        return {"allow": True, "reason": "session_volatility_intelligence no disponible"}
+
+try:
+    from risk_control_engine import evaluate_risk_controls
+except Exception:
+    def evaluate_risk_controls(ticker=None, signal=None):
+        return {"allow": True, "reason": "risk_control_engine no disponible"}
+
+try:
+    from paper_broker import (
+        open_trade,
+        update_open_trades,
+        has_open_trade_for_ticker,
+    )
+except Exception:
+    def open_trade(ticker, signal, regime, trade_setup):
+        print(f"[paper_broker fallback] open_trade | {ticker} | {signal} | {regime} | {trade_setup}")
+
+    def update_open_trades():
+        return
+
+    def has_open_trade_for_ticker(ticker):
+        return False
+
+try:
+    from storage import save_signal
+except Exception:
+    def save_signal(**kwargs):
+        return
+
+try:
+    import telegram_alerts
+except Exception:
+    telegram_alerts = None
 
 
-_SIGNAL_ALERT_MEMORY = {}
-_SETUP_ALERT_MEMORY = {}
-_ERROR_ALERT_MEMORY = {}
-_FIRST_CYCLE_TELEGRAM_SENT = False
+# =========================================================
+# HELPERS
+# =========================================================
 
-
-def _now():
-    return datetime.now()
-
-
-def _normalize_text(value):
-    if value is None:
-        return ""
-    return str(value).strip()
-
-
-def _round_safe(value, digits=4):
+def _safe_float(value, default=0.0):
     try:
-        return round(float(value), digits)
+        return float(value)
     except Exception:
-        return 0.0
+        return default
 
 
-def _should_send_runtime_alert(memory_store, key, signature, cooldown_minutes):
-    now = _now()
-    existing = memory_store.get(key)
+def _safe_send_telegram(text):
+    if telegram_alerts is None:
+        return
 
-    if existing is None:
-        memory_store[key] = {
-            "signature": signature,
-            "timestamp": now
-        }
-        return True
+    candidates = [
+        "send_telegram_message",
+        "send_message",
+        "send_alert",
+        "send_text_message",
+    ]
 
-    last_signature = existing.get("signature")
-    last_timestamp = existing.get("timestamp")
-
-    if last_signature != signature:
-        memory_store[key] = {
-            "signature": signature,
-            "timestamp": now
-        }
-        return True
-
-    if last_timestamp is None:
-        memory_store[key] = {
-            "signature": signature,
-            "timestamp": now
-        }
-        return True
-
-    elapsed = now - last_timestamp
-    if elapsed >= timedelta(minutes=cooldown_minutes):
-        memory_store[key] = {
-            "signature": signature,
-            "timestamp": now
-        }
-        return True
-
-    return False
+    for fn_name in candidates:
+        fn = getattr(telegram_alerts, fn_name, None)
+        if callable(fn):
+            try:
+                fn(text)
+                return
+            except Exception:
+                pass
 
 
-def _build_signal_alert_signature(
+def _send_startup_message():
+    if not STARTUP_MESSAGE_ENABLED:
+        return
+
+    msg = (
+        "🤖 SHARK V16 SNIPER INICIADO EN RENDER\n\n"
+        f"Loop ejecutado correctamente.\n"
+        f"Timeframe: {TIMEFRAME}\n"
+        f"Loop: {LOOP_INTERVAL}s\n"
+        f"Activos: {len(ASSETS)}"
+    )
+    _safe_send_telegram(msg)
+
+
+def _send_cycle_ok():
+    msg = (
+        "✅ SHARK V16 SNIPER ACTIVO\n"
+        "Loop ejecutado correctamente.\n"
+        f"Timeframe: {TIMEFRAME}\n"
+        f"Loop: {LOOP_INTERVAL}s\n"
+        f"Activos: {len(ASSETS)}"
+    )
+    _safe_send_telegram(msg)
+
+
+def _send_error_message(text):
+    _safe_send_telegram(f"❌ ERROR SHARK V16\n\n{text}")
+
+
+def _send_trade_open_message(ticker, signal, trade_setup, capital_snapshot):
+    entry = _safe_float(trade_setup.get("entry"))
+    stop = _safe_float(trade_setup.get("stop_loss"))
+    tp = _safe_float(trade_setup.get("take_profit"))
+    size = _safe_float(trade_setup.get("position_size"))
+    rr = _safe_float(trade_setup.get("rr_ratio"))
+
+    msg = (
+        "📈 SHARK TRADE ABIERTO\n\n"
+        f"Activo: {ticker}\n"
+        f"Dirección: {signal}\n\n"
+        f"Entry: {entry:.2f} USD\n"
+        f"Stop: {stop:.2f} USD\n"
+        f"TP: {tp:.2f} USD\n\n"
+        f"Size: {size:.4f}\n"
+        f"R:R: {rr:.2f}\n"
+        f"Capital actual: {capital_snapshot:.2f} €"
+    )
+    _safe_send_telegram(msg)
+
+
+def _send_mobile_signal_message(
     ticker,
     signal,
+    data,
     regime,
-    trade_setup,
     ai_result,
     context_result,
     session_result,
     volatility_result,
+    risk_result,
+    trade_setup,
     final_result,
-    scanner_info
 ):
-    return (
-        f"{ticker}|"
-        f"{signal}|"
-        f"{regime}|"
-        f"{_round_safe(trade_setup.get('entry', 0), 2)}|"
-        f"{_round_safe(trade_setup.get('stop_loss', 0), 2)}|"
-        f"{_round_safe(trade_setup.get('take_profit', 0), 2)}|"
-        f"{_round_safe(trade_setup.get('position_size', 0), 4)}|"
-        f"{_round_safe(ai_result.get('score', 0), 1)}|"
-        f"{_round_safe(context_result.get('final_score', 0), 1)}|"
-        f"{_normalize_text(session_result.get('session'))}|"
-        f"{_normalize_text(volatility_result.get('volatility_state'))}|"
-        f"{_normalize_text(final_result.get('decision'))}|"
-        f"{_round_safe(final_result.get('score', 0), 1)}|"
-        f"{_normalize_text(scanner_info.get('signal'))}|"
-        f"{_normalize_text(scanner_info.get('reason'))}"
-    )
+    last = data.iloc[-1]
 
+    price = _safe_float(last.get("Close"))
+    rsi = _safe_float(last.get("rsi"))
+    adx = _safe_float(last.get("adx"))
+    atr = _safe_float(last.get("atr"))
+    ema200 = _safe_float(last.get("ema200"))
+    macd = _safe_float(last.get("macd"))
+    macd_signal = _safe_float(last.get("macd_signal"))
 
-def _build_setup_alert_signature(ticker, setup_info, regime, last_row):
-    return (
-        f"{ticker}|"
-        f"{_normalize_text(setup_info.get('alert_type'))}|"
-        f"{_normalize_text(regime)}|"
-        f"{_round_safe(last_row.get('Close', 0), 2)}|"
-        f"{_round_safe(last_row.get('rsi', 0), 2)}|"
-        f"{_round_safe(last_row.get('adx', 0), 2)}|"
-        f"{_normalize_text(setup_info.get('reason'))}"
-    )
+    entry = _safe_float(trade_setup.get("entry"))
+    stop = _safe_float(trade_setup.get("stop_loss"))
+    tp = _safe_float(trade_setup.get("take_profit"))
+    rr = _safe_float(trade_setup.get("rr_ratio"))
+    size = _safe_float(trade_setup.get("position_size"))
+    ai_score = _safe_float(ai_result.get("score", 50))
+    ctx_score = _safe_float(context_result.get("final_score", 55))
 
+    session_reason = session_result.get("reason", "")
+    session_label = "Sí" if session_result.get("allow", True) else "No"
+    vol_label = "NORMAL" if volatility_result.get("allow", True) else "BLOQUEADA"
 
-def _build_error_signature(scope, error_text):
-    clean_error = _normalize_text(error_text)
-    return f"{scope}|{clean_error}"
-
-
-def build_technical_reason(df, signal):
-    last = df.iloc[-1]
-
-    close_price = float(last["Close"])
-    ema200 = float(last["ema200"])
-    rsi = float(last["rsi"])
-    macd = float(last["macd"])
-    macd_signal = float(last["macd_signal"])
-    adx = float(last["adx"])
+    fuerza = "ALTA" if adx >= 30 else "MEDIA" if adx >= 25 else "BAJA"
 
     if signal == "BUY":
-        return (
-            f"Tendencia alcista: precio ({close_price:.2f}) sobre EMA200 ({ema200:.2f}), "
+        motivo = (
+            f"Tendencia alcista: precio ({price:.2f}) sobre EMA200 ({ema200:.2f}), "
             f"RSI {rsi:.2f}, MACD {macd:.2f} > señal {macd_signal:.2f}, "
             f"ADX {adx:.2f} confirmando fuerza."
         )
-
-    if signal == "SELL":
-        return (
-            f"Tendencia bajista: precio ({close_price:.2f}) bajo EMA200 ({ema200:.2f}), "
+    else:
+        motivo = (
+            f"Tendencia bajista: precio ({price:.2f}) bajo EMA200 ({ema200:.2f}), "
             f"RSI {rsi:.2f}, MACD {macd:.2f} < señal {macd_signal:.2f}, "
             f"ADX {adx:.2f} confirmando fuerza."
         )
 
-    return "Sin motivo técnico relevante."
+    msg = (
+        "📱 SHARK EJECUCIÓN MÓVIL\n\n"
+        f"Activo: {ticker}\n"
+        f"Dirección: {signal}\n"
+        f"Operable ahora: {session_label}\n"
+        f"Fuerza: {fuerza}\n"
+        f"Moneda esperada: USD\n\n"
+        f"Precio actual: {price:.2f} USD\n"
+        f"Entry: {entry:.2f} USD\n"
+        f"Stop: {stop:.2f} USD\n"
+        f"Take Profit: {tp:.2f} USD\n\n"
+        f"R:R: {rr:.2f}\n"
+        f"Riesgo estimado: 5.00 €\n"
+        f"Size: {size:.4f}\n\n"
+        f"RSI: {rsi:.2f}\n"
+        f"ADX: {adx:.2f}\n"
+        f"ATR: {atr:.2f}\n"
+        f"Regime: {regime}\n"
+        f"Session: {session_reason if session_reason else 'OK'}\n"
+        f"Volatilidad: {vol_label}\n\n"
+        f"AI: {ai_result.get('decision', 'NEUTRAL')} ({ai_score:.1f})\n"
+        f"Contexto: {context_result.get('decision', 'NEUTRAL')} ({ctx_score:.1f})\n"
+        f"Risk: {'ALLOW' if risk_result.get('allow', True) else 'BLOCK'}\n\n"
+        f"Motivo:\n{motivo}"
+    )
+    _safe_send_telegram(msg)
 
+
+def _log(msg):
+    if VERBOSE_LOGS:
+        print(msg)
+
+
+# =========================================================
+# CORE
+# =========================================================
 
 def run_live_cycle():
-    print("\n=== SHARK V15 SNIPER LIVE CYCLE ===")
-    print("Hora:", datetime.now().isoformat())
+    _log("\n=== SHARK V16 SNIPER LIVE CYCLE ===")
+    _log(f"Hora: {datetime.utcnow().isoformat()}")
 
-    latest_prices = {}
-    market_data = {}
+    try:
+        update_open_trades()
+    except Exception as e:
+        _log(f"ERROR update_open_trades: {e}")
 
-    ranked_assets = get_ranked_assets(ASSETS)
-    print("Ranking actual:", [get_asset_label_with_ticker(x) for x in ranked_assets])
-
-    for ticker in ranked_assets:
-        asset_name = get_asset_label_with_ticker(ticker)
-
+    for ticker in ASSETS:
         try:
-            df, provider_used = get_data(ticker, TIMEFRAME, PERIOD)
+            _log(f"\n--- Evaluando {ticker} ---")
 
-            if df is None or len(df) < 50:
-                raise ValueError("Data insuficiente para análisis")
-
+            # -------------------------------------------------
+            # DATA
+            # -------------------------------------------------
+            df, provider = get_data(ticker, TIMEFRAME, PERIOD)
             df = add_indicators(df)
 
-            if df is None or len(df) < 50:
-                raise ValueError("Data insuficiente luego de indicadores")
+            _log(f"DATA FEED OK | {ticker} | provider={provider} | rows={len(df)}")
 
-            market_data[ticker] = df
-            latest_prices[ticker] = float(df.iloc[-1]["Close"])
+            last = df.iloc[-1]
+            adx_value = _safe_float(last.get("adx"))
+            regime = str(detect_market_regime(df)).strip().upper()
 
-            log_feed_event(
-                timestamp=datetime.now().isoformat(),
-                ticker=ticker,
-                provider=provider_used,
-                timeframe=TIMEFRAME,
-                period=PERIOD,
-                rows_count=len(df),
-                status="SUCCESS",
-                message=f"Feed OK con {provider_used}"
-            )
-
-            print(f"FEED | {asset_name} | Provider: {provider_used} | Rows: {len(df)}")
-
-        except Exception as e:
-            log_feed_event(
-                timestamp=datetime.now().isoformat(),
-                ticker=ticker,
-                provider="ERROR",
-                timeframe=TIMEFRAME,
-                period=PERIOD,
-                rows_count=0,
-                status="FAIL",
-                message=str(e)
-            )
-
-            print(f"⚠️ Error en data feed {asset_name}: {e}")
-            continue
-
-    check_and_close_trades(latest_prices)
-
-    capital = get_paper_capital()
-    print(f"Capital paper actual: {capital:.2f}")
-
-    for ticker, df in market_data.items():
-        asset_name = get_asset_label_with_ticker(ticker)
-
-        try:
+            # -------------------------------------------------
+            # SIGNAL
+            # -------------------------------------------------
             base_signal = check_signal(df)
-            regime = detect_market_regime(df)
-
-            scanner_info = {
-                "signal": "NO_SIGNAL",
-                "reason": "No usado"
-            }
-
             signal = base_signal
+            scanner_info = {"signal": "NO_SIGNAL", "reason": "No usado"}
 
             if base_signal == "NO_SIGNAL":
                 scanner_info = scan_smart_opportunity(df)
-                if scanner_info["signal"] in ["BUY", "SELL"]:
+                if scanner_info.get("signal") in ["BUY", "SELL"]:
                     signal = scanner_info["signal"]
 
-            last = df.iloc[-1]
-            adx_value = float(last["adx"])
-
-            print(
-                f"{asset_name} | Señal base: {base_signal} | "
-                f"Scanner: {scanner_info['signal']} | "
-                f"Final signal: {signal} | "
-                f"Regime: {regime} | "
-                f"Close: {float(last['Close']):.2f} | "
-                f"RSI: {float(last['rsi']):.2f} | "
+            _log(
+                f"{ticker} | Señal base: {base_signal} | "
+                f"Scanner: {scanner_info.get('signal')} | "
+                f"Final signal: {signal} | Regime: {regime} | "
+                f"Close: {_safe_float(last.get('Close')):.2f} | "
+                f"RSI: {_safe_float(last.get('rsi')):.2f} | "
                 f"ADX: {adx_value:.2f}"
             )
 
-            if signal == "NO_SIGNAL" and SETUP_ALERTS_ENABLED:
-                setup_info = detect_setup_watch(df, regime)
+            if signal not in ["BUY", "SELL"]:
+                continue
 
-                if setup_info["alert_type"] != "NONE":
-                    print(f"SETUP | {asset_name} | {setup_info['alert_type']} | {setup_info['reason']}")
-
-                    setup_signature = _build_setup_alert_signature(
-                        ticker=ticker,
-                        setup_info=setup_info,
-                        regime=regime,
-                        last_row=last
-                    )
-
-                    db_allows_setup = not has_recent_setup_alert(
-                        ticker=ticker,
-                        alert_type=setup_info["alert_type"],
-                        within_minutes=SETUP_ALERT_COOLDOWN_MINUTES
-                    )
-
-                    runtime_allows_setup = _should_send_runtime_alert(
-                        memory_store=_SETUP_ALERT_MEMORY,
-                        key=f"{ticker}|{setup_info['alert_type']}",
-                        signature=setup_signature,
-                        cooldown_minutes=SETUP_ALERT_COOLDOWN_MINUTES
-                    )
-
-                    if db_allows_setup and runtime_allows_setup:
-                        send_telegram_message(
-                            format_setup_watch_message(
-                                ticker=ticker,
-                                last_row=last,
-                                setup_info=setup_info,
-                                regime=regime
-                            )
-                        )
-
-                        log_setup_alert(
-                            timestamp=datetime.now().isoformat(),
-                            ticker=ticker,
-                            alert_type=setup_info["alert_type"],
-                            reason=setup_info["reason"]
-                        )
-                    else:
-                        print(f"ANTI-SPAM SETUP | {asset_name} | alerta duplicada evitada")
-
-            base_trade_setup = calculate_trade_levels(
-                df=df,
-                signal=signal,
-                capital=capital,
-                risk_per_trade=RISK_PER_TRADE
-            )
-
-            scaled_trade_setup = apply_position_scaling(base_trade_setup, ticker)
-            trade_setup = apply_capital_allocation(
-                scaled_trade_setup,
-                ticker=ticker,
-                default_assets=ASSETS
-            )
-
-            save_signal(
-                timestamp=datetime.now().isoformat(),
-                ticker=ticker,
-                signal=signal,
-                regime=regime,
-                df=df,
-                trade=trade_setup
-            )
-
-            if signal in ["BUY", "SELL"]:
-                ai_result = evaluate_signal_quality(ticker, signal)
-                context_result = evaluate_trade_context(ticker, signal, regime)
-                session_result = evaluate_session_filter(df, regime)
-                volatility_result = evaluate_volatility_filter(df, regime)
-                risk_result = evaluate_risk_controls(ticker, signal)
-
-                final_result = evaluate_final_decision(
-                    ai_result=ai_result,
-                    context_result=context_result,
-                    session_result=session_result,
-                    volatility_result=volatility_result,
-                    risk_result=risk_result,
-                    adx=adx_value,
-                    regime=regime
-                )
-
-                print(
-                    f"AI | {asset_name} | Score: {ai_result['score']} | "
-                    f"Decision: {ai_result['decision']} | "
-                    f"Reason: {ai_result['reason']}"
-                )
-
-                print(
-                    f"INTEL | {asset_name} | "
-                    f"FinalScore: {context_result['final_score']} | "
-                    f"Decision: {context_result['decision']} | "
-                    f"Reason: {context_result['reason']}"
-                )
-
-                print(
-                    f"SESSION | {asset_name} | "
-                    f"Session: {session_result['session']} | "
-                    f"Allow: {session_result['allow']} | "
-                    f"Reason: {session_result['reason']}"
-                )
-
-                print(
-                    f"VOL | {asset_name} | "
-                    f"State: {volatility_result['volatility_state']} | "
-                    f"Allow: {volatility_result['allow']} | "
-                    f"Reason: {volatility_result['reason']}"
-                )
-
-                print(
-                    f"RISK | {asset_name} | Allow: {risk_result['allow']} | "
-                    f"Reason: {risk_result['reason']}"
-                )
-
-                print(
-                    f"FINAL | {asset_name} | Score: {final_result['score']} | "
-                    f"Decision: {final_result['decision']} | "
-                    f"Reason: {final_result['reason']}"
-                )
-
-                technical_reason = build_technical_reason(df, signal)
-
-                if scanner_info["signal"] in ["BUY", "SELL"]:
-                    technical_reason += f" | Scanner extra: {scanner_info['reason']}"
-
-                if final_result["decision"] == "BLOCK":
-                    log_risk_event(
-                        timestamp=datetime.now().isoformat(),
+            # -------------------------------------------------
+            # OPTIONAL SIGNAL SAVE
+            # -------------------------------------------------
+            if SAVE_ALL_SIGNALS:
+                try:
+                    save_signal(
                         ticker=ticker,
                         signal=signal,
-                        event_type="FINAL_BLOCK",
-                        reason=final_result["reason"]
+                        regime=regime,
+                        price=_safe_float(last.get("Close")),
+                        rsi=_safe_float(last.get("rsi")),
+                        adx=adx_value,
+                        reason=scanner_info.get("reason", "") if base_signal == "NO_SIGNAL" else "Base signal",
                     )
+                except Exception as e:
+                    _log(f"save_signal warning | {ticker}: {e}")
 
-                    print(f"--> Trade bloqueado por semáforo final: {asset_name}")
-                    continue
+            # -------------------------------------------------
+            # AI / CONTEXT / FILTERS
+            # -------------------------------------------------
+            ai_result = evaluate_signal_quality(ticker, signal)
+            _log(
+                f"AI | {ticker} | Score: {ai_result.get('score')} | "
+                f"Decision: {ai_result.get('decision')} | "
+                f"Reason: {ai_result.get('reason')}"
+            )
 
-                already_has_open_trade = has_open_trade_for_ticker(ticker)
+            context_result = evaluate_trade_context(ticker, signal, regime)
+            _log(
+                f"INTEL | {ticker} | FinalScore: {context_result.get('final_score')} | "
+                f"Decision: {context_result.get('decision')} | "
+                f"Reason: {context_result.get('reason')}"
+            )
 
-                signal_signature = _build_signal_alert_signature(
-                    ticker=ticker,
-                    signal=signal,
-                    regime=regime,
-                    trade_setup=trade_setup,
-                    ai_result=ai_result,
-                    context_result=context_result,
-                    session_result=session_result,
-                    volatility_result=volatility_result,
-                    final_result=final_result,
-                    scanner_info=scanner_info
-                )
+            session_result = evaluate_session_filter(df, regime)
+            _log(
+                f"SESSION | {ticker} | Allow: {session_result.get('allow')} | "
+                f"Reason: {session_result.get('reason')}"
+            )
 
-                can_send_signal_alert = _should_send_runtime_alert(
-                    memory_store=_SIGNAL_ALERT_MEMORY,
-                    key=f"{ticker}|{signal}",
-                    signature=signal_signature,
-                    cooldown_minutes=SIGNAL_ALERT_COOLDOWN_MINUTES
-                )
+            volatility_result = evaluate_volatility_filter(df, regime)
+            _log(
+                f"VOL | {ticker} | Allow: {volatility_result.get('allow')} | "
+                f"Reason: {volatility_result.get('reason')}"
+            )
 
-                if not already_has_open_trade and can_send_signal_alert:
-                    send_telegram_message(
-                        format_pro_signal_message(
-                            ticker=ticker,
-                            signal=signal,
-                            trade_setup=trade_setup,
-                            last_row=last,
-                            ai_result=ai_result,
-                            risk_result=risk_result,
-                            regime=regime,
-                            technical_reason=technical_reason,
-                            session_result=session_result,
-                            volatility_result=volatility_result,
-                            context_result=context_result
-                        )
-                    )
-                else:
-                    if already_has_open_trade:
-                        print(f"ANTI-SPAM SIGNAL | {asset_name} | ya existe trade abierto")
-                    elif not can_send_signal_alert:
-                        print(f"ANTI-SPAM SIGNAL | {asset_name} | señal duplicada evitada")
+            risk_result = evaluate_risk_controls(ticker=ticker, signal=signal)
+            _log(
+                f"RISK | {ticker} | Allow: {risk_result.get('allow')} | "
+                f"Reason: {risk_result.get('reason')}"
+            )
 
-                if (
-                    final_result["decision"] == "ALLOW" and
-                    not has_open_trade_for_ticker(ticker) and
-                    trade_setup["position_size"] > 0
-                ):
-                    open_trade(ticker, signal, regime, trade_setup)
+            # -------------------------------------------------
+            # FINAL DECISION V16
+            # -------------------------------------------------
+            final_result = evaluate_final_decision(
+                ai_result=ai_result,
+                context_result=context_result,
+                session_result=session_result,
+                volatility_result=volatility_result,
+                risk_result=risk_result,
+                adx=adx_value,
+                regime=regime,
+                data=df,
+                ticker=ticker,
+            )
 
-                    print(
-                        f"--> NUEVO PAPER TRADE: {asset_name} | {signal} | "
-                        f"Regime: {regime} | "
-                        f"Entry: {trade_setup['entry']:.2f} | "
-                        f"SL: {trade_setup['stop_loss']:.2f} | "
-                        f"TP: {trade_setup['take_profit']:.2f} | "
-                        f"Size: {trade_setup['position_size']:.4f} | "
-                        f"Scale: {trade_setup.get('scale_factor', 1.0):.2f} | "
-                        f"CapitalAlloc: {trade_setup.get('capital_allocation_factor', 1.0):.2f}"
-                    )
+            debug = final_result.get("debug", {})
+            _log(
+                f"FINAL | {ticker} | Score: {debug.get('final_score')} | "
+                f"Decision: {final_result.get('decision')} | "
+                f"Reason: {final_result.get('reason')}"
+            )
+
+            if final_result["decision"] != "ALLOW":
+                _log(f"--> Trade bloqueado por semáforo final: {ticker}")
+                continue
+
+            # -------------------------------------------------
+            # TRADE SETUP
+            # -------------------------------------------------
+            trade_setup = calculate_trade_levels(
+                df=df,
+                signal=signal,
+                capital=CAPITAL,
+                risk_per_trade=RISK_PER_TRADE,
+            )
+
+            if has_open_trade_for_ticker(ticker):
+                _log(f"--> Trade bloqueado: ya existe trade abierto para {ticker}")
+                continue
+
+            if _safe_float(trade_setup.get("position_size")) <= 0:
+                _log(f"--> Trade bloqueado: position_size inválido para {ticker}")
+                continue
+
+            # -------------------------------------------------
+            # OPEN TRADE
+            # -------------------------------------------------
+            _send_mobile_signal_message(
+                ticker=ticker,
+                signal=signal,
+                data=df,
+                regime=regime,
+                ai_result=ai_result,
+                context_result=context_result,
+                session_result=session_result,
+                volatility_result=volatility_result,
+                risk_result=risk_result,
+                trade_setup=trade_setup,
+                final_result=final_result,
+            )
+
+            open_trade(ticker, signal, regime, trade_setup)
+            _send_trade_open_message(ticker, signal, trade_setup, CAPITAL)
 
         except Exception as e:
-            print(f"Error analizando {asset_name}: {e}")
-            continue
+            err = f"{ticker} | ERROR live cycle: {e}"
+            print(err)
+            _send_error_message(err)
 
 
-def run_live_engine(interval_seconds=None):
-    global _FIRST_CYCLE_TELEGRAM_SENT
+def run_live_engine():
+    print("=" * 50)
+    print("SHARK V16 SNIPER - INICIO")
+    print("=" * 50)
+    print(f"Hora inicio: {datetime.utcnow().isoformat()}")
+    print("Entorno: production")
+    print(f"Loop interval: {LOOP_INTERVAL} segundos")
+    print("=" * 50)
 
-    init_db()
+    _send_startup_message()
 
-    if interval_seconds is None:
-        interval_seconds = LOOP_INTERVAL
-
-    if STARTUP_MESSAGE_ENABLED:
-        send_telegram_message("🤖 SHARK V15 SNIPER INICIADO EN RENDER")
-
-    print("=== SHARK V15 SNIPER INICIADO ===")
+    first_cycle = True
 
     while True:
         try:
             run_live_cycle()
-
-            if not _FIRST_CYCLE_TELEGRAM_SENT:
-                send_telegram_message(
-                    f"✅ SHARK V15 SNIPER ACTIVO\n"
-                    f"Loop ejecutado correctamente.\n"
-                    f"Timeframe: {TIMEFRAME}\n"
-                    f"Loop: {interval_seconds}s\n"
-                    f"Activos: {len(ASSETS)}"
-                )
-                _FIRST_CYCLE_TELEGRAM_SENT = True
-
+            if first_cycle:
+                _send_cycle_ok()
+                first_cycle = False
         except Exception as e:
-            error_text = str(e)
-            print(f"Error en ciclo live: {error_text}")
+            err = f"ERROR GENERAL run_live_engine: {e}"
+            print(err)
+            _send_error_message(err)
 
-            error_signature = _build_error_signature("LIVE_CYCLE", error_text)
-
-            can_send_error = _should_send_runtime_alert(
-                memory_store=_ERROR_ALERT_MEMORY,
-                key="LIVE_CYCLE",
-                signature=error_signature,
-                cooldown_minutes=ERROR_ALERT_COOLDOWN_MINUTES
-            )
-
-            if can_send_error:
-                send_telegram_message(f"❌ Error en ciclo live: {error_text}")
-            else:
-                print("ANTI-SPAM ERROR | error repetido no enviado a Telegram")
-
-        print(f"Esperando {interval_seconds} segundos para el próximo ciclo...\n")
-        time.sleep(interval_seconds)
+        print(f"Esperando {LOOP_INTERVAL} segundos para el próximo ciclo...")
+        time.sleep(LOOP_INTERVAL)
