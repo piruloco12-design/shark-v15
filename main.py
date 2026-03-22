@@ -27,7 +27,7 @@ def log_shutdown():
 def main():
     try:
         log_startup()
-        run_live_engine(interval_seconds=LOOP_INTERVAL)
+        run_live_engine()
 
     except KeyboardInterrupt:
         print("\nInterrupción manual detectada (CTRL+C)", flush=True)
