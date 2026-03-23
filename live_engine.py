@@ -22,6 +22,7 @@ from risk_management import calculate_trade_levels
 from final_decision_engine import evaluate_final_decision
 
 from ai_filter import evaluate_signal_quality
+from storage import init_db
 
 try:
     from trade_intelligence import evaluate_trade_context
@@ -119,7 +120,7 @@ def _send_startup_message():
         return
 
     msg = (
-        "🤖 SHARK V16 SNIPER INICIADO EN RENDER\n\n"
+        "🤖 SHARK V15 SNIPER INICIADO EN RENDER\n\n"
         f"Loop ejecutado correctamente.\n"
         f"Timeframe: {TIMEFRAME}\n"
         f"Loop: {LOOP_INTERVAL}s\n"
@@ -130,7 +131,7 @@ def _send_startup_message():
 
 def _send_cycle_ok():
     msg = (
-        "✅ SHARK V16 SNIPER ACTIVO\n"
+        "✅ SHARK V15 SNIPER ACTIVO\n"
         "Loop ejecutado correctamente.\n"
         f"Timeframe: {TIMEFRAME}\n"
         f"Loop: {LOOP_INTERVAL}s\n"
@@ -140,7 +141,7 @@ def _send_cycle_ok():
 
 
 def _send_error_message(text):
-    _safe_send_telegram(f"❌ ERROR SHARK V16\n\n{text}")
+    _safe_send_telegram(f"❌ ERROR SHARK V15\n\n{text}")
 
 
 def _send_trade_open_message(ticker, signal, trade_setup, capital_snapshot):
@@ -252,7 +253,7 @@ def _log(msg):
 # =========================================================
 
 def run_live_cycle():
-    _log("\n=== SHARK V16 SNIPER LIVE CYCLE ===")
+    _log("\n=== SHARK V15 SNIPER LIVE CYCLE ===")
     _log(f"Hora: {datetime.utcnow().isoformat()}")
 
     try:
@@ -353,7 +354,7 @@ def run_live_cycle():
             )
 
             # -------------------------------------------------
-            # FINAL DECISION V16
+            # FINAL DECISION
             # -------------------------------------------------
             final_result = evaluate_final_decision(
                 ai_result=ai_result,
@@ -423,8 +424,11 @@ def run_live_cycle():
 
 
 def run_live_engine():
+    # Inicializar base de datos (crea tablas si no existen)
+    init_db()
+
     print("=" * 50)
-    print("SHARK V16 SNIPER - INICIO")
+    print("SHARK V15 SNIPER - INICIO")
     print("=" * 50)
     print(f"Hora inicio: {datetime.utcnow().isoformat()}")
     print("Entorno: production")
