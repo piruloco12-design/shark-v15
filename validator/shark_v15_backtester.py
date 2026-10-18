@@ -196,9 +196,30 @@ def run_v16_backtest_single_asset(
                     should_close = True
 
             if should_close:
+                # CONTABILIDAD DE COSTES
+                #
+                # Antes el coste de entrada se restaba al capital al
+                # abrir y NUNCA entraba en el pnl del trade, mientras
+                # que el de salida sí. Como winrate, expectativa y
+                # profit factor se calculan sobre ese pnl, todas las
+                # estadísticas por trade omitían la mitad de los
+                # costes. Daba resultados imposibles: expectativa
+                # +0.06 con 37 trades y a la vez PnL total -13.84.
+                #
+                # Ahora:
+                #   capital  <- bruto - coste de salida
+                #              (el de entrada ya se cobró al abrir)
+                #   pnl      <- bruto - salida - entrada
+                #              (la economía real de la operación)
+                #
+                # Así la suma de los pnl cuadra con la variación de
+                # capital, y las estadísticas incluyen todo el coste.
+                pnl_bruto = pnl
                 exit_cost = exit_price * TRADING_COST_PCT * size
-                pnl -= exit_cost
-                capital += pnl
+                entry_cost = open_position.get("entry_cost", 0.0)
+
+                capital += pnl_bruto - exit_cost
+                pnl_neto = pnl_bruto - exit_cost - entry_cost
 
                 closed_trades.append({
                     "ticker": ticker,
@@ -206,7 +227,10 @@ def run_v16_backtest_single_asset(
                     "regime": open_position["regime"],
                     "entry": entry,
                     "exit": exit_price,
-                    "pnl": pnl,
+                    "pnl": pnl_neto,
+                    "pnl_bruto": pnl_bruto,
+                    "coste_entrada": entry_cost,
+                    "coste_salida": exit_cost,
                     "size": size,
                     "bars_held": i - open_position["bar_index"],
                     "timestamp": str(data.index[-1]),
@@ -299,6 +323,9 @@ def run_v16_backtest_single_asset(
                             "take_profit": trade_setup["take_profit"],
                             "position_size": trade_setup["position_size"],
                             "bar_index": i,
+                            # Se guarda para poder descontarlo del pnl
+                            # del trade al cerrarlo.
+                            "entry_cost": entry_cost,
                         }
                 else:
                     total_blocked += 1
@@ -497,6 +524,35 @@ def print_consolidated(results, label):
     print(f"  PF:          {pf:.2f}")
     print(f"  PnL total:   {total_pnl:+.2f}")
     print(f"  Peor DD:     {max_dd:.2f}")
+
+    # RECONCILIACIÓN
+    #
+    # La suma de los PnL de los trades cerrados tiene que cuadrar
+    # con la variación de capital. La única diferencia legítima son
+    # los costes de entrada de trades que seguían abiertos al
+    # terminar el periodo: ese coste ya se pagó pero no tiene trade
+    # cerrado al que asignarse.
+    #
+    # Esta comprobación existe porque sin ella se colaba un fallo
+    # que daba expectativa positiva con PnL total negativo.
+    suma_pnls = sum(all_pnls)
+    descuadre = abs(suma_pnls - total_pnl)
+    coste_medio = (
+        sum(t.get("coste_entrada", 0.0) for r in results for t in r["closed_trades"])
+        / len(all_pnls)
+    ) if all_pnls else 0.0
+    # Margen: un coste de entrada por activo, más redondeo.
+    margen = coste_medio * len(results) + 0.01
+
+    print(f"  {'-'*61}")
+    print(f"  Suma PnL trades:  {suma_pnls:+.2f}   (debe cuadrar con PnL total)")
+    if descuadre > margen:
+        print(f"  ❌ DESCUADRE DE {descuadre:.2f} — las estadísticas por trade")
+        print(f"     no son fiables. Revisar la contabilidad de costes.")
+    else:
+        print(f"  ✅ Cuadra (dif. {descuadre:.2f}, son costes de trades "
+              f"aún abiertos)")
+
     print(f"{'#'*65}\n")
 
     print("  VEREDICTO:")

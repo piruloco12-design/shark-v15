@@ -18,6 +18,47 @@ def _a_float(valor, defecto=0.0):
     return valor
 
 
+def _es_intradia(df):
+    """
+    ¿Son velas intradía o de un día o más?
+
+    Se deduce del espaciado entre velas en vez de pedir el
+    timeframe como parámetro, para no cambiar la firma de las
+    funciones ni los sitios que las llaman.
+
+    Hace falta porque el filtro de sesión solo tiene sentido
+    intradía. Las velas diarias de yfinance llevan marca de
+    medianoche, así que al convertirlas a hora de Nueva York dan
+    las 00:00, el filtro las clasificaba como OFF_HOURS y
+    bloqueaba el 100% de las señales. En un backtest diario de 15
+    años: 2222 señales, 0 operaciones.
+
+    Una vela diaria no está "dentro" de una sesión: ES la sesión
+    entera. Preguntarle en qué parte del día está no tiene
+    sentido.
+    """
+    if df is None or len(df) < 3:
+        # Sin datos para decidir, se asume intradía: es lo
+        # conservador, porque mantiene el filtro activo.
+        return True
+
+    if not isinstance(df.index, pd.DatetimeIndex):
+        return True
+
+    try:
+        diferencias = pd.Series(df.index[1:]) - pd.Series(df.index[:-1])
+        horas = diferencias.median().total_seconds() / 3600.0
+    except Exception:
+        return True
+
+    if not math.isfinite(horas) or horas <= 0:
+        return True
+
+    # 20h de margen: 30m y 1h quedan claramente por debajo,
+    # diario y semanal claramente por encima.
+    return horas < 20.0
+
+
 def classify_market_session(df):
     """
     Clasifica la sesión usando hora de New York.
@@ -28,6 +69,14 @@ def classify_market_session(df):
             "session": "UNKNOWN",
             "hour_et": None,
             "reason": "Sin datos"
+        }
+
+    # En diario o superior no hay sesión intradía que clasificar.
+    if not _es_intradia(df):
+        return {
+            "session": "VELA_DIARIA",
+            "hour_et": None,
+            "reason": "Vela de un día o más: la vela es la sesión completa"
         }
 
     ts = df.index[-1]
@@ -95,6 +144,15 @@ def evaluate_session_filter(df, regime):
 
     last = df.iloc[-1]
     adx = _a_float(last.get("adx", 0))
+
+    # En diario el filtro de sesión no aplica: no hay un "momento
+    # del día" en una vela que abarca el día entero.
+    if session == "VELA_DIARIA":
+        return {
+            "allow": True,
+            "session": session,
+            "reason": session_info["reason"]
+        }
 
     # FALLA CERRADA. Antes, una sesión UNKNOWN caía hasta el
     # "allow: True" del final: si la zona horaria no se podía

@@ -81,6 +81,7 @@ jobs:
           python tests/test_config.py    2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_arreglos.py  2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_historial.py 2>&1 | tail -5  | tee -a resultados/ultimo.md
+          python tests/test_costes.py    2>&1 | tail -12 | tee -a resultados/ultimo.md
           python tests/test_cooldown.py  2>&1 | tail -14 | tee -a resultados/ultimo.md
           { echo '```'; echo; } >> resultados/ultimo.md
 

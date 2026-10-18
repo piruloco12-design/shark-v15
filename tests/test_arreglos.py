@@ -282,6 +282,41 @@ if HAY_TZDATA:
 else:
     print("  OMITE sesion real (sin tzdata en este entorno)")
 
+# El filtro de sesion no aplica en diario: una vela diaria ES la
+# sesion completa. Antes bloqueaba el 100% de las senales diarias
+# porque yfinance las marca a medianoche -> OFF_HOURS.
+# En un backtest diario de 15 anos: 2222 senales, 0 operaciones.
+svi.ZONA_MERCADO = "US/Eastern" if HAY_TZDATA else TZ_EST
+
+
+def _velas(freq, n=300, hora="00:00"):
+    idx = pd.date_range(f"2020-01-02 {hora}", periods=n, freq=freq, tz=TZ_EST)
+    return pd.DataFrame({"Open": 100.0, "High": 101.0, "Low": 99.0,
+                         "Close": 100.0, "Volume": 10.0, "atr": 1.0,
+                         "adx": 25.0}, index=idx)
+
+
+diarias = _velas("1D")
+check("velas diarias se detectan como NO intradia",
+      svi._es_intradia(diarias) is False)
+r = svi.evaluate_session_filter(diarias, "TREND")
+check("diario a medianoche NO se bloquea por horario",
+      r["allow"] is True and r["session"] == "VELA_DIARIA", f"-> {r}")
+
+r = svi.evaluate_session_filter(_velas("1D", hora="09:30"), "TREND")
+check("diario con otra marca horaria tampoco se bloquea", r["allow"] is True)
+
+r = svi.evaluate_session_filter(_velas("7D"), "TREND")
+check("semanal tampoco se bloquea", r["allow"] is True)
+
+check("velas de 30m siguen siendo intradia",
+      svi._es_intradia(_velas("30min", hora="10:00")) is True)
+check("velas de 1h siguen siendo intradia",
+      svi._es_intradia(_velas("1h", hora="10:00")) is True)
+check("pocas velas -> se asume intradia (conservador)",
+      svi._es_intradia(_velas("1D", n=2)) is True)
+check("df vacio no explota", svi._es_intradia(None) is True)
+
 
 print("\n=== 8) config: cascada de providers ===")
 
