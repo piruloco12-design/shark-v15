@@ -1,0 +1,733 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SHARK V15 — Resultados</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0: #f4f4f1;
+    --surface-1: #fcfcfb;
+    --surface-2: #eeeeea;
+    --border:    #d8d8d2;
+    --text-1:    #0b0b0b;
+    --text-2:    #52514e;
+    --text-3:    #7a7975;
+    --s1: #2a78d6;
+    --s2: #eb6834;
+    --s3: #1baf7a;
+    --good:     #0ca30c;
+    --warning:  #fab219;
+    --serious:  #ec835a;
+    --critical: #d03b3b;
+    --grid: #e4e4df;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-0: #121211;
+      --surface-1: #1a1a19;
+      --surface-2: #232322;
+      --border:    #35352f;
+      --text-1:    #f0efec;
+      --text-2:    #c3c2b7;
+      --text-3:    #8e8d84;
+      --s1: #3987e5;
+      --s2: #d95926;
+      --s3: #199e70;
+      --grid: #2b2b28;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0: #121211;
+    --surface-1: #1a1a19;
+    --surface-2: #232322;
+    --border:    #35352f;
+    --text-1:    #f0efec;
+    --text-2:    #c3c2b7;
+    --text-3:    #8e8d84;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --grid: #2b2b28;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface-0);
+    color: var(--text-1);
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .envoltorio { max-width: 1080px; margin: 0 auto; padding: 32px 16px 80px; }
+
+  header { margin-bottom: 28px; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.015em; }
+  .sub { color: var(--text-2); font-size: 14px; margin: 0; }
+  .barra-sup { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+
+  button {
+    font: inherit; font-size: 13px; cursor: pointer;
+    background: var(--surface-1); color: var(--text-1);
+    border: 1px solid var(--border); border-radius: 7px;
+    padding: 6px 11px;
+  }
+  button:hover { background: var(--surface-2); }
+  button[aria-pressed="true"] { background: var(--text-1); color: var(--surface-1); border-color: var(--text-1); }
+
+  section { margin-top: 36px; }
+  h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text-3); margin: 0 0 14px; font-weight: 600;
+  }
+  .nota { color: var(--text-2); font-size: 13.5px; margin: 0 0 16px; max-width: 72ch; }
+
+  .tarjeta {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 11px; padding: 18px 20px;
+  }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 11px; padding: 15px 17px; }
+  .tile .et { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 7px; }
+  .tile .num { font-size: 27px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .tile .pie { font-size: 12.5px; color: var(--text-2); margin-top: 5px; }
+
+  .veredicto { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 3px 9px; border-radius: 6px; border: 1px solid; }
+  .v-good     { color: var(--good);     border-color: var(--good);     background: color-mix(in srgb, var(--good) 9%, transparent); }
+  .v-critical { color: var(--critical); border-color: var(--critical); background: color-mix(in srgb, var(--critical) 9%, transparent); }
+  .v-warning  { color: var(--text-1);   border-color: var(--warning);  background: color-mix(in srgb, var(--warning) 16%, transparent); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 7px 9px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; white-space: normal; }
+  th { color: var(--text-3); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  tbody tr:hover { background: var(--surface-2); }
+  .pos { color: var(--good); } .neg { color: var(--critical); }
+  .envtabla { overflow-x: auto; }
+
+  svg { display: block; max-width: 100%; overflow: visible; }
+  .eje { stroke: var(--border); stroke-width: 1; }
+  .rejilla { stroke: var(--grid); stroke-width: 1; }
+  .txt-eje { fill: var(--text-3); font-size: 11px; }
+  .txt-val { fill: var(--text-1); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .txt-cat { fill: var(--text-2); font-size: 12px; }
+  .cero { stroke: var(--text-2); stroke-width: 1.5; stroke-dasharray: 4 3; }
+
+  .leyenda { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-2); margin-bottom: 12px; }
+  .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .pastilla { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+
+  pre {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px;
+    padding: 14px; overflow-x: auto; font-size: 11.5px; line-height: 1.45;
+    color: var(--text-2); max-height: 420px; overflow-y: auto;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; font-size: 13px; color: var(--text-2); padding: 5px 0; }
+  summary:hover { color: var(--text-1); }
+
+  .aviso { border-left: 3px solid var(--critical); padding: 13px 16px; background: color-mix(in srgb, var(--critical) 6%, var(--surface-1)); border-radius: 0 9px 9px 0; font-size: 14px; }
+  .aviso strong { color: var(--critical); }
+  .vacio { color: var(--text-3); font-size: 13.5px; font-style: italic; padding: 16px 0; }
+
+  #sv { position: fixed; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px; font-size: 12.5px; pointer-events: none; opacity: 0; transition: opacity .1s; box-shadow: 0 6px 20px rgba(0,0,0,.14); z-index: 50; max-width: 260px; }
+  #sv .t { font-weight: 650; margin-bottom: 3px; }
+  #sv .r { color: var(--text-2); font-variant-numeric: tabular-nums; }
+  @media (max-width: 560px) { h1 { font-size: 21px; } .tile .num { font-size: 23px; } }
+</style>
+</head>
+<body>
+<div id="sv"></div>
+<div class="envoltorio">
+
+<header>
+  <div class="barra-sup">
+    <div>
+      <h1>SHARK V15 — Resultados medidos</h1>
+      <p class="sub" id="pie-gen"></p>
+    </div>
+    <div style="display:flex;gap:7px">
+      <button id="btn-tablas" aria-pressed="false">Ver tablas</button>
+      <button id="btn-tema">Tema</button>
+    </div>
+  </div>
+</header>
+
+<div class="aviso" id="aviso-top"></div>
+
+<section id="s-tiles"><h2>Resumen</h2><div class="tiles" id="tiles"></div></section>
+
+<section id="s-clases">
+  <h2>Por clase de activo</h2>
+  <p class="nota">Las mismas reglas aplicadas a cinco clases distintas, sobre
+  histórico diario. La referencia honesta es comprar y mantener: si el bot no
+  la bate, no aporta nada salvo riesgo y trabajo.</p>
+  <div id="clases"></div>
+</section>
+
+<section id="s-intervalos">
+  <h2>¿Significa algo? Intervalos de confianza</h2>
+  <p class="nota">Cada punto es la expectativa medida por operación; la barra es
+  el intervalo del 90% del bootstrap. <strong>Si la barra cruza el cero, el
+  resultado no distingue la estrategia de una moneda.</strong> Si queda entera a
+  un lado, es concluyente en ese lado.</p>
+  <div id="intervalos"></div>
+</section>
+
+<section id="s-universo">
+  <h2>Universo y posiciones simultáneas</h2>
+  <p class="nota">Qué pasa al diversificar entre más instrumentos y al permitir
+  más posiciones abiertas a la vez.</p>
+  <div id="universo"></div>
+</section>
+
+<section id="s-barrido">
+  <h2>Barrido de stop y objetivo</h2>
+  <p class="nota">Expectativa por operación variando los múltiplos de ATR. Si la
+  configuración actual es un pico aislado, es sobreajuste. Si es una meseta
+  (los vecinos también funcionan), puede ser un efecto real.</p>
+  <div id="barrido"></div>
+</section>
+
+<section id="s-cuello">
+  <h2>Qué limita las operaciones</h2>
+  <p class="nota">Motivo por el que se descarta cada señal válida.</p>
+  <div id="cuello"></div>
+</section>
+
+<section id="s-crudo">
+  <h2>Salidas completas</h2>
+  <div id="crudo"></div>
+</section>
+
+</div>
+
+<script>
+const D = /*__DATOS__*/null;
+
+const $ = s => document.querySelector(s);
+const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+const nf = (v, d = 2) => (v == null || !isFinite(v)) ? "—" : v.toFixed(d);
+const sg = (v, d = 2) => (v == null || !isFinite(v)) ? "—" : (v >= 0 ? "+" : "") + v.toFixed(d);
+const cls = v => v == null ? "" : (v > 0 ? "pos" : v < 0 ? "neg" : "");
+
+/* ---------- tema ---------- */
+const temaGuardado = (() => { try { return localStorage.getItem("tema"); } catch (e) { return null; } })();
+if (temaGuardado) document.documentElement.dataset.theme = temaGuardado;
+$("#btn-tema").onclick = () => {
+  const oscuroAhora = document.documentElement.dataset.theme === "dark"
+    || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+  const nuevo = oscuroAhora ? "light" : "dark";
+  document.documentElement.dataset.theme = nuevo;
+  try { localStorage.setItem("tema", nuevo); } catch (e) {}
+  pintar();
+};
+
+/* ---------- vista de tabla (relieve de contraste + accesibilidad) ---------- */
+let verTablas = false;
+$("#btn-tablas").onclick = e => {
+  verTablas = !verTablas;
+  e.target.setAttribute("aria-pressed", String(verTablas));
+  e.target.textContent = verTablas ? "Ver gráficos" : "Ver tablas";
+  pintar();
+};
+
+/* ---------- tooltip ---------- */
+const sv = $("#sv");
+function conSombra(nodo, titulo, filas) {
+  nodo.style.cursor = "default";
+  nodo.addEventListener("mouseenter", ev => {
+    sv.innerHTML = "";
+    sv.appendChild(el("div", "t", titulo));
+    filas.forEach(f => sv.appendChild(el("div", "r", f)));
+    sv.style.opacity = "1";
+    mover(ev);
+  });
+  nodo.addEventListener("mousemove", mover);
+  nodo.addEventListener("mouseleave", () => { sv.style.opacity = "0"; });
+  function mover(ev) {
+    const m = 14;
+    let x = ev.clientX + m, y = ev.clientY + m;
+    const r = sv.getBoundingClientRect();
+    if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - m;
+    if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - m;
+    sv.style.left = x + "px"; sv.style.top = y + "px";
+  }
+}
+
+const SVGNS = "http://www.w3.org/2000/svg";
+const mk = (t, a = {}) => { const n = document.createElementNS(SVGNS, t); for (const k in a) n.setAttribute(k, a[k]); return n; };
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function tabla(contenedor, cabeceras, filas) {
+  const env = el("div", "envtabla");
+  const t = el("table");
+  const thead = el("thead"), tr = el("tr");
+  cabeceras.forEach(h => tr.appendChild(el("th", null, h)));
+  thead.appendChild(tr); t.appendChild(thead);
+  const tb = el("tbody");
+  filas.forEach(f => {
+    const r = el("tr");
+    f.forEach(c => {
+      const td = el("td");
+      if (c && typeof c === "object") { td.textContent = c.t; if (c.c) td.className = c.c; }
+      else td.textContent = c;
+      r.appendChild(td);
+    });
+    tb.appendChild(r);
+  });
+  t.appendChild(tb); env.appendChild(t); contenedor.appendChild(env);
+}
+
+function vacio(contenedor, msg) {
+  contenedor.appendChild(el("p", "vacio", msg));
+}
+
+/* ======================= barras horizontales ======================= */
+function barras(contenedor, items, opc = {}) {
+  // items: [{etiqueta, valor, color?, sombra:[]}]
+  const H = 30, pad = { t: 14, r: 72, b: 30, l: 180 };
+  const W = Math.min(contenedor.clientWidth || 900, 900);
+  const alto = pad.t + pad.b + items.length * H;
+  const anchoPlot = W - pad.l - pad.r;
+
+  const vals = items.map(d => d.valor).filter(v => isFinite(v));
+  let min = Math.min(0, ...vals), max = Math.max(0, ...vals);
+  const margen = (max - min) * 0.08 || 1;
+  min -= margen; max += margen;
+  const x = v => pad.l + (v - min) / (max - min) * anchoPlot;
+
+  const svg = mk("svg", { width: W, height: alto, viewBox: `0 0 ${W} ${alto}`, role: "img" });
+  svg.appendChild(mk("title", {})).textContent = opc.titulo || "";
+
+  // rejilla
+  const pasos = 5;
+  for (let i = 0; i <= pasos; i++) {
+    const v = min + (max - min) * i / pasos;
+    svg.appendChild(mk("line", { class: "rejilla", x1: x(v), x2: x(v), y1: pad.t, y2: alto - pad.b }));
+    const tx = mk("text", { class: "txt-eje", x: x(v), y: alto - pad.b + 15, "text-anchor": "middle" });
+    tx.textContent = nf(v, opc.dec ?? 1) + (opc.sufijo || "");
+    svg.appendChild(tx);
+  }
+  // cero
+  if (min < 0 && max > 0) svg.appendChild(mk("line", { class: "cero", x1: x(0), x2: x(0), y1: pad.t, y2: alto - pad.b }));
+
+  items.forEach((d, i) => {
+    const yc = pad.t + i * H + H / 2;
+    const alt = 13;
+    const x0 = x(0), x1 = x(d.valor);
+    const izq = Math.min(x0, x1), ancho = Math.max(Math.abs(x1 - x0), 2);
+    const color = d.color || (d.valor >= 0 ? tok("--s1") : tok("--critical"));
+
+    const g = mk("g", {});
+    const r = mk("rect", { x: izq, y: yc - alt / 2, width: ancho, height: alt, rx: 4, fill: color });
+    g.appendChild(r);
+
+    const cat = mk("text", { class: "txt-cat", x: pad.l - 10, y: yc + 4, "text-anchor": "end" });
+    cat.textContent = d.etiqueta;
+    g.appendChild(cat);
+
+    // Etiqueta directa: ademas de informar, es el relieve de
+    // contraste que exige la paleta. Se coloca fuera de la barra,
+    // pero si al hacerlo se saldria del area de dibujo y pisaria
+    // el nombre de la categoria, se mete dentro de la barra.
+    const texto = sg(d.valor, opc.dec ?? 2) + (opc.sufijo || "");
+    const anchoAprox = texto.length * 6.6;
+    let lx, anclaje;
+    if (x1 >= x0) {
+      if (x1 + 7 + anchoAprox > W - 4) { lx = x1 - 7; anclaje = "end"; }
+      else { lx = x1 + 7; anclaje = "start"; }
+    } else {
+      if (x1 - 7 - anchoAprox < pad.l + 4) { lx = x1 + 7; anclaje = "start"; }
+      else { lx = x1 - 7; anclaje = "end"; }
+    }
+    const lv = mk("text", { class: "txt-val", x: lx, y: yc + 4, "text-anchor": anclaje });
+    lv.textContent = texto;
+    // Dentro de la barra el texto va sobre el color: se le pone
+    // un halo del color de fondo para que siga legible.
+    const dentro = (x1 >= x0) ? (anclaje === "end") : (anclaje === "start");
+    if (dentro) {
+      lv.setAttribute("paint-order", "stroke");
+      lv.setAttribute("stroke", "var(--surface-1)");
+      lv.setAttribute("stroke-width", "3");
+      lv.setAttribute("stroke-linejoin", "round");
+    }
+    g.appendChild(lv);
+
+    svg.appendChild(g);
+    conSombra(r, d.etiqueta, d.sombra || []);
+  });
+
+  contenedor.appendChild(svg);
+}
+
+/* ======================= intervalos (punto + barra) ======================= */
+function intervalos(contenedor, items) {
+  const H = 42, pad = { t: 18, r: 86, b: 34, l: 180 };
+  const W = Math.min(contenedor.clientWidth || 900, 900);
+  const alto = pad.t + pad.b + items.length * H;
+  const anchoPlot = W - pad.l - pad.r;
+
+  const todos = items.flatMap(d => [d.p05, d.p95, d.valor]).filter(isFinite);
+  let min = Math.min(0, ...todos), max = Math.max(0, ...todos);
+  const m = (max - min) * 0.12 || 0.1;
+  min -= m; max += m;
+  const x = v => pad.l + (v - min) / (max - min) * anchoPlot;
+
+  const svg = mk("svg", { width: W, height: alto, viewBox: `0 0 ${W} ${alto}`, role: "img" });
+
+  for (let i = 0; i <= 4; i++) {
+    const v = min + (max - min) * i / 4;
+    svg.appendChild(mk("line", { class: "rejilla", x1: x(v), x2: x(v), y1: pad.t, y2: alto - pad.b }));
+    const tx = mk("text", { class: "txt-eje", x: x(v), y: alto - pad.b + 15, "text-anchor": "middle" });
+    tx.textContent = nf(v, 2);
+    svg.appendChild(tx);
+  }
+
+  // linea del cero: el elemento mas importante del grafico
+  svg.appendChild(mk("line", { class: "cero", x1: x(0), x2: x(0), y1: pad.t - 6, y2: alto - pad.b + 4 }));
+  const et0 = mk("text", { class: "txt-eje", x: x(0), y: pad.t - 10, "text-anchor": "middle" });
+  et0.textContent = "cero";
+  svg.appendChild(et0);
+
+  items.forEach((d, i) => {
+    const yc = pad.t + i * H + H / 2;
+    const cruza = d.p05 <= 0 && d.p95 >= 0;
+    const color = cruza ? tok("--warning") : (d.p05 > 0 ? tok("--good") : tok("--critical"));
+
+    const g = mk("g", {});
+    g.appendChild(mk("line", { x1: x(d.p05), x2: x(d.p95), y1: yc, y2: yc, stroke: color, "stroke-width": 3, "stroke-linecap": "round" }));
+    [d.p05, d.p95].forEach(v => g.appendChild(mk("line", { x1: x(v), x2: x(v), y1: yc - 6, y2: yc + 6, stroke: color, "stroke-width": 2 })));
+    g.appendChild(mk("circle", { cx: x(d.valor), cy: yc, r: 5.5, fill: color, stroke: tok("--surface-1"), "stroke-width": 2 }));
+
+    const cat = mk("text", { class: "txt-cat", x: pad.l - 10, y: yc + 4, "text-anchor": "end" });
+    cat.textContent = d.etiqueta;
+    g.appendChild(cat);
+
+    const lv = mk("text", { class: "txt-val", x: W - pad.r + 10, y: yc + 4 });
+    lv.textContent = cruza ? "cruza cero" : (d.p05 > 0 ? "a favor" : "en contra");
+    lv.setAttribute("fill", color);
+    g.appendChild(lv);
+
+    svg.appendChild(g);
+    conSombra(g, d.etiqueta, [
+      `Expectativa: ${sg(d.valor, 4)} €/op`,
+      `Intervalo 90%: ${sg(d.p05, 4)} a ${sg(d.p95, 4)}`,
+      `P(expectativa > 0): ${nf(d.prob * 100, 1)}%`,
+      `${d.ops} operaciones`,
+      cruza ? "El cero esta dentro: no concluyente"
+            : (d.p05 > 0 ? "Intervalo entero a favor" : "Intervalo entero en contra"),
+    ]);
+  });
+
+  contenedor.appendChild(svg);
+}
+
+/* ======================= mapa de calor del barrido ======================= */
+function mapaCalor(contenedor, barrido) {
+  const sls = [...new Set(barrido.map(b => b.sl))].sort((a, b) => a - b);
+  const tps = [...new Set(barrido.map(b => b.tp))].sort((a, b) => a - b);
+  const celda = 62, pad = { t: 34, r: 14, b: 34, l: 54 };
+  const W = pad.l + pad.r + tps.length * celda;
+  const alto = pad.t + pad.b + sls.length * celda;
+
+  const vals = barrido.map(b => b.expectativa).filter(isFinite);
+  const amax = Math.max(...vals.map(Math.abs)) || 1;
+
+  const svg = mk("svg", { width: W, height: alto, viewBox: `0 0 ${W} ${alto}`, role: "img" });
+
+  const t1 = mk("text", { class: "txt-eje", x: pad.l + tps.length * celda / 2, y: 14, "text-anchor": "middle" });
+  t1.textContent = "TP (multiplos de ATR)";
+  svg.appendChild(t1);
+  const t2 = mk("text", { class: "txt-eje", x: 13, y: pad.t + sls.length * celda / 2,
+                          "text-anchor": "middle", transform: `rotate(-90 13 ${pad.t + sls.length * celda / 2})` });
+  t2.textContent = "SL (multiplos de ATR)";
+  svg.appendChild(t2);
+
+  tps.forEach((tp, j) => {
+    const tx = mk("text", { class: "txt-eje", x: pad.l + j * celda + celda / 2, y: pad.t - 8, "text-anchor": "middle" });
+    tx.textContent = tp; svg.appendChild(tx);
+  });
+  sls.forEach((sl, i) => {
+    const tx = mk("text", { class: "txt-eje", x: pad.l - 10, y: pad.t + i * celda + celda / 2 + 4, "text-anchor": "end" });
+    tx.textContent = sl; svg.appendChild(tx);
+  });
+
+  sls.forEach((sl, i) => tps.forEach((tp, j) => {
+    const b = barrido.find(x => x.sl === sl && x.tp === tp);
+    const X = pad.l + j * celda, Y = pad.t + i * celda;
+    const g = mk("g", {});
+    if (!b) {
+      g.appendChild(mk("rect", { x: X + 1, y: Y + 1, width: celda - 2, height: celda - 2, rx: 5, fill: tok("--surface-2") }));
+      svg.appendChild(g); return;
+    }
+    // diverging: azul positivo, rojo negativo, gris en el medio
+    const f = Math.abs(b.expectativa) / amax;
+    const base = b.expectativa >= 0 ? tok("--s1") : tok("--critical");
+    const r = mk("rect", {
+      x: X + 1, y: Y + 1, width: celda - 2, height: celda - 2, rx: 5,
+      fill: `color-mix(in srgb, ${base} ${Math.round(16 + f * 74)}%, var(--surface-1))`,
+      stroke: b.es_actual ? tok("--text-1") : "transparent",
+      "stroke-width": b.es_actual ? 2.5 : 0,
+    });
+    g.appendChild(r);
+    const tx = mk("text", { x: X + celda / 2, y: Y + celda / 2 + 1, "text-anchor": "middle",
+                            class: "txt-val", "font-size": "11.5" });
+    tx.textContent = sg(b.expectativa, 3);
+    g.appendChild(tx);
+    const tx2 = mk("text", { x: X + celda / 2, y: Y + celda / 2 + 15, "text-anchor": "middle", class: "txt-eje" });
+    tx2.textContent = "PF " + nf(b.pf, 2);
+    g.appendChild(tx2);
+    svg.appendChild(g);
+    conSombra(r, `SL ${sl} / TP ${tp}${b.es_actual ? "  (config actual)" : ""}`, [
+      `Expectativa: ${sg(b.expectativa, 4)} €/op`,
+      `Profit factor: ${nf(b.pf, 3)}`,
+      `Winrate: ${nf(b.winrate, 1)}%`,
+      `${b.operaciones} operaciones`,
+      `R:R = ${nf(tp / sl, 2)}`,
+    ]);
+  }));
+
+  contenedor.appendChild(svg);
+  const ley = el("div", "leyenda");
+  [["Expectativa positiva", tok("--s1")], ["Expectativa negativa", tok("--critical")]]
+    .forEach(([t, c]) => {
+      const s = el("span"); const p = el("span", "pastilla"); p.style.background = c;
+      s.appendChild(p); s.appendChild(document.createTextNode(t)); ley.appendChild(s);
+    });
+  const s = el("span");
+  s.textContent = "Borde negro = configuración actual";
+  ley.appendChild(s);
+  contenedor.appendChild(ley);
+}
+
+/* ======================= render ======================= */
+function pintar() {
+  if (!D) return;
+  $("#pie-gen").textContent = "Generado " + D.generado +
+    " · datos medidos, sin estimaciones";
+
+  /* --- aviso superior: el hallazgo principal --- */
+  const av = $("#aviso-top"); av.innerHTML = "";
+  const rv = (D.clases?.clases || []).find(c => c.clase === "renta_variable");
+  if (rv && rv.concluyente) {
+    av.innerHTML = `<strong>Resultado medido, no supuesto.</strong> Sobre ${rv.operaciones}
+      operaciones en ETFs de renta variable limpios de sesgo de supervivencia, la
+      expectativa es ${sg(rv.expectativa, 3)} € por operación y el intervalo del 90% va de
+      ${sg(rv.boot_p05, 3)} a ${sg(rv.boot_p95, 3)}. El universo de 4 activos de producción
+      (NVDA, AMZN, META) da positivo porque esos tickers se eligieron en 2026 sabiendo
+      cómo acabaron.`;
+  } else {
+    av.innerHTML = `<strong>Faltan datos.</strong> Lanza el workflow de validación o
+      ejecuta los validadores en local para rellenar este panel.`;
+  }
+
+  /* --- tiles --- */
+  const tl = $("#tiles"); tl.innerHTML = "";
+  function tile(etq, num, pie, veredicto) {
+    const t = el("div", "tile");
+    t.appendChild(el("div", "et", etq));
+    const n = el("div", "num", num);
+    if (veredicto) n.classList.add(veredicto);
+    t.appendChild(n);
+    if (pie) t.appendChild(el("div", "pie", pie));
+    tl.appendChild(t);
+  }
+  const clases = D.clases?.clases || [];
+  const concl = clases.filter(c => c.concluyente);
+  const pasan = concl.filter(c => c.pasa_criterio);
+  const contra = concl.filter(c => c.concluyente_en_contra);
+  const totOps = concl.reduce((a, c) => a + c.operaciones, 0);
+
+  if (concl.length) {
+    tile("Operaciones analizadas", totOps.toLocaleString("es"),
+         `${concl.length} clases de activo, histórico diario`);
+    tile("Clases que pasan el criterio", `${pasan.length} / ${concl.length}`,
+         "Intervalo entero sobre cero y bate comprar y mantener",
+         pasan.length ? "pos" : "neg");
+    tile("Clases concluyentes en contra", `${contra.length} / ${concl.length}`,
+         "Intervalo del 90% entero por debajo de cero",
+         contra.length ? "neg" : "");
+  }
+  const r1 = D.robustez_1d;
+  if (r1?.bootstrap) {
+    tile("Expectativa (diario, 4 activos)", sg(r1.bootstrap.expectativa, 3) + " €",
+         `${r1.operaciones} ops · ${nf(r1.ops_anio, 0)}/año · sesgo de selección`,
+         cls(r1.bootstrap.expectativa));
+  }
+  if (!concl.length && !r1) vacio(tl, "Sin datos todavía.");
+
+  /* --- clases --- */
+  const cc = $("#clases"); cc.innerHTML = "";
+  if (!concl.length) {
+    vacio(cc, "Sin resultados por clase. Ejecuta validator/experimento_clases.py");
+  } else {
+    const ley = el("div", "leyenda");
+    [["Bot", tok("--s1")], ["Comprar y mantener", tok("--s2")]].forEach(([t, c]) => {
+      const s = el("span"); const p = el("span", "pastilla"); p.style.background = c;
+      s.appendChild(p); s.appendChild(document.createTextNode(t)); ley.appendChild(s);
+    });
+    cc.appendChild(ley);
+
+    const filas = concl.map(c => [
+      c.clase.replace(/_/g, " "),
+      c.activos, c.operaciones, nf(c.ops_anio, 1),
+      nf(c.winrate, 1) + "%",
+      { t: sg(c.expectativa, 4), c: cls(c.expectativa) },
+      nf(c.pf, 2),
+      { t: sg(c.rent_anual_pct, 2) + "%", c: cls(c.rent_anual_pct) },
+      { t: c.buy_hold_anual_pct == null ? "—" : sg(c.buy_hold_anual_pct, 2) + "%",
+        c: cls(c.buy_hold_anual_pct) },
+      nf(c.peor_dd, 1) + "%",
+      c.pasa_criterio ? "pasa" : c.concluyente_en_contra ? "en contra" : "no concluyente",
+    ]);
+
+    if (verTablas) {
+      tabla(cc, ["Clase", "Act", "Ops", "Ops/año", "WR", "Expect", "PF",
+                 "Anual bot", "Anual B&H", "Peor DD", "Veredicto"], filas);
+    } else {
+      const env = el("div", "tarjeta");
+      barras(env, concl.map(c => ({
+        etiqueta: c.clase.replace(/_/g, " "),
+        valor: c.rent_anual_pct,
+        sombra: [
+          `Bot: ${sg(c.rent_anual_pct, 2)}% anual`,
+          `Comprar y mantener: ${c.buy_hold_anual_pct == null ? "—" : sg(c.buy_hold_anual_pct, 2) + "%"}`,
+          `${c.operaciones} operaciones en ${nf(c.anios, 1)} años`,
+          `Winrate ${nf(c.winrate, 1)}% · PF ${nf(c.pf, 2)}`,
+          `Peor drawdown ${nf(c.peor_dd, 1)}%`,
+          c.nota || "",
+        ].filter(Boolean),
+      })), { sufijo: "%", dec: 2, titulo: "Rentabilidad anual del bot por clase" });
+      cc.appendChild(env);
+
+      const env2 = el("div", "tarjeta");
+      env2.style.marginTop = "12px";
+      const h = el("div", "nota", "Comparado con no hacer nada (comprar y mantener):");
+      env2.appendChild(h);
+      barras(env2, concl.map(c => ({
+        etiqueta: c.clase.replace(/_/g, " "),
+        valor: (c.rent_anual_pct || 0) - (c.buy_hold_anual_pct || 0),
+        color: ((c.rent_anual_pct || 0) - (c.buy_hold_anual_pct || 0)) >= 0 ? tok("--s3") : tok("--critical"),
+        sombra: [`Diferencia: ${sg((c.rent_anual_pct || 0) - (c.buy_hold_anual_pct || 0), 2)} puntos/año`,
+                 `Bot ${sg(c.rent_anual_pct, 2)}% vs B&H ${sg(c.buy_hold_anual_pct, 2)}%`],
+      })), { sufijo: " pp", dec: 2 });
+      cc.appendChild(env2);
+      tabla(cc, ["Clase", "Act", "Ops", "Ops/año", "WR", "Expect", "PF",
+                 "Anual bot", "Anual B&H", "Peor DD", "Veredicto"], filas);
+    }
+  }
+
+  /* --- intervalos --- */
+  const ic = $("#intervalos"); ic.innerHTML = "";
+  const its = [];
+  concl.forEach(c => its.push({
+    etiqueta: c.clase.replace(/_/g, " "), valor: c.expectativa,
+    p05: c.boot_p05, p95: c.boot_p95, prob: c.boot_prob_positiva, ops: c.operaciones,
+  }));
+  if (D.universo?.bootstrap) {
+    const b = D.universo.bootstrap;
+    its.push({ etiqueta: "universo diversificado", valor: b.expectativa,
+               p05: b.p05, p95: b.p95, prob: b.prob_positiva, ops: b.operaciones });
+  }
+  if (r1?.bootstrap) {
+    const b = r1.bootstrap;
+    its.push({ etiqueta: "4 activos producción (sesgo)", valor: b.expectativa,
+               p05: b.p05, p95: b.p95, prob: b.prob_positiva, ops: r1.operaciones });
+  }
+  if (!its.length) vacio(ic, "Sin intervalos calculados.");
+  else {
+    const env = el("div", "tarjeta");
+    if (!verTablas) intervalos(env, its);
+    tabla(env, ["Serie", "Ops", "Expectativa", "p05", "p95", "P(>0)", "Lectura"],
+      its.map(d => [d.etiqueta, d.ops,
+        { t: sg(d.valor, 4), c: cls(d.valor) },
+        sg(d.p05, 4), sg(d.p95, 4), nf(d.prob * 100, 1) + "%",
+        (d.p05 <= 0 && d.p95 >= 0) ? "cruza cero" : (d.p05 > 0 ? "a favor" : "en contra")]));
+    ic.appendChild(env);
+  }
+
+  /* --- universo --- */
+  const uc = $("#universo"); uc.innerHTML = "";
+  const cfgs = D.universo?.configuraciones || [];
+  if (!cfgs.length) vacio(uc, "Sin datos de universo. Ejecuta validator/experimento_universo.py");
+  else {
+    const env = el("div", "tarjeta");
+    if (!verTablas) barras(env, cfgs.map(c => ({
+      etiqueta: c.nombre, valor: c.rent_anual_pct,
+      sombra: [`${c.activos} activos · ${c.huecos} huecos · riesgo ${nf(c.riesgo_pct * 100, 2)}%`,
+               `${c.operaciones} ops (${nf(c.ops_anio, 1)}/año)`,
+               `Expectativa ${sg(c.expectativa, 4)} · PF ${nf(c.pf, 2)}`,
+               `Peor drawdown ${nf(c.peor_dd, 1)}%`],
+    })), { sufijo: "%", dec: 2 });
+    tabla(env, ["Configuración", "Act", "Huecos", "Riesgo", "Ops", "Ops/año",
+                "WR", "Expect", "PF", "Anual", "Peor DD"],
+      cfgs.map(c => [c.nombre, c.activos, c.huecos, nf(c.riesgo_pct * 100, 2) + "%",
+        c.operaciones, nf(c.ops_anio, 1), nf(c.winrate, 1) + "%",
+        { t: sg(c.expectativa, 4), c: cls(c.expectativa) }, nf(c.pf, 2),
+        { t: sg(c.rent_anual_pct, 2) + "%", c: cls(c.rent_anual_pct) },
+        nf(c.peor_dd, 1) + "%"]));
+    uc.appendChild(env);
+  }
+
+  /* --- barrido --- */
+  const bc = $("#barrido"); bc.innerHTML = "";
+  const bar = r1?.barrido || D.robustez_30m?.barrido || [];
+  if (!bar.length) vacio(bc, "Sin barrido. Ejecuta validator/robustez.py");
+  else {
+    const env = el("div", "tarjeta");
+    if (!verTablas) mapaCalor(env, bar);
+    tabla(env, ["SL", "TP", "R:R", "Ops", "WR", "Expectativa", "PF"],
+      [...bar].sort((a, b) => b.expectativa - a.expectativa).map(b => [
+        b.sl + (b.es_actual ? "  (actual)" : ""), b.tp, nf(b.tp / b.sl, 2),
+        b.operaciones, nf(b.winrate, 1) + "%",
+        { t: sg(b.expectativa, 4), c: cls(b.expectativa) }, nf(b.pf, 2)]));
+    bc.appendChild(env);
+  }
+
+  /* --- cuello de botella --- */
+  const qc = $("#cuello"); qc.innerHTML = "";
+  const cb = D.universo?.cuello_botella || [];
+  if (!cb.length) vacio(qc, "Sin datos de bloqueos.");
+  else {
+    const env = el("div", "tarjeta");
+    if (!verTablas) barras(env, cb.slice(0, 7).map(c => ({
+      etiqueta: c.motivo.length > 44 ? c.motivo.slice(0, 44) + "…" : c.motivo,
+      valor: c.pct_senales, color: tok("--s2"),
+      sombra: [c.motivo, `${c.veces} veces`, `${nf(c.pct_senales, 1)}% de las señales`],
+    })), { sufijo: "%", dec: 1 });
+    tabla(env, ["Motivo del bloqueo", "Veces", "% de señales"],
+      cb.map(c => [c.motivo, c.veces, nf(c.pct_senales, 1) + "%"]));
+    qc.appendChild(env);
+  }
+
+  /* --- crudo --- */
+  const rc = $("#crudo"); rc.innerHTML = "";
+  const nombres = { proveedores: "Prueba de proveedores de datos",
+                    clases: "Experimento por clase de activo",
+                    universo: "Experimento de universo",
+                    backtest_diario: "Backtest diario",
+                    backtest_intradia: "Backtest intradía" };
+  let alguno = false;
+  for (const k in nombres) {
+    const txt = D.crudo?.[k];
+    if (!txt) continue;
+    alguno = true;
+    const d = el("details");
+    d.appendChild(el("summary", null, nombres[k]));
+    d.appendChild(el("pre", null, txt));
+    rc.appendChild(d);
+  }
+  if (!alguno) vacio(rc, "Sin salidas crudas.");
+}
+
+pintar();
+addEventListener("resize", () => { clearTimeout(window.__t); window.__t = setTimeout(pintar, 180); });
+</script>
+</body>
+</html>

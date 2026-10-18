@@ -233,12 +233,88 @@ jobs:
             echo
           } >> resultados/ultimo.md
 
+      - name: Prueba de proveedores de datos
+        if: always()
+        run: |
+          python - <<'PY' 2>&1 | tee resultados/proveedores.txt
+          import data_feed, config
+          print("PRUEBA DE PROVEEDORES — cada uno por separado")
+          print(f"Cascada por defecto: {config.DATA_PROVIDER_ORDER}")
+          print()
+          pruebas = [
+              ("yfinance", "SPY",     "1d"),
+              ("stooq",    "SPY",     "1d"),
+              ("yfinance", "BTC-USD", "1d"),
+              ("coinbase", "BTC-USD", "1d"),
+              ("stooq",    "GLD",     "1d"),
+          ]
+          for prov, ticker, tf in pruebas:
+              data_feed.DATA_PROVIDER_ORDER = [prov]
+              try:
+                  df, usado = data_feed.get_data(ticker, tf, "15y")
+                  print(f"  OK    {prov:10} {ticker:9} {len(df):6} velas  "
+                        f"{df.index[0].date()} -> {df.index[-1].date()}")
+              except Exception as e:
+                  print(f"  FALLA {prov:10} {ticker:9} {type(e).__name__}: {str(e)[:70]}")
+
+          # Cruce de fuentes: si dos fuentes independientes no
+          # coinciden, una de las dos trae datos malos.
+          print()
+          print("CRUCE yfinance vs stooq en SPY (ultimos cierres comunes)")
+          try:
+              data_feed.DATA_PROVIDER_ORDER = ["yfinance"]
+              a, _ = data_feed.get_data("SPY", "1d", "5y")
+              data_feed.DATA_PROVIDER_ORDER = ["stooq"]
+              b, _ = data_feed.get_data("SPY", "1d", "5y")
+              comun = a.index.normalize().intersection(b.index.normalize())
+              print(f"  dias comunes: {len(comun)}")
+              if len(comun) > 10:
+                  import pandas as pd
+                  aa = a.copy(); aa.index = aa.index.normalize()
+                  bb = b.copy(); bb.index = bb.index.normalize()
+                  dif = (aa.loc[comun, "Close"] - bb.loc[comun, "Close"]).abs()
+                  rel = (dif / aa.loc[comun, "Close"] * 100)
+                  print(f"  diferencia media: {rel.mean():.4f}%")
+                  print(f"  diferencia maxima: {rel.max():.4f}%")
+                  if rel.max() > 2.0:
+                      print("  AVISO: discrepancia mayor del 2%: revisar")
+                  else:
+                      print("  Las dos fuentes concuerdan")
+          except Exception as e:
+              print(f"  no se pudo cruzar: {type(e).__name__}: {e}")
+          PY
+          {
+            echo '## Proveedores de datos'
+            echo '```'
+            cat resultados/proveedores.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
+      - name: Experimento por clase de activo
+        if: ${{ always() && github.event.inputs.historico_largo != 'false' }}
+        run: |
+          set -o pipefail
+          python validator/experimento_clases.py 2>&1 | tee resultados/experimento_clases.txt
+          {
+            echo '## Experimento por clase de activo'
+            echo '```'
+            cat resultados/experimento_clases.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
+      - name: Generar dashboard
+        if: always()
+        run: |
+          python dashboard/generar.py 2>&1 | tail -20
+
       - name: Guardar resultados en el repositorio
         if: always()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add -f resultados/
+          git add -f resultados/ dashboard/index.html
           if git diff --cached --quiet; then
             echo "Sin cambios en resultados/"
             exit 0

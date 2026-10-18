@@ -46,6 +46,7 @@ USO
     TIMEFRAME=1d PERIOD=15y python validator/robustez.py
 """
 
+import json
 import os
 import random
 import sys
@@ -312,7 +313,11 @@ def barrido_parametros(datos):
     return resultados
 
 
+BARRIDO = []
+
+
 def interpretar_barrido(resultados):
+    BARRIDO.extend(resultados)
     if not resultados:
         return
 
@@ -570,6 +575,37 @@ def main():
     interpretar_barrido(barrido_parametros(datos))
 
     informe_economia(pnls, boot, datos)
+
+    mc = montecarlo_drawdown(pnls)
+    velas_max = max(len(df) for df in datos.values())
+    anios = (velas_max / 252.0 if TIMEFRAME in ["1d", "1wk", "1mo"]
+             else velas_max / (13.0 if TIMEFRAME == "30m" else 6.5) / 252.0)
+
+    ruta = os.getenv(
+        "SALIDA_JSON_ROBUSTEZ",
+        f"resultados/robustez_{TIMEFRAME}.json")
+    os.makedirs(os.path.dirname(ruta) or ".", exist_ok=True)
+    with open(ruta, "w", encoding="utf-8") as f:
+        json.dump({
+            "timeframe": TIMEFRAME,
+            "periodo": PERIOD,
+            "activos": sorted(datos.keys()),
+            "capital": CAPITAL,
+            "riesgo_pct": RISK_PER_TRADE,
+            "sl_mult": SL_ATR_MULT,
+            "tp_mult": TP_ATR_MULT,
+            "anios": anios,
+            "operaciones": len(pnls),
+            "ops_anio": len(pnls) / anios if anios > 0 else 0,
+            "bootstrap": {
+                "expectativa": boot["expectativa_real"],
+                "p05": boot["p05"], "p50": boot["p50"], "p95": boot["p95"],
+                "prob_positiva": boot["prob_positiva"],
+            } if boot else None,
+            "montecarlo": mc,
+            "barrido": BARRIDO,
+        }, f, indent=2, ensure_ascii=False, default=float)
+    print(f"\nJSON escrito en {ruta}")
 
     print("\n" + "=" * 62)
     return 0

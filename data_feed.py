@@ -65,6 +65,32 @@ FINNHUB_RESOLUTION_MAP = {
     "1d": "D",
 }
 
+# Stooq: gratis, sin clave, decadas de historico diario, e
+# independiente de Yahoo. Importa porque yfinance se rompio en
+# febrero de 2025 cuando Yahoo rediseno la web: depender de un
+# solo raspador es un punto unico de fallo.
+STOOQ_INTERVAL_MAP = {
+    "5m": "5",
+    "60m": "60",
+    "1h": "60",
+    "1d": "d",
+    "1wk": "w",
+    "1mo": "m",
+}
+
+# Coinbase Exchange: gratis, sin clave, historico profundo de
+# cripto en cualquier timeframe. 300 velas por peticion, asi que
+# hay que paginar.
+COINBASE_GRANULARIDAD = {
+    "1m": 60,
+    "5m": 300,
+    "15m": 900,
+    "60m": 3600,
+    "1h": 3600,
+    "6h": 21600,
+    "1d": 86400,
+}
+
 POLYGON_TIMESPAN_MAP = {
     "1m": (1, "minute"),
     "5m": (5, "minute"),
@@ -242,6 +268,131 @@ def _polygon_download(symbol: str, timeframe: str, period: str):
     df = pd.DataFrame(rows).set_index("Datetime")
     df = _recortar_a_rth(df, timeframe)
     return _normalize_df(df), "polygon"
+
+
+def _sufijo_stooq(symbol: str) -> str:
+    """
+    Stooq usa sufijos: .us para valores de EEUU, ^ para indices,
+    .f para futuros. Si el simbolo ya trae sufijo o prefijo, se
+    respeta tal cual.
+    """
+    s = symbol.strip().lower()
+    if s.startswith("^") or "." in s:
+        return s
+    return f"{s}.us"
+
+
+def _stooq_download(symbol: str, timeframe: str, period: str):
+    intervalo = STOOQ_INTERVAL_MAP.get(timeframe)
+    if intervalo is None:
+        raise ValueError(f"Timeframe no soportado en Stooq: {timeframe}")
+
+    url = "https://stooq.com/q/d/l/"
+    params = {"s": _sufijo_stooq(symbol), "i": intervalo}
+
+    respuesta = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
+    respuesta.raise_for_status()
+
+    texto = respuesta.text.strip()
+
+    # Stooq devuelve 200 con cuerpo de texto cuando no hay datos.
+    if not texto or texto.lower().startswith("no data") or "<" in texto[:1]:
+        raise ValueError(f"Stooq sin datos para {symbol}: {texto[:120]}")
+
+    from io import StringIO
+    df = pd.read_csv(StringIO(texto))
+
+    if "Date" not in df.columns and "Datetime" not in df.columns:
+        raise ValueError(f"Stooq devolvio columnas inesperadas: {list(df.columns)}")
+
+    columna_fecha = "Date" if "Date" in df.columns else "Datetime"
+    df[columna_fecha] = pd.to_datetime(df[columna_fecha], errors="coerce", utc=True)
+    df = df.rename(columns={columna_fecha: "Datetime"}).set_index("Datetime")
+
+    # Recorte al periodo pedido: Stooq siempre manda todo.
+    inicio, _ = _period_to_date_range(period)
+    df = df[df.index >= pd.Timestamp(inicio, tz="UTC")]
+
+    df = _recortar_a_rth(df, timeframe)
+    return _normalize_df(df), "stooq"
+
+
+def _coinbase_download(symbol: str, timeframe: str, period: str):
+    """
+    Historico de cripto desde Coinbase Exchange. Gratis y sin
+    clave. Devuelve 300 velas por peticion, asi que se pagina
+    hacia atras hasta cubrir el periodo.
+
+    El simbolo va en formato Coinbase: BTC-USD, ETH-USD.
+    """
+    granularidad = COINBASE_GRANULARIDAD.get(timeframe)
+    if granularidad is None:
+        raise ValueError(f"Timeframe no soportado en Coinbase: {timeframe}")
+
+    par = symbol.strip().upper().replace("USDT", "USD")
+    if "-" not in par:
+        raise ValueError(
+            f"Coinbase necesita el par con guion (BTC-USD), recibido: {symbol}"
+        )
+
+    inicio_str, _ = _period_to_date_range(period)
+    inicio = pd.Timestamp(inicio_str, tz="UTC")
+    fin = pd.Timestamp.now(tz="UTC")
+
+    url = f"https://api.exchange.coinbase.com/products/{par}/candles"
+    filas = []
+    cursor = fin
+    peticiones = 0
+    LIMITE_PETICIONES = 400   # tope de seguridad
+
+    while cursor > inicio and peticiones < LIMITE_PETICIONES:
+        desde = cursor - pd.Timedelta(seconds=granularidad * 300)
+        if desde < inicio:
+            desde = inicio
+
+        respuesta = requests.get(
+            url,
+            params={
+                "granularity": granularidad,
+                "start": desde.isoformat(),
+                "end": cursor.isoformat(),
+            },
+            timeout=REQUEST_TIMEOUT,
+        )
+        peticiones += 1
+
+        if respuesta.status_code == 429:
+            time.sleep(1.0)
+            continue
+
+        respuesta.raise_for_status()
+        lote = respuesta.json()
+
+        if not isinstance(lote, list) or not lote:
+            break
+
+        # Coinbase devuelve [time, low, high, open, close, volume]
+        for vela in lote:
+            filas.append({
+                "Datetime": pd.to_datetime(vela[0], unit="s", utc=True),
+                "Low": vela[1],
+                "High": vela[2],
+                "Open": vela[3],
+                "Close": vela[4],
+                "Volume": vela[5],
+            })
+
+        cursor = desde
+        time.sleep(0.12)   # cortesia con el limite de peticiones
+
+    if not filas:
+        raise ValueError(f"Coinbase sin datos para {par}")
+
+    df = pd.DataFrame(filas).set_index("Datetime")
+    df = df[~df.index.duplicated(keep="last")].sort_index()
+
+    # Cripto cotiza 24/7: aqui NO se recorta a horario de mercado.
+    return _normalize_df(df), "coinbase"
 
 
 def _yf_download(symbol: str, timeframe: str, period: str):
@@ -434,6 +585,12 @@ def get_data(symbol: str, timeframe: str = "1h", period: str = "6mo"):
 
             if provider == "yfinance":
                 return _yf_download(symbol, timeframe, period)
+
+            if provider == "stooq":
+                return _stooq_download(symbol, timeframe, period)
+
+            if provider == "coinbase":
+                return _coinbase_download(symbol, timeframe, period)
 
             if provider == "twelve_data":
                 return _twelve_data_download(symbol, timeframe, period)

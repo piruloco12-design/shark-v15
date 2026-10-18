@@ -39,6 +39,7 @@ USO
     python validator/experimento_universo.py
 """
 
+import json
 import os
 import sys
 
@@ -115,10 +116,27 @@ def cargar(tickers):
     return datos, fallos
 
 
+RECOGIDO = []
+
+
 def fila(nombre, r):
     if r is None or r["operaciones"] == 0:
         print(f"  {nombre:34} sin operaciones")
         return None
+
+    RECOGIDO.append({
+        "nombre": nombre,
+        "activos": r["activos"],
+        "huecos": r["max_abiertas"],
+        "riesgo_pct": r["riesgo_pct"],
+        "operaciones": r["operaciones"],
+        "ops_anio": r["ops_anio"],
+        "winrate": r["winrate"],
+        "expectativa": r["expectativa"],
+        "pf": r["pf"],
+        "rent_anual_pct": r["rent_anual_pct"],
+        "peor_dd": r["peor_dd"],
+    })
 
     print(f"  {nombre:34} {r['activos']:3}  {r['max_abiertas']:3}  "
           f"{r['riesgo_pct']*100:4.2f}%  {r['operaciones']:5}  "
@@ -297,6 +315,32 @@ def main():
         if mejor["rent_anual_pct"] > 0:
             cap = 12000 / (mejor["rent_anual_pct"] / 100)
             print(f"\n  Capital para 1.000 EUR/mes: {cap:>12,.0f} EUR")
+
+    # JSON para el dashboard: datos, no texto parseado.
+    salida = {
+        "configuraciones": RECOGIDO,
+        "cuello_botella": (
+            [{"motivo": m, "veces": v,
+              "pct_senales": v / max(mejor["senales"], 1) * 100}
+             for m, v in mejor["motivos"].most_common(8)]
+            if mejor else []
+        ),
+        "bootstrap": None,
+    }
+    if mejor and mejor["operaciones"] >= 30:
+        b = bootstrap_expectativa([t["pnl"] for t in mejor["cerradas"]], n=10000)
+        salida["bootstrap"] = {
+            "operaciones": b["n_operaciones"],
+            "expectativa": b["expectativa_real"],
+            "p05": b["p05"], "p95": b["p95"],
+            "prob_positiva": b["prob_positiva"],
+        }
+
+    ruta = os.getenv("SALIDA_JSON_UNIVERSO", "resultados/universo.json")
+    os.makedirs(os.path.dirname(ruta) or ".", exist_ok=True)
+    with open(ruta, "w", encoding="utf-8") as f:
+        json.dump(salida, f, indent=2, ensure_ascii=False)
+    print(f"\n  JSON escrito en {ruta}")
 
     print("=" * 70)
     return 0

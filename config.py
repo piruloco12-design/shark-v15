@@ -116,7 +116,10 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 
 PRIMARY_PROVIDER = _env("PRIMARY_PROVIDER", "yfinance").lower()
 
-_ORDEN_PROVIDERS_DEFECTO = "yfinance,finnhub,alpha_vantage,twelve_data"
+# stooq va detras de yfinance: gratis, sin clave, independiente
+# de Yahoo. Es el seguro contra que Yahoo vuelva a cambiar la
+# web y rompa yfinance, como paso en febrero de 2025.
+_ORDEN_PROVIDERS_DEFECTO = "yfinance,stooq,finnhub,alpha_vantage,twelve_data"
 
 DATA_PROVIDER_ORDER = [
     p.strip().lower()
@@ -219,7 +222,10 @@ if MIN_BARS < 220:
         "y por debajo de eso el bot deja de señalizar en silencio"
     )
 
-_PROVIDERS_VALIDOS = {"polygon", "yfinance", "finnhub", "alpha_vantage", "twelve_data"}
+_PROVIDERS_VALIDOS = {
+    "polygon", "yfinance", "stooq", "coinbase",
+    "finnhub", "alpha_vantage", "twelve_data",
+}
 
 _desconocidos = [p for p in DATA_PROVIDER_ORDER if p not in _PROVIDERS_VALIDOS]
 if _desconocidos:

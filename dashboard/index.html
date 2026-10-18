@@ -1,0 +1,712 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>SHARK V15 — Resultados</title>
+<style>
+  :root {
+    color-scheme: light;
+    --surface-0: #f4f4f1;
+    --surface-1: #fcfcfb;
+    --surface-2: #eeeeea;
+    --border:    #d8d8d2;
+    --text-1:    #0b0b0b;
+    --text-2:    #52514e;
+    --text-3:    #7a7975;
+    --s1: #2a78d6;
+    --s2: #eb6834;
+    --s3: #1baf7a;
+    --good:     #0ca30c;
+    --warning:  #fab219;
+    --serious:  #ec835a;
+    --critical: #d03b3b;
+    --grid: #e4e4df;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --surface-0: #121211;
+      --surface-1: #1a1a19;
+      --surface-2: #232322;
+      --border:    #35352f;
+      --text-1:    #f0efec;
+      --text-2:    #c3c2b7;
+      --text-3:    #8e8d84;
+      --s1: #3987e5;
+      --s2: #d95926;
+      --s3: #199e70;
+      --grid: #2b2b28;
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --surface-0: #121211;
+    --surface-1: #1a1a19;
+    --surface-2: #232322;
+    --border:    #35352f;
+    --text-1:    #f0efec;
+    --text-2:    #c3c2b7;
+    --text-3:    #8e8d84;
+    --s1: #3987e5;
+    --s2: #d95926;
+    --s3: #199e70;
+    --grid: #2b2b28;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--surface-0);
+    color: var(--text-1);
+    font: 15px/1.55 ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .envoltorio { max-width: 1080px; margin: 0 auto; padding: 32px 16px 80px; }
+
+  header { margin-bottom: 28px; }
+  h1 { font-size: 26px; margin: 0 0 4px; letter-spacing: -0.015em; }
+  .sub { color: var(--text-2); font-size: 14px; margin: 0; }
+  .barra-sup { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+
+  button {
+    font: inherit; font-size: 13px; cursor: pointer;
+    background: var(--surface-1); color: var(--text-1);
+    border: 1px solid var(--border); border-radius: 7px;
+    padding: 6px 11px;
+  }
+  button:hover { background: var(--surface-2); }
+  button[aria-pressed="true"] { background: var(--text-1); color: var(--surface-1); border-color: var(--text-1); }
+
+  section { margin-top: 36px; }
+  h2 {
+    font-size: 13px; text-transform: uppercase; letter-spacing: 0.07em;
+    color: var(--text-3); margin: 0 0 14px; font-weight: 600;
+  }
+  .nota { color: var(--text-2); font-size: 13.5px; margin: 0 0 16px; max-width: 72ch; }
+
+  .tarjeta {
+    background: var(--surface-1); border: 1px solid var(--border);
+    border-radius: 11px; padding: 18px 20px;
+  }
+
+  .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+  .tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 11px; padding: 15px 17px; }
+  .tile .et { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-3); margin-bottom: 7px; }
+  .tile .num { font-size: 27px; font-weight: 650; letter-spacing: -0.02em; font-variant-numeric: tabular-nums; line-height: 1.1; }
+  .tile .pie { font-size: 12.5px; color: var(--text-2); margin-top: 5px; }
+
+  .veredicto { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; font-weight: 600; padding: 3px 9px; border-radius: 6px; border: 1px solid; }
+  .v-good     { color: var(--good);     border-color: var(--good);     background: color-mix(in srgb, var(--good) 9%, transparent); }
+  .v-critical { color: var(--critical); border-color: var(--critical); background: color-mix(in srgb, var(--critical) 9%, transparent); }
+  .v-warning  { color: var(--text-1);   border-color: var(--warning);  background: color-mix(in srgb, var(--warning) 16%, transparent); }
+
+  table { border-collapse: collapse; width: 100%; font-size: 13.5px; font-variant-numeric: tabular-nums; }
+  th, td { text-align: right; padding: 7px 9px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; white-space: normal; }
+  th { color: var(--text-3); font-weight: 600; font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; }
+  tbody tr:hover { background: var(--surface-2); }
+  .pos { color: var(--good); } .neg { color: var(--critical); }
+  .envtabla { overflow-x: auto; }
+
+  svg { display: block; max-width: 100%; overflow: visible; }
+  .eje { stroke: var(--border); stroke-width: 1; }
+  .rejilla { stroke: var(--grid); stroke-width: 1; }
+  .txt-eje { fill: var(--text-3); font-size: 11px; }
+  .txt-val { fill: var(--text-1); font-size: 11.5px; font-weight: 600; font-variant-numeric: tabular-nums; }
+  .txt-cat { fill: var(--text-2); font-size: 12px; }
+  .cero { stroke: var(--text-2); stroke-width: 1.5; stroke-dasharray: 4 3; }
+
+  .leyenda { display: flex; gap: 16px; flex-wrap: wrap; font-size: 12.5px; color: var(--text-2); margin-bottom: 12px; }
+  .leyenda span { display: inline-flex; align-items: center; gap: 6px; }
+  .pastilla { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+
+  pre {
+    background: var(--surface-2); border: 1px solid var(--border); border-radius: 9px;
+    padding: 14px; overflow-x: auto; font-size: 11.5px; line-height: 1.45;
+    color: var(--text-2); max-height: 420px; overflow-y: auto;
+    font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  }
+  details { margin-top: 10px; }
+  summary { cursor: pointer; font-size: 13px; color: var(--text-2); padding: 5px 0; }
+  summary:hover { color: var(--text-1); }
+
+  .aviso { border-left: 3px solid var(--critical); padding: 13px 16px; background: color-mix(in srgb, var(--critical) 6%, var(--surface-1)); border-radius: 0 9px 9px 0; font-size: 14px; }
+  .aviso strong { color: var(--critical); }
+  .vacio { color: var(--text-3); font-size: 13.5px; font-style: italic; padding: 16px 0; }
+
+  #sv { position: fixed; background: var(--surface-1); border: 1px solid var(--border); border-radius: 8px; padding: 8px 11px; font-size: 12.5px; pointer-events: none; opacity: 0; transition: opacity .1s; box-shadow: 0 6px 20px rgba(0,0,0,.14); z-index: 50; max-width: 260px; }
+  #sv .t { font-weight: 650; margin-bottom: 3px; }
+  #sv .r { color: var(--text-2); font-variant-numeric: tabular-nums; }
+  @media (max-width: 560px) { h1 { font-size: 21px; } .tile .num { font-size: 23px; } }
+</style>
+</head>
+<body>
+<div id="sv"></div>
+<div class="envoltorio">
+
+<header>
+  <div class="barra-sup">
+    <div>
+      <h1>SHARK V15 — Resultados medidos</h1>
+      <p class="sub" id="pie-gen"></p>
+    </div>
+    <div style="display:flex;gap:7px">
+      <button id="btn-tablas" aria-pressed="false">Ver tablas</button>
+      <button id="btn-tema">Tema</button>
+    </div>
+  </div>
+</header>
+
+<div class="aviso" id="aviso-top"></div>
+
+<section id="s-tiles"><h2>Resumen</h2><div class="tiles" id="tiles"></div></section>
+
+<section id="s-clases">
+  <h2>Por clase de activo</h2>
+  <p class="nota">Las mismas reglas aplicadas a cinco clases distintas, sobre
+  histórico diario. La referencia honesta es comprar y mantener: si el bot no
+  la bate, no aporta nada salvo riesgo y trabajo.</p>
+  <div id="clases"></div>
+</section>
+
+<section id="s-intervalos">
+  <h2>¿Significa algo? Intervalos de confianza</h2>
+  <p class="nota">Cada punto es la expectativa medida por operación; la barra es
+  el intervalo del 90% del bootstrap. <strong>Si la barra cruza el cero, el
+  resultado no distingue la estrategia de una moneda.</strong> Si queda entera a
+  un lado, es concluyente en ese lado.</p>
+  <div id="intervalos"></div>
+</section>
+
+<section id="s-universo">
+  <h2>Universo y posiciones simultáneas</h2>
+  <p class="nota">Qué pasa al diversificar entre más instrumentos y al permitir
+  más posiciones abiertas a la vez.</p>
+  <div id="universo"></div>
+</section>
+
+<section id="s-barrido">
+  <h2>Barrido de stop y objetivo</h2>
+  <p class="nota">Expectativa por operación variando los múltiplos de ATR. Si la
+  configuración actual es un pico aislado, es sobreajuste. Si es una meseta
+  (los vecinos también funcionan), puede ser un efecto real.</p>
+  <div id="barrido"></div>
+</section>
+
+<section id="s-cuello">
+  <h2>Qué limita las operaciones</h2>
+  <p class="nota">Motivo por el que se descarta cada señal válida.</p>
+  <div id="cuello"></div>
+</section>
+
+<section id="s-crudo">
+  <h2>Salidas completas</h2>
+  <div id="crudo"></div>
+</section>
+
+</div>
+
+<script>
+const D = {"generado": "2026-10-18 14:35 UTC", "clases": null, "universo": null, "robustez_1d": null, "robustez_30m": null, "crudo": {"proveedores": null, "clases": null, "universo": "==============================================================================================================\nEXPERIMENTO DE UNIVERSO — ¿diversificar cambia la economía?\n==============================================================================================================\nTimeframe: 1d | Periodo: 15y | Capital: 1000 EUR\n\nDescargando universo de produccion...\n  4 de 4 activos\nDescargando universo limpio...\n  30 de 30 activos\n  de los cuales 14 son renta variable USA\n\n==============================================================================================================\n  CONFIGURACION                      ACT  HUE  RIESGO    OPS  OPS/AÑO    WR%   EXPECT     PF   ANUAL%     DD%\n==============================================================================================================\n\n  -- universo de produccion (con sesgo de seleccion) --\n  4 activos / 2 huecos (ACTUAL)        4    2  0.50%    407    28.7   49.6   +0.425   1.15    +1.11     8.7\n  4 activos / 4 huecos                 4    4  0.50%    496    34.9   48.4   +0.269   1.09    +0.86    13.1\n\n  -- universo limpio de ETFs --\n  30 ETFs / 2 huecos                  30    2  0.50%    615    43.3   44.9   -0.435   0.83    -2.19    35.6\n  30 ETFs / 6 huecos                  30    6  0.50%   1842   129.7   43.6   -0.376   0.79    -7.98    71.2\n  30 ETFs / 12 huecos                 30   12  0.50%   2966   208.8   43.1   -0.292   0.77   -13.16    88.0\n  30 ETFs / 20 huecos                 30   20  0.50%   3441   242.3   42.8   -0.265   0.78   -15.75    92.1\n\n  -- solo renta variable USA (universo homogeneo) --\n     (los umbrales del bot estan calibrados sobre acciones;\n      bonos y materias primas necesitarian reescalado)\n  14 ETFs accion / 2 huecos           14    2  0.50%    539    37.9   43.8   -0.365   0.86    -1.54    27.6\n  14 ETFs accion / 6 huecos           14    6  0.50%   1265    89.1   44.1   -0.304   0.87    -3.35    43.7\n  14 ETFs accion / 6 huecos / 0.25%   14    6  0.25%   1265    89.1   44.1   -0.163   0.88    -1.61    24.2\n\n  -- mismo numero de huecos, riesgo ajustado --\n     (mas posiciones a la vez = mas riesgo total;\n      bajar el riesgo por operacion lo compensa)\n  30 ETFs / 12 huecos / 0.25%         30   12  0.25%   2966   208.8   43.1   -0.210   0.78    -6.60    64.3\n  30 ETFs / 12 huecos / 1.0%          30   12  1.00%   2966   208.8   43.1   -0.332   0.75   -25.97    98.9\n==============================================================================================================\n\n======================================================================\n¿QUE ESTA LIMITANDO LAS OPERACIONES?\n======================================================================\n    1395x ( 39.2% de las señales)  Cuenta llena (6 posiciones)\n     461x ( 13.0% de las señales)  Cooldown por activo (6h)\n      81x (  2.3% de las señales)  Volatilidad no válida: Volatilidad demasiado comprimida\n       5x (  0.1% de las señales)  ADX insuficiente para sniper: 20.19 < 22.0 | Score final ins\n       5x (  0.1% de las señales)  ADX insuficiente para sniper: 20.46 < 22.0 | Score final ins\n       5x (  0.1% de las señales)  ADX insuficiente para sniper: 20.11 < 22.0 | Score final ins\n\n======================================================================\n¿EL RESULTADO DEL UNIVERSO LIMPIO ES SIGNIFICATIVO?\n======================================================================\n  Operaciones:            1265\n  Expectativa observada:  -0.3037 EUR\n  Intervalo 90%:          -0.5136  a  -0.0965\n  Prob. expectativa > 0:  0.9%\n\n  LECTURA: intervalo entero por DEBAJO de cero. Esto no es\n           incertidumbre: es un resultado concluyente en\n           contra. Con esta muestra, la estrategia pierde\n           dinero en este universo, y no por mala suerte.\n\n======================================================================\nVEREDICTO\n======================================================================\n  Config actual (4 activos / 2 huecos):\n    28.7 ops/año | +1.11% anual | DD 8.7%\n  Universo limpio diversificado:\n    89.1 ops/año | -3.35% anual | DD 43.7%\n\n  Operaciones por año: x3.1\n  La diversificacion NO mejoro la rentabilidad\n  (+1.11% -> -3.35%)\n  Si la ventaja no se mantiene fuera de los 4 activos\n  elegidos, probablemente venia de haberlos elegido.\n======================================================================\n", "backtest_diario": "\n=================================================================\n  SHARK V16 SNIPER — BACKTESTER FIEL\n  Usa la misma lógica que live_engine.py\n  Timeframe: 1d | Período: 15y\n  Capital: 1000.0 | Risk/trade: 0.005\n  Sniper mode: True | Min ADX: 22.0\n  Min AI Score: 50.0 | Min Context Score: 55.0\n  Min Final Score: 55.0\n  Trading cost total: 0.08%\n  Activos: ['IWM', 'NVDA', 'AMZN', 'META']\n=================================================================\n\nDescargando IWM...\n  OK | yfinance | 3772 velas\nDescargando NVDA...\n  OK | yfinance | 3772 velas\nDescargando AMZN...\n  OK | yfinance | 3772 velas\nDescargando META...\n  OK | yfinance | 3624 velas\n\n=================================================================\n  FASE 1: BACKTEST COMPLETO (todo el período)\n=================================================================\n\n============================================================\nIWM | FULL | Bars: 3572\n============================================================\nCapital:     1000.00 → 932.83  (-67.17)\nSeñales:     180 generadas | 104 ALLOW | 76 BLOCK\nTrades:      103 cerrados | 42 wins | 61 losses\nWinrate:     40.8%\nAvg Trade:   -0.65\nAvg Win:     5.89  |  Avg Loss: 5.15\nExpectancy:  -0.65 por trade\nPF:          0.79\nMax DD:      101.75 (10.2%)\nAvg Bars:    12 velas\nRegímenes:   {'TREND': 29, 'BULL_TREND': 38, 'BEAR_TREND': 36}\nSeñales:     {'BUY': 54, 'SELL': 49}\nBloqueos principales:\n    38x  Cooldown por activo (6h)\n    14x  Volatilidad no válida: Volatilidad demasiado comprimida\n     2x  ADX insuficiente para sniper: 21.78 < 22.0 | Score final insuficiente para sniper: 54.86 <\n     1x  ADX insuficiente para sniper: 20.09 < 22.0 | Score final insuficiente para sniper: 53.80 <\n     1x  ADX insuficiente para sniper: 21.29 < 22.0 | Score final insuficiente para sniper: 54.56 <\n\n============================================================\nNVDA | FULL | Bars: 3572\n============================================================\nCapital:     1000.00 → 1168.13  (+168.13)\nSeñales:     214 generadas | 136 ALLOW | 78 BLOCK\nTrades:      136 cerrados | 76 wins | 60 losses\nWinrate:     55.9%\nAvg Trade:   1.24\nAvg Win:     6.49  |  Avg Loss: 5.42\nExpectancy:  1.24 por trade\nPF:          1.52\nMax DD:      35.48 (3.5%)\nAvg Bars:    10 velas\nRegímenes:   {'BULL_TREND': 78, 'TREND': 34, 'BEAR_TREND': 24}\nSeñales:     {'BUY': 108, 'SELL': 28}\nBloqueos principales:\n    56x  Cooldown por activo (6h)\n     3x  Volatilidad no válida: Volatilidad demasiado comprimida\n     1x  ADX insuficiente para sniper: 21.94 < 22.0 | Score final insuficiente para sniper: 54.96 <\n     1x  ADX insuficiente para sniper: 21.59 < 22.0 | Score final insuficiente para sniper: 54.75 <\n     1x  ADX insuficiente para sniper: 20.79 < 22.0 | Score final insuficiente para sniper: 54.24 <\n\n============================================================\nAMZN | FULL | Bars: 3572\n============================================================\nCapital:     1000.00 → 1006.90  (+6.90)\nSeñales:     218 generadas | 131 ALLOW | 87 BLOCK\nTrades:      131 cerrados | 61 wins | 70 losses\nWinrate:     46.6%\nAvg Trade:   0.05\nAvg Win:     6.24  |  Avg Loss: 5.33\nExpectancy:  0.05 por trade\nPF:          1.02\nMax DD:      69.68 (7.0%)\nAvg Bars:    12 velas\nRegímenes:   {'BULL_TREND': 66, 'BEAR_TREND': 32, 'TREND': 33}\nSeñales:     {'BUY': 88, 'SELL': 43}\nBloqueos principales:\n    49x  Cooldown por activo (6h)\n    11x  Volatilidad no válida: Volatilidad demasiado comprimida\n     1x  ADX insuficiente para sniper: 20.18 < 22.0 | Score final insuficiente para sniper: 53.86 <\n     1x  ADX insuficiente para sniper: 20.15 < 22.0 | Score final insuficiente para sniper: 53.84 <\n     1x  ADX insuficiente para sniper: 20.87 < 22.0 | Score final insuficiente para sniper: 54.29 <\n\n============================================================\nMETA | FULL | Bars: 3424\n============================================================\nCapital:     1000.00 → 1035.71  (+35.71)\nSeñales:     182 generadas | 127 ALLOW | 55 BLOCK\nTrades:      126 cerrados | 61 wins | 65 losses\nWinrate:     48.4%\nAvg Trade:   0.28\nAvg Win:     6.19  |  Avg Loss: 5.26\nExpectancy:  0.28 por trade\nPF:          1.10\nMax DD:      60.29 (6.0%)\nAvg Bars:    12 velas\nRegímenes:   {'BULL_TREND': 74, 'BEAR_TREND': 31, 'TREND': 21}\nSeñales:     {'BUY': 93, 'SELL': 33}\nBloqueos principales:\n    41x  Cooldown por activo (6h)\n     2x  ADX insuficiente para sniper: 20.42 < 22.0 | Score final insuficiente para sniper: 54.01 <\n     1x  ADX insuficiente para sniper: 20.81 < 22.0 | Score final insuficiente para sniper: 54.26 <\n     1x  ADX insuficiente para sniper: 20.34 < 22.0 | Score final insuficiente para sniper: 53.96 <\n     1x  ADX insuficiente para sniper: 21.96 < 22.0 | Score final insuficiente para sniper: 54.97 <\n\n\n#################################################################\n  CONSOLIDADO FULL PERIOD — 4 activos\n#################################################################\n  Señales:     794 generadas | 498 ALLOW | 296 BLOCK\n  Trades:      496 cerrados | 240 wins | 256 losses\n  Winrate:     48.4%\n  Avg Trade:   0.29\n  Avg Win:     6.24  |  Avg Loss: 5.29\n  Expectancy:  0.29 por trade\n  PF:          1.11\n  PnL total:   +143.57\n  Peor DD:     101.75\n  -------------------------------------------------------------\n  Suma PnL trades:  +143.76   (debe cuadrar con PnL total)\n  ✅ Cuadra (dif. 0.20, son costes de trades aún abiertos)\n#################################################################\n\n  VEREDICTO:\n  🟡  Edge marginal. Positivo pero débil.\n\n\n=================================================================\n  FASE 2: WALK-FORWARD (70% train / 30% test)\n=================================================================\n\n--- IWM TRAIN ---\n  ============================================================\n  IWM | TRAIN | Bars: 2440\n  ============================================================\n  Capital:     1000.00 → 986.90  (-13.10)\n  Señales:     130 generadas | 75 ALLOW | 55 BLOCK\n  Trades:      75 cerrados | 34 wins | 41 losses\n  Winrate:     45.3%\n  Avg Trade:   -0.17\n  Avg Win:     5.94  |  Avg Loss: 5.25\n  Expectancy:  -0.17 por trade\n  PF:          0.94\n  Max DD:      56.62 (5.7%)\n  Avg Bars:    11 velas\n  Regímenes:   {'TREND': 19, 'BULL_TREND': 28, 'BEAR_TREND': 28}\n  Señales:     {'BUY': 40, 'SELL': 35}\n  Bloqueos principales:\n      28x  Cooldown por activo (6h)\n      14x  Volatilidad no válida: Volatilidad demasiado comprimida\n       1x  ADX insuficiente para sniper: 20.09 < 22.0 | Score final insuficiente para sniper: 53.80 <\n       1x  ADX insuficiente para sniper: 21.29 < 22.0 | Score final insuficiente para sniper: 54.56 <\n       1x  ADX insuficiente para sniper: 20.74 < 22.0 | Score final insuficiente para sniper: 54.21 <\n\n--- IWM TEST ---\n  ============================================================\n  IWM | TEST | Bars: 1132\n  ============================================================\n  Capital:     1000.00 → 945.21  (-54.79)\n  Señales:     50 generadas | 29 ALLOW | 21 BLOCK\n  Trades:      28 cerrados | 8 wins | 20 losses\n  Winrate:     28.6%\n  Avg Trade:   -1.95\n  Avg Win:     5.73  |  Avg Loss: 5.03\n  Expectancy:  -1.95 por trade\n  PF:          0.46\n  Max DD:      68.17 (6.8%)\n  Avg Bars:    13 velas\n  Regímenes:   {'TREND': 10, 'BEAR_TREND': 8, 'BULL_TREND': 10}\n  Señales:     {'SELL': 14, 'BUY': 14}\n  Bloqueos principales:\n      10x  Cooldown por activo (6h)\n       1x  ADX insuficiente para sniper: 21.62 < 22.0 | Score final insuficiente para sniper: 54.76 <\n       1x  ADX insuficiente para sniper: 20.92 < 22.0 | Score final insuficiente para sniper: 54.32 <\n       1x  ADX insuficiente para sniper: 20.38 < 22.0 | Score final insuficiente para sniper: 53.99 <\n       1x  ADX insuficiente para sniper: 20.19 < 22.0 | Score final insuficiente para sniper: 53.87 <\n\n--- NVDA TRAIN ---\n  ============================================================\n  NVDA | TRAIN | Bars: 2440\n  ============================================================\n  Capital:     1000.00 → 1082.41  (+82.41)\n  Señales:     154 generadas | 97 ALLOW | 57 BLOCK\n  Trades:      96 cerrados | 51 wins | 45 losses\n  Winrate:     53.1%\n  Avg Trade:   0.86\n  Avg Win:     6.28  |  Avg Loss: 5.29\n  Expectancy:  0.86 por trade\n  PF:          1.35\n  Max DD:      35.48 (3.5%)\n  Avg Bars:    10 velas\n  Regímenes:   {'BULL_TREND': 54, 'TREND': 23, 'BEAR_TREND': 19}\n  Señales:     {'BUY': 76, 'SELL': 20}\n  Bloqueos principales:\n      41x  Cooldown por activo (6h)\n       3x  Volatilidad no válida: Volatilidad demasiado comprimida\n       1x  ADX insuficiente para sniper: 21.94 < 22.0 | Score final insuficiente para sniper: 54.96 <\n       1x  ADX insuficiente para sniper: 21.59 < 22.0 | Score final insuficiente para sniper: 54.75 <\n       1x  ADX insuficiente para sniper: 20.79 < 22.0 | Score final insuficiente para sniper: 54.24 <\n\n--- NVDA TEST ---\n  ============================================================\n  NVDA | TEST | Bars: 1132\n  ============================================================\n  Capital:     1000.00 → 1067.08  (+67.08)\n  Señales:     63 generadas | 40 ALLOW | 23 BLOCK\n  Trades:      40 cerrados | 24 wins | 16 losses\n  Winrate:     60.0%\n  Avg Trade:   1.68\n  Avg Win:     6.33  |  Avg Loss: 5.30\n  Expectancy:  1.68 por trade\n  PF:          1.79\n  Max DD:      17.79 (1.8%)\n  Avg Bars:    9 velas\n  Regímenes:   {'BEAR_TREND': 6, 'BULL_TREND': 24, 'TREND': 10}\n  Señales:     {'SELL': 8, 'BUY': 32}\n  Bloqueos principales:\n      16x  Cooldown por activo (6h)\n       1x  ADX insuficiente para sniper: 20.01 < 22.0 | Score final insuficiente para sniper: 53.76 <\n       1x  ADX insuficiente para sniper: 20.82 < 22.0 | Score final insuficiente para sniper: 54.26 <\n       1x  ADX insuficiente para sniper: 20.90 < 22.0 | Score final insuficiente para sniper: 54.31 <\n       1x  ADX insuficiente para sniper: 20.41 < 22.0 | Score final insuficiente para sniper: 54.01 <\n\n--- AMZN TRAIN ---\n  ============================================================\n  AMZN | TRAIN | Bars: 2440\n  ============================================================\n  Capital:     1000.00 → 1017.29  (+17.29)\n  Señales:     164 generadas | 95 ALLOW | 69 BLOCK\n  Trades:      94 cerrados | 45 wins | 49 losses\n  Winrate:     47.9%\n  Avg Trade:   0.18\n  Avg Win:     6.24  |  Avg Loss: 5.38\n  Expectancy:  0.18 por trade\n  PF:          1.07\n  Max DD:      56.27 (5.6%)\n  Avg Bars:    12 velas\n  Regímenes:   {'BULL_TREND': 52, 'BEAR_TREND': 18, 'TREND': 24}\n  Señales:     {'BUY': 67, 'SELL': 27}\n  Bloqueos principales:\n      40x  Cooldown por activo (6h)\n       8x  Volatilidad no válida: Volatilidad demasiado comprimida\n       1x  ADX insuficiente para sniper: 20.18 < 22.0 | Score final insuficiente para sniper: 53.86 <\n       1x  ADX insuficiente para sniper: 20.15 < 22.0 | Score final insuficiente para sniper: 53.84 <\n       1x  ADX insuficiente para sniper: 20.87 < 22.0 | Score final insuficiente para sniper: 54.29 <\n\n--- AMZN TEST ---\n  ============================================================\n  AMZN | TEST | Bars: 1132\n  ============================================================\n  Capital:     1000.00 → 994.82  (-5.18)\n  Señales:     54 generadas | 36 ALLOW | 18 BLOCK\n  Trades:      36 cerrados | 16 wins | 20 losses\n  Winrate:     44.4%\n  Avg Trade:   -0.14\n  Avg Win:     6.15  |  Avg Loss: 5.18\n  Expectancy:  -0.14 por trade\n  PF:          0.95\n  Max DD:      35.22 (3.5%)\n  Avg Bars:    12 velas\n  Regímenes:   {'BEAR_TREND': 14, 'BULL_TREND': 14, 'TREND': 8}\n  Señales:     {'SELL': 16, 'BUY': 20}\n  Bloqueos principales:\n       9x  Cooldown por activo (6h)\n       3x  Volatilidad no válida: Volatilidad demasiado comprimida\n       1x  ADX insuficiente para sniper: 21.56 < 22.0 | Score final insuficiente para sniper: 54.72 <\n       1x  ADX insuficiente para sniper: 20.63 < 22.0 | Score final insuficiente para sniper: 54.14 <\n       1x  ADX insuficiente para sniper: 20.23 < 22.0 | Score final insuficiente para sniper: 53.89 <\n\n--- META TRAIN ---\n  ============================================================\n  META | TRAIN | Bars: 2336\n  ============================================================\n  Capital:     1000.00 → 997.78  (-2.22)\n  Señales:     119 generadas | 83 ALLOW | 36 BLOCK\n  Trades:      83 cerrados | 38 wins | 45 losses\n  Winrate:     45.8%\n  Avg Trade:   -0.03\n  Avg Win:     6.14  |  Avg Loss: 5.23\n  Expectancy:  -0.03 por trade\n  PF:          0.99\n  Max DD:      48.04 (4.8%)\n  Avg Bars:    12 velas\n  Regímenes:   {'BULL_TREND': 49, 'BEAR_TREND': 21, 'TREND': 13}\n  Señales:     {'BUY': 62, 'SELL': 21}\n  Bloqueos principales:\n      24x  Cooldown por activo (6h)\n       2x  ADX insuficiente para sniper: 20.42 < 22.0 | Score final insuficiente para sniper: 54.01 <\n       1x  ADX insuficiente para sniper: 20.81 < 22.0 | Score final insuficiente para sniper: 54.26 <\n       1x  ADX insuficiente para sniper: 20.34 < 22.0 | Score final insuficiente para sniper: 53.96 <\n       1x  ADX insuficiente para sniper: 21.96 < 22.0 | Score final insuficiente para sniper: 54.97 <\n\n--- META TEST ---\n  ============================================================\n  META | TEST | Bars: 1088\n  ============================================================\n  Capital:     1000.00 → 1038.02  (+38.02)\n  Señales:     63 generadas | 44 ALLOW | 19 BLOCK\n  Trades:      43 cerrados | 23 wins | 20 losses\n  Winrate:     53.5%\n  Avg Trade:   0.89\n  Avg Win:     6.28  |  Avg Loss: 5.32\n  Expectancy:  0.89 por trade\n  PF:          1.36\n  Max DD:      43.85 (4.4%)\n  Avg Bars:    13 velas\n  Regímenes:   {'BEAR_TREND': 10, 'BULL_TREND': 25, 'TREND': 8}\n  Señales:     {'SELL': 12, 'BUY': 31}\n  Bloqueos principales:\n      17x  Cooldown por activo (6h)\n       1x  ADX insuficiente para sniper: 20.71 < 22.0 | Score final insuficiente para sniper: 54.19 <\n       1x  ADX insuficiente para sniper: 21.91 < 22.0 | Score final insuficiente para sniper: 54.94 <\n\n\n#################################################################\n  CONSOLIDADO TRAIN (IN-SAMPLE) — 4 activos\n#################################################################\n  Señales:     567 generadas | 350 ALLOW | 217 BLOCK\n  Trades:      348 cerrados | 168 wins | 180 losses\n  Winrate:     48.3%\n  Avg Trade:   0.24\n  Avg Win:     6.17  |  Avg Loss: 5.29\n  Expectancy:  0.24 por trade\n  PF:          1.09\n  PnL total:   +84.38\n  Peor DD:     56.62\n  -------------------------------------------------------------\n  Suma PnL trades:  +84.47   (debe cuadrar con PnL total)\n  ✅ Cuadra (dif. 0.09, son costes de trades aún abiertos)\n#################################################################\n\n  VEREDICTO:\n  🟡  Edge marginal. Positivo pero débil.\n\n\n#################################################################\n  CONSOLIDADO TEST (OUT-OF-SAMPLE) — 4 activos\n#################################################################\n  Señales:     230 generadas | 149 ALLOW | 81 BLOCK\n  Trades:      147 cerrados | 71 wins | 76 losses\n  Winrate:     48.3%\n  Avg Trade:   0.31\n  Avg Win:     6.20  |  Avg Loss: 5.20\n  Expectancy:  0.31 por trade\n  PF:          1.11\n  PnL total:   +45.12\n  Peor DD:     68.17\n  -------------------------------------------------------------\n  Suma PnL trades:  +45.32   (debe cuadrar con PnL total)\n  ✅ Cuadra (dif. 0.20, son costes de trades aún abiertos)\n#################################################################\n\n  VEREDICTO:\n  🟡  Edge marginal. Positivo pero débil.\n\n\n=================================================================\n  COMPARACIÓN TRAIN vs TEST\n=================================================================\n\n  IWM:\n    TRAIN: 75 trades | WR 45.3% | PF 0.94 | Exp -0.17\n    TEST:  28 trades | WR 28.6% | PF 0.46 | Exp -1.95\n    ⚠️  Degradación significativa train→test\n\n  NVDA:\n    TRAIN: 96 trades | WR 53.1% | PF 1.35 | Exp 0.86\n    TEST:  40 trades | WR 60.0% | PF 1.79 | Exp 1.68\n    ✅  Consistente entre train y test\n\n  AMZN:\n    TRAIN: 94 trades | WR 47.9% | PF 1.07 | Exp 0.18\n    TEST:  36 trades | WR 44.4% | PF 0.95 | Exp -0.14\n    ✅  Consistente entre train y test\n\n  META:\n    TRAIN: 83 trades | WR 45.8% | PF 0.99 | Exp -0.03\n    TEST:  43 trades | WR 53.5% | PF 1.36 | Exp 0.89\n    ✅  Consistente entre train y test\n\n\n=================================================================\n  BACKTEST COMPLETO\n=================================================================\n\n", "backtest_intradia": "\n=================================================================\n  SHARK V16 SNIPER — BACKTESTER FIEL\n  Usa la misma lógica que live_engine.py\n  Timeframe: 30m | Período: 60d\n  Capital: 1000.0 | Risk/trade: 0.005\n  Sniper mode: True | Min ADX: 22.0\n  Min AI Score: 50.0 | Min Context Score: 55.0\n  Min Final Score: 55.0\n  Trading cost total: 0.08%\n  Activos: ['IWM', 'NVDA', 'AMZN', 'META']\n=================================================================\n\nDescargando IWM...\n  OK | yfinance | 780 velas\nDescargando NVDA...\n  OK | yfinance | 780 velas\nDescargando AMZN...\n  OK | yfinance | 780 velas\nDescargando META...\n  OK | yfinance | 780 velas\n\n=================================================================\n  FASE 1: BACKTEST COMPLETO (todo el período)\n=================================================================\n\n============================================================\nIWM | FULL | Bars: 580\n============================================================\nCapital:     1000.00 → 982.73  (-17.27)\nSeñales:     67 generadas | 14 ALLOW | 53 BLOCK\nTrades:      13 cerrados | 6 wins | 7 losses\nWinrate:     46.1%\nAvg Trade:   -1.28\nAvg Win:     4.74  |  Avg Loss: 6.44\nExpectancy:  -1.28 por trade\nPF:          0.63\nMax DD:      28.85 (2.9%)\nAvg Bars:    9 velas\nRegímenes:   {'BULL_TREND': 2, 'BEAR_TREND': 8, 'TREND': 3}\nSeñales:     {'BUY': 2, 'SELL': 11}\nBloqueos principales:\n    43x  Cooldown por activo (6h)\n     1x  ADX insuficiente para sniper: 21.64 < 22.0 | Score final insuficiente para sniper: 54.78 <\n     1x  ADX insuficiente para sniper: 21.41 < 22.0 | Score final insuficiente para sniper: 54.63 <\n     1x  ADX insuficiente para sniper: 20.47 < 22.0 | Score final insuficiente para sniper: 54.04 <\n     1x  ADX insuficiente para sniper: 20.26 < 22.0 | Score final insuficiente para sniper: 53.91 <\n\n============================================================\nNVDA | FULL | Bars: 580\n============================================================\nCapital:     1000.00 → 977.10  (-22.90)\nSeñales:     47 generadas | 19 ALLOW | 28 BLOCK\nTrades:      18 cerrados | 7 wins | 11 losses\nWinrate:     38.9%\nAvg Trade:   -1.26\nAvg Win:     5.44  |  Avg Loss: 5.52\nExpectancy:  -1.26 por trade\nPF:          0.63\nMax DD:      33.90 (3.4%)\nAvg Bars:    12 velas\nRegímenes:   {'BULL_TREND': 7, 'BEAR_TREND': 7, 'TREND': 4}\nSeñales:     {'BUY': 10, 'SELL': 8}\nBloqueos principales:\n    28x  Cooldown por activo (6h)\n\n============================================================\nAMZN | FULL | Bars: 580\n============================================================\nCapital:     1000.00 → 1025.87  (+25.87)\nSeñales:     84 generadas | 18 ALLOW | 66 BLOCK\nTrades:      17 cerrados | 11 wins | 6 losses\nWinrate:     64.7%\nAvg Trade:   1.54\nAvg Win:     5.58  |  Avg Loss: 5.86\nExpectancy:  1.54 por trade\nPF:          1.75\nMax DD:      14.72 (1.5%)\nAvg Bars:    13 velas\nRegímenes:   {'BEAR_TREND': 10, 'TREND': 4, 'BULL_TREND': 3}\nSeñales:     {'SELL': 12, 'BUY': 5}\nBloqueos principales:\n    66x  Cooldown por activo (6h)\n\n============================================================\nMETA | FULL | Bars: 580\n============================================================\nCapital:     1000.00 → 1012.71  (+12.71)\nSeñales:     66 generadas | 14 ALLOW | 52 BLOCK\nTrades:      14 cerrados | 8 wins | 6 losses\nWinrate:     57.1%\nAvg Trade:   0.91\nAvg Win:     5.79  |  Avg Loss: 5.60\nExpectancy:  0.91 por trade\nPF:          1.38\nMax DD:      22.82 (2.3%)\nAvg Bars:    17 velas\nRegímenes:   {'TREND': 3, 'BEAR_TREND': 2, 'BULL_TREND': 9}\nSeñales:     {'SELL': 4, 'BUY': 10}\nBloqueos principales:\n    52x  Cooldown por activo (6h)\n\n\n#################################################################\n  CONSOLIDADO FULL PERIOD — 4 activos\n#################################################################\n  Señales:     264 generadas | 65 ALLOW | 199 BLOCK\n  Trades:      62 cerrados | 32 wins | 30 losses\n  Winrate:     51.6%\n  Avg Trade:   -0.00\n  Avg Win:     5.45  |  Avg Loss: 5.82\n  Expectancy:  -0.00 por trade\n  PF:          1.00\n  PnL total:   -1.59\n  Peor DD:     33.90\n  -------------------------------------------------------------\n  Suma PnL trades:  -0.29   (debe cuadrar con PnL total)\n  ✅ Cuadra (dif. 1.30, son costes de trades aún abiertos)\n#################################################################\n\n  VEREDICTO:\n  ❌  NO HAY EDGE. Expectancy negativa.\n\n\n=================================================================\n  FASE 2: WALK-FORWARD (70% train / 30% test)\n=================================================================\n\n--- IWM TRAIN ---\n  ============================================================\n  IWM | TRAIN | Bars: 346\n  ============================================================\n  Capital:     1000.00 → 975.35  (-24.65)\n  Señales:     46 generadas | 9 ALLOW | 37 BLOCK\n  Trades:      9 cerrados | 3 wins | 6 losses\n  Winrate:     33.3%\n  Avg Trade:   -2.74\n  Avg Win:     4.77  |  Avg Loss: 6.49\n  Expectancy:  -2.74 por trade\n  PF:          0.37\n  Max DD:      25.44 (2.5%)\n  Avg Bars:    8 velas\n  Regímenes:   {'BULL_TREND': 2, 'BEAR_TREND': 6, 'TREND': 1}\n  Señales:     {'BUY': 2, 'SELL': 7}\n  Bloqueos principales:\n      28x  Cooldown por activo (6h)\n       1x  ADX insuficiente para sniper: 21.64 < 22.0 | Score final insuficiente para sniper: 54.78 <\n       1x  ADX insuficiente para sniper: 21.41 < 22.0 | Score final insuficiente para sniper: 54.63 <\n       1x  ADX insuficiente para sniper: 20.47 < 22.0 | Score final insuficiente para sniper: 54.04 <\n       1x  ADX insuficiente para sniper: 20.26 < 22.0 | Score final insuficiente para sniper: 53.91 <\n\n--- IWM TEST ---\n  ============================================================\n  IWM | TEST | Bars: 234\n  ============================================================\n  Capital:     1000.00 → 1007.57  (+7.57)\n  Señales:     21 generadas | 5 ALLOW | 16 BLOCK\n  Trades:      4 cerrados | 3 wins | 1 losses\n  Winrate:     75.0%\n  Avg Trade:   2.06\n  Avg Win:     4.83  |  Avg Loss: 6.26\n  Expectancy:  2.06 por trade\n  PF:          2.31\n  Max DD:      8.54 (0.8%)\n  Avg Bars:    9 velas\n  Regímenes:   {'BEAR_TREND': 2, 'TREND': 2}\n  Señales:     {'SELL': 4}\n  Bloqueos principales:\n      15x  Cooldown por activo (6h)\n       1x  ADX insuficiente para sniper: 20.88 < 22.0 | Score final insuficiente para sniper: 54.30 <\n\n--- NVDA TRAIN ---\n  ============================================================\n  NVDA | TRAIN | Bars: 346\n  ============================================================\n  Capital:     1000.00 → 977.53  (-22.47)\n  Señales:     27 generadas | 11 ALLOW | 16 BLOCK\n  Trades:      10 cerrados | 3 wins | 7 losses\n  Winrate:     30.0%\n  Avg Trade:   -2.21\n  Avg Win:     5.45  |  Avg Loss: 5.49\n  Expectancy:  -2.21 por trade\n  PF:          0.43\n  Max DD:      33.90 (3.4%)\n  Avg Bars:    11 velas\n  Regímenes:   {'BULL_TREND': 5, 'BEAR_TREND': 3, 'TREND': 2}\n  Señales:     {'BUY': 6, 'SELL': 4}\n  Bloqueos principales:\n      16x  Cooldown por activo (6h)\n\n--- NVDA TEST ---\n  ============================================================\n  NVDA | TEST | Bars: 234\n  ============================================================\n  Capital:     1000.00 → 1004.97  (+4.97)\n  Señales:     20 generadas | 8 ALLOW | 12 BLOCK\n  Trades:      7 cerrados | 4 wins | 3 losses\n  Winrate:     57.1%\n  Avg Trade:   0.75\n  Avg Win:     5.59  |  Avg Loss: 5.70\n  Expectancy:  0.75 por trade\n  PF:          1.31\n  Max DD:      14.31 (1.4%)\n  Avg Bars:    15 velas\n  Regímenes:   {'BULL_TREND': 1, 'TREND': 2, 'BEAR_TREND': 4}\n  Señales:     {'BUY': 3, 'SELL': 4}\n  Bloqueos principales:\n      12x  Cooldown por activo (6h)\n\n--- AMZN TRAIN ---\n  ============================================================\n  AMZN | TRAIN | Bars: 346\n  ============================================================\n  Capital:     1000.00 → 1026.87  (+26.87)\n  Señales:     49 generadas | 10 ALLOW | 39 BLOCK\n  Trades:      9 cerrados | 7 wins | 2 losses\n  Winrate:     77.8%\n  Avg Trade:   3.03\n  Avg Win:     5.55  |  Avg Loss: 5.80\n  Expectancy:  3.03 por trade\n  PF:          3.35\n  Max DD:      12.59 (1.3%)\n  Avg Bars:    12 velas\n  Regímenes:   {'BEAR_TREND': 7, 'TREND': 2}\n  Señales:     {'SELL': 7, 'BUY': 2}\n  Bloqueos principales:\n      39x  Cooldown por activo (6h)\n\n--- AMZN TEST ---\n  ============================================================\n  AMZN | TEST | Bars: 234\n  ============================================================\n  Capital:     1000.00 → 993.27  (-6.73)\n  Señales:     28 generadas | 8 ALLOW | 20 BLOCK\n  Trades:      7 cerrados | 3 wins | 4 losses\n  Winrate:     42.9%\n  Avg Trade:   -0.91\n  Avg Win:     5.48  |  Avg Loss: 5.70\n  Expectancy:  -0.91 por trade\n  PF:          0.72\n  Max DD:      14.25 (1.4%)\n  Avg Bars:    16 velas\n  Regímenes:   {'BEAR_TREND': 3, 'TREND': 1, 'BULL_TREND': 3}\n  Señales:     {'SELL': 4, 'BUY': 3}\n  Bloqueos principales:\n      20x  Cooldown por activo (6h)\n\n--- META TRAIN ---\n  ============================================================\n  META | TRAIN | Bars: 346\n  ============================================================\n  Capital:     1000.00 → 1006.41  (+6.41)\n  Señales:     36 generadas | 10 ALLOW | 26 BLOCK\n  Trades:      9 cerrados | 5 wins | 4 losses\n  Winrate:     55.6%\n  Avg Trade:   0.73\n  Avg Win:     5.75  |  Avg Loss: 5.54\n  Expectancy:  0.73 por trade\n  PF:          1.30\n  Max DD:      22.82 (2.3%)\n  Avg Bars:    15 velas\n  Regímenes:   {'TREND': 3, 'BEAR_TREND': 1, 'BULL_TREND': 5}\n  Señales:     {'SELL': 3, 'BUY': 6}\n  Bloqueos principales:\n      26x  Cooldown por activo (6h)\n\n--- META TEST ---\n  ============================================================\n  META | TEST | Bars: 234\n  ============================================================\n  Capital:     1000.00 → 994.83  (-5.17)\n  Señales:     24 generadas | 5 ALLOW | 19 BLOCK\n  Trades:      5 cerrados | 2 wins | 3 losses\n  Winrate:     40.0%\n  Avg Trade:   -1.03\n  Avg Win:     5.72  |  Avg Loss: 5.54\n  Expectancy:  -1.03 por trade\n  PF:          0.69\n  Max DD:      9.49 (0.9%)\n  Avg Bars:    17 velas\n  Regímenes:   {'BULL_TREND': 4, 'BEAR_TREND': 1}\n  Señales:     {'BUY': 4, 'SELL': 1}\n  Bloqueos principales:\n      19x  Cooldown por activo (6h)\n\n\n#################################################################\n  CONSOLIDADO TRAIN (IN-SAMPLE) — 4 activos\n#################################################################\n  Señales:     158 generadas | 40 ALLOW | 118 BLOCK\n  Trades:      37 cerrados | 18 wins | 19 losses\n  Winrate:     48.6%\n  Avg Trade:   -0.35\n  Avg Win:     5.46  |  Avg Loss: 5.85\n  Expectancy:  -0.35 por trade\n  PF:          0.88\n  PnL total:   -13.84\n  Peor DD:     33.90\n  -------------------------------------------------------------\n  Suma PnL trades:  -12.93   (debe cuadrar con PnL total)\n  ✅ Cuadra (dif. 0.91, son costes de trades aún abiertos)\n#################################################################\n\n  VEREDICTO:\n  ❌  NO HAY EDGE. Expectancy negativa.\n\n\n#################################################################\n  CONSOLIDADO TEST (OUT-OF-SAMPLE) — 4 activos\n#################################################################\n  Señales:     93 generadas | 26 ALLOW | 67 BLOCK\n  Trades:      23 cerrados | 12 wins | 11 losses\n  Winrate:     52.2%\n  Avg Trade:   0.09\n  Avg Win:     5.39  |  Avg Loss: 5.71\n  Expectancy:  0.09 por trade\n  PF:          1.03\n  PnL total:   +0.65\n  Peor DD:     14.31\n  -------------------------------------------------------------\n  Suma PnL trades:  +1.96   (debe cuadrar con PnL total)\n  ✅ Cuadra (dif. 1.31, son costes de trades aún abiertos)\n#################################################################\n\n  VEREDICTO:\n  🟡  Edge marginal. Positivo pero débil.\n\n\n=================================================================\n  COMPARACIÓN TRAIN vs TEST\n=================================================================\n\n  IWM:\n    TRAIN: 9 trades | WR 33.3% | PF 0.37 | Exp -2.74\n    TEST:  4 trades | WR 75.0% | PF 2.31 | Exp 2.06\n    ⚠️  Pocos trades para comparar\n\n  NVDA:\n    TRAIN: 10 trades | WR 30.0% | PF 0.43 | Exp -2.21\n    TEST:  7 trades | WR 57.1% | PF 1.31 | Exp 0.75\n    ✅  Consistente entre train y test\n\n  AMZN:\n    TRAIN: 9 trades | WR 77.8% | PF 3.35 | Exp 3.03\n    TEST:  7 trades | WR 42.9% | PF 0.72 | Exp -0.91\n    ⚠️  Degradación significativa train→test\n\n  META:\n    TRAIN: 9 trades | WR 55.6% | PF 1.30 | Exp 0.73\n    TEST:  5 trades | WR 40.0% | PF 0.69 | Exp -1.03\n    ⚠️  Pocos trades para comparar\n\n\n=================================================================\n  BACKTEST COMPLETO\n=================================================================\n\n"}};
+
+const $ = s => document.querySelector(s);
+const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+const nf = (v, d = 2) => (v == null || !isFinite(v)) ? "—" : v.toFixed(d);
+const sg = (v, d = 2) => (v == null || !isFinite(v)) ? "—" : (v >= 0 ? "+" : "") + v.toFixed(d);
+const cls = v => v == null ? "" : (v > 0 ? "pos" : v < 0 ? "neg" : "");
+
+/* ---------- tema ---------- */
+const temaGuardado = (() => { try { return localStorage.getItem("tema"); } catch (e) { return null; } })();
+if (temaGuardado) document.documentElement.dataset.theme = temaGuardado;
+$("#btn-tema").onclick = () => {
+  const oscuroAhora = document.documentElement.dataset.theme === "dark"
+    || (!document.documentElement.dataset.theme && matchMedia("(prefers-color-scheme: dark)").matches);
+  const nuevo = oscuroAhora ? "light" : "dark";
+  document.documentElement.dataset.theme = nuevo;
+  try { localStorage.setItem("tema", nuevo); } catch (e) {}
+  pintar();
+};
+
+/* ---------- vista de tabla (relieve de contraste + accesibilidad) ---------- */
+let verTablas = false;
+$("#btn-tablas").onclick = e => {
+  verTablas = !verTablas;
+  e.target.setAttribute("aria-pressed", String(verTablas));
+  e.target.textContent = verTablas ? "Ver gráficos" : "Ver tablas";
+  pintar();
+};
+
+/* ---------- tooltip ---------- */
+const sv = $("#sv");
+function conSombra(nodo, titulo, filas) {
+  nodo.style.cursor = "default";
+  nodo.addEventListener("mouseenter", ev => {
+    sv.innerHTML = "";
+    sv.appendChild(el("div", "t", titulo));
+    filas.forEach(f => sv.appendChild(el("div", "r", f)));
+    sv.style.opacity = "1";
+    mover(ev);
+  });
+  nodo.addEventListener("mousemove", mover);
+  nodo.addEventListener("mouseleave", () => { sv.style.opacity = "0"; });
+  function mover(ev) {
+    const m = 14;
+    let x = ev.clientX + m, y = ev.clientY + m;
+    const r = sv.getBoundingClientRect();
+    if (x + r.width > innerWidth - 8) x = ev.clientX - r.width - m;
+    if (y + r.height > innerHeight - 8) y = ev.clientY - r.height - m;
+    sv.style.left = x + "px"; sv.style.top = y + "px";
+  }
+}
+
+const SVGNS = "http://www.w3.org/2000/svg";
+const mk = (t, a = {}) => { const n = document.createElementNS(SVGNS, t); for (const k in a) n.setAttribute(k, a[k]); return n; };
+const tok = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+
+function tabla(contenedor, cabeceras, filas) {
+  const env = el("div", "envtabla");
+  const t = el("table");
+  const thead = el("thead"), tr = el("tr");
+  cabeceras.forEach(h => tr.appendChild(el("th", null, h)));
+  thead.appendChild(tr); t.appendChild(thead);
+  const tb = el("tbody");
+  filas.forEach(f => {
+    const r = el("tr");
+    f.forEach(c => {
+      const td = el("td");
+      if (c && typeof c === "object") { td.textContent = c.t; if (c.c) td.className = c.c; }
+      else td.textContent = c;
+      r.appendChild(td);
+    });
+    tb.appendChild(r);
+  });
+  t.appendChild(tb); env.appendChild(t); contenedor.appendChild(env);
+}
+
+function vacio(contenedor, msg) {
+  contenedor.appendChild(el("p", "vacio", msg));
+}
+
+/* ======================= barras horizontales ======================= */
+function barras(contenedor, items, opc = {}) {
+  // items: [{etiqueta, valor, color?, sombra:[]}]
+  const H = 30, pad = { t: 14, r: 72, b: 30, l: 180 };
+  const W = Math.min(contenedor.clientWidth || 900, 900);
+  const alto = pad.t + pad.b + items.length * H;
+  const anchoPlot = W - pad.l - pad.r;
+
+  const vals = items.map(d => d.valor).filter(v => isFinite(v));
+  let min = Math.min(0, ...vals), max = Math.max(0, ...vals);
+  const margen = (max - min) * 0.08 || 1;
+  min -= margen; max += margen;
+  const x = v => pad.l + (v - min) / (max - min) * anchoPlot;
+
+  const svg = mk("svg", { width: W, height: alto, viewBox: `0 0 ${W} ${alto}`, role: "img" });
+  svg.appendChild(mk("title", {})).textContent = opc.titulo || "";
+
+  // rejilla
+  const pasos = 5;
+  for (let i = 0; i <= pasos; i++) {
+    const v = min + (max - min) * i / pasos;
+    svg.appendChild(mk("line", { class: "rejilla", x1: x(v), x2: x(v), y1: pad.t, y2: alto - pad.b }));
+    const tx = mk("text", { class: "txt-eje", x: x(v), y: alto - pad.b + 15, "text-anchor": "middle" });
+    tx.textContent = nf(v, opc.dec ?? 1) + (opc.sufijo || "");
+    svg.appendChild(tx);
+  }
+  // cero
+  if (min < 0 && max > 0) svg.appendChild(mk("line", { class: "cero", x1: x(0), x2: x(0), y1: pad.t, y2: alto - pad.b }));
+
+  items.forEach((d, i) => {
+    const yc = pad.t + i * H + H / 2;
+    const alt = 13;
+    const x0 = x(0), x1 = x(d.valor);
+    const izq = Math.min(x0, x1), ancho = Math.max(Math.abs(x1 - x0), 2);
+    const color = d.color || (d.valor >= 0 ? tok("--s1") : tok("--critical"));
+
+    const g = mk("g", {});
+    const r = mk("rect", { x: izq, y: yc - alt / 2, width: ancho, height: alt, rx: 4, fill: color });
+    g.appendChild(r);
+
+    const cat = mk("text", { class: "txt-cat", x: pad.l - 10, y: yc + 4, "text-anchor": "end" });
+    cat.textContent = d.etiqueta;
+    g.appendChild(cat);
+
+    // etiqueta directa: tambien es el relieve de contraste
+    const lv = mk("text", { class: "txt-val", x: (x1 >= x0 ? x1 + 7 : x1 - 7), y: yc + 4,
+                            "text-anchor": x1 >= x0 ? "start" : "end" });
+    lv.textContent = sg(d.valor, opc.dec ?? 2) + (opc.sufijo || "");
+    g.appendChild(lv);
+
+    svg.appendChild(g);
+    conSombra(r, d.etiqueta, d.sombra || []);
+  });
+
+  contenedor.appendChild(svg);
+}
+
+/* ======================= intervalos (punto + barra) ======================= */
+function intervalos(contenedor, items) {
+  const H = 42, pad = { t: 18, r: 86, b: 34, l: 180 };
+  const W = Math.min(contenedor.clientWidth || 900, 900);
+  const alto = pad.t + pad.b + items.length * H;
+  const anchoPlot = W - pad.l - pad.r;
+
+  const todos = items.flatMap(d => [d.p05, d.p95, d.valor]).filter(isFinite);
+  let min = Math.min(0, ...todos), max = Math.max(0, ...todos);
+  const m = (max - min) * 0.12 || 0.1;
+  min -= m; max += m;
+  const x = v => pad.l + (v - min) / (max - min) * anchoPlot;
+
+  const svg = mk("svg", { width: W, height: alto, viewBox: `0 0 ${W} ${alto}`, role: "img" });
+
+  for (let i = 0; i <= 4; i++) {
+    const v = min + (max - min) * i / 4;
+    svg.appendChild(mk("line", { class: "rejilla", x1: x(v), x2: x(v), y1: pad.t, y2: alto - pad.b }));
+    const tx = mk("text", { class: "txt-eje", x: x(v), y: alto - pad.b + 15, "text-anchor": "middle" });
+    tx.textContent = nf(v, 2);
+    svg.appendChild(tx);
+  }
+
+  // linea del cero: el elemento mas importante del grafico
+  svg.appendChild(mk("line", { class: "cero", x1: x(0), x2: x(0), y1: pad.t - 6, y2: alto - pad.b + 4 }));
+  const et0 = mk("text", { class: "txt-eje", x: x(0), y: pad.t - 10, "text-anchor": "middle" });
+  et0.textContent = "cero";
+  svg.appendChild(et0);
+
+  items.forEach((d, i) => {
+    const yc = pad.t + i * H + H / 2;
+    const cruza = d.p05 <= 0 && d.p95 >= 0;
+    const color = cruza ? tok("--warning") : (d.p05 > 0 ? tok("--good") : tok("--critical"));
+
+    const g = mk("g", {});
+    g.appendChild(mk("line", { x1: x(d.p05), x2: x(d.p95), y1: yc, y2: yc, stroke: color, "stroke-width": 3, "stroke-linecap": "round" }));
+    [d.p05, d.p95].forEach(v => g.appendChild(mk("line", { x1: x(v), x2: x(v), y1: yc - 6, y2: yc + 6, stroke: color, "stroke-width": 2 })));
+    g.appendChild(mk("circle", { cx: x(d.valor), cy: yc, r: 5.5, fill: color, stroke: tok("--surface-1"), "stroke-width": 2 }));
+
+    const cat = mk("text", { class: "txt-cat", x: pad.l - 10, y: yc + 4, "text-anchor": "end" });
+    cat.textContent = d.etiqueta;
+    g.appendChild(cat);
+
+    const lv = mk("text", { class: "txt-val", x: W - pad.r + 10, y: yc + 4 });
+    lv.textContent = cruza ? "cruza cero" : (d.p05 > 0 ? "a favor" : "en contra");
+    lv.setAttribute("fill", color);
+    g.appendChild(lv);
+
+    svg.appendChild(g);
+    conSombra(g, d.etiqueta, [
+      `Expectativa: ${sg(d.valor, 4)} €/op`,
+      `Intervalo 90%: ${sg(d.p05, 4)} a ${sg(d.p95, 4)}`,
+      `P(expectativa > 0): ${nf(d.prob * 100, 1)}%`,
+      `${d.ops} operaciones`,
+      cruza ? "El cero esta dentro: no concluyente"
+            : (d.p05 > 0 ? "Intervalo entero a favor" : "Intervalo entero en contra"),
+    ]);
+  });
+
+  contenedor.appendChild(svg);
+}
+
+/* ======================= mapa de calor del barrido ======================= */
+function mapaCalor(contenedor, barrido) {
+  const sls = [...new Set(barrido.map(b => b.sl))].sort((a, b) => a - b);
+  const tps = [...new Set(barrido.map(b => b.tp))].sort((a, b) => a - b);
+  const celda = 62, pad = { t: 34, r: 14, b: 34, l: 54 };
+  const W = pad.l + pad.r + tps.length * celda;
+  const alto = pad.t + pad.b + sls.length * celda;
+
+  const vals = barrido.map(b => b.expectativa).filter(isFinite);
+  const amax = Math.max(...vals.map(Math.abs)) || 1;
+
+  const svg = mk("svg", { width: W, height: alto, viewBox: `0 0 ${W} ${alto}`, role: "img" });
+
+  const t1 = mk("text", { class: "txt-eje", x: pad.l + tps.length * celda / 2, y: 14, "text-anchor": "middle" });
+  t1.textContent = "TP (multiplos de ATR)";
+  svg.appendChild(t1);
+  const t2 = mk("text", { class: "txt-eje", x: 13, y: pad.t + sls.length * celda / 2,
+                          "text-anchor": "middle", transform: `rotate(-90 13 ${pad.t + sls.length * celda / 2})` });
+  t2.textContent = "SL (multiplos de ATR)";
+  svg.appendChild(t2);
+
+  tps.forEach((tp, j) => {
+    const tx = mk("text", { class: "txt-eje", x: pad.l + j * celda + celda / 2, y: pad.t - 8, "text-anchor": "middle" });
+    tx.textContent = tp; svg.appendChild(tx);
+  });
+  sls.forEach((sl, i) => {
+    const tx = mk("text", { class: "txt-eje", x: pad.l - 10, y: pad.t + i * celda + celda / 2 + 4, "text-anchor": "end" });
+    tx.textContent = sl; svg.appendChild(tx);
+  });
+
+  sls.forEach((sl, i) => tps.forEach((tp, j) => {
+    const b = barrido.find(x => x.sl === sl && x.tp === tp);
+    const X = pad.l + j * celda, Y = pad.t + i * celda;
+    const g = mk("g", {});
+    if (!b) {
+      g.appendChild(mk("rect", { x: X + 1, y: Y + 1, width: celda - 2, height: celda - 2, rx: 5, fill: tok("--surface-2") }));
+      svg.appendChild(g); return;
+    }
+    // diverging: azul positivo, rojo negativo, gris en el medio
+    const f = Math.abs(b.expectativa) / amax;
+    const base = b.expectativa >= 0 ? tok("--s1") : tok("--critical");
+    const r = mk("rect", {
+      x: X + 1, y: Y + 1, width: celda - 2, height: celda - 2, rx: 5,
+      fill: `color-mix(in srgb, ${base} ${Math.round(16 + f * 74)}%, var(--surface-1))`,
+      stroke: b.es_actual ? tok("--text-1") : "transparent",
+      "stroke-width": b.es_actual ? 2.5 : 0,
+    });
+    g.appendChild(r);
+    const tx = mk("text", { x: X + celda / 2, y: Y + celda / 2 + 1, "text-anchor": "middle",
+                            class: "txt-val", "font-size": "11.5" });
+    tx.textContent = sg(b.expectativa, 3);
+    g.appendChild(tx);
+    const tx2 = mk("text", { x: X + celda / 2, y: Y + celda / 2 + 15, "text-anchor": "middle", class: "txt-eje" });
+    tx2.textContent = "PF " + nf(b.pf, 2);
+    g.appendChild(tx2);
+    svg.appendChild(g);
+    conSombra(r, `SL ${sl} / TP ${tp}${b.es_actual ? "  (config actual)" : ""}`, [
+      `Expectativa: ${sg(b.expectativa, 4)} €/op`,
+      `Profit factor: ${nf(b.pf, 3)}`,
+      `Winrate: ${nf(b.winrate, 1)}%`,
+      `${b.operaciones} operaciones`,
+      `R:R = ${nf(tp / sl, 2)}`,
+    ]);
+  }));
+
+  contenedor.appendChild(svg);
+  const ley = el("div", "leyenda");
+  [["Expectativa positiva", tok("--s1")], ["Expectativa negativa", tok("--critical")]]
+    .forEach(([t, c]) => {
+      const s = el("span"); const p = el("span", "pastilla"); p.style.background = c;
+      s.appendChild(p); s.appendChild(document.createTextNode(t)); ley.appendChild(s);
+    });
+  const s = el("span");
+  s.textContent = "Borde negro = configuración actual";
+  ley.appendChild(s);
+  contenedor.appendChild(ley);
+}
+
+/* ======================= render ======================= */
+function pintar() {
+  if (!D) return;
+  $("#pie-gen").textContent = "Generado " + D.generado +
+    " · datos medidos, sin estimaciones";
+
+  /* --- aviso superior: el hallazgo principal --- */
+  const av = $("#aviso-top"); av.innerHTML = "";
+  const rv = (D.clases?.clases || []).find(c => c.clase === "renta_variable");
+  if (rv && rv.concluyente) {
+    av.innerHTML = `<strong>Resultado medido, no supuesto.</strong> Sobre ${rv.operaciones}
+      operaciones en ETFs de renta variable limpios de sesgo de supervivencia, la
+      expectativa es ${sg(rv.expectativa, 3)} € por operación y el intervalo del 90% va de
+      ${sg(rv.boot_p05, 3)} a ${sg(rv.boot_p95, 3)}. El universo de 4 activos de producción
+      (NVDA, AMZN, META) da positivo porque esos tickers se eligieron en 2026 sabiendo
+      cómo acabaron.`;
+  } else {
+    av.innerHTML = `<strong>Faltan datos.</strong> Lanza el workflow de validación o
+      ejecuta los validadores en local para rellenar este panel.`;
+  }
+
+  /* --- tiles --- */
+  const tl = $("#tiles"); tl.innerHTML = "";
+  function tile(etq, num, pie, veredicto) {
+    const t = el("div", "tile");
+    t.appendChild(el("div", "et", etq));
+    const n = el("div", "num", num);
+    if (veredicto) n.classList.add(veredicto);
+    t.appendChild(n);
+    if (pie) t.appendChild(el("div", "pie", pie));
+    tl.appendChild(t);
+  }
+  const clases = D.clases?.clases || [];
+  const concl = clases.filter(c => c.concluyente);
+  const pasan = concl.filter(c => c.pasa_criterio);
+  const contra = concl.filter(c => c.concluyente_en_contra);
+  const totOps = concl.reduce((a, c) => a + c.operaciones, 0);
+
+  if (concl.length) {
+    tile("Operaciones analizadas", totOps.toLocaleString("es"),
+         `${concl.length} clases de activo, histórico diario`);
+    tile("Clases que pasan el criterio", `${pasan.length} / ${concl.length}`,
+         "Intervalo entero sobre cero y bate comprar y mantener",
+         pasan.length ? "pos" : "neg");
+    tile("Clases concluyentes en contra", `${contra.length} / ${concl.length}`,
+         "Intervalo del 90% entero por debajo de cero",
+         contra.length ? "neg" : "");
+  }
+  const r1 = D.robustez_1d;
+  if (r1?.bootstrap) {
+    tile("Expectativa (diario, 4 activos)", sg(r1.bootstrap.expectativa, 3) + " €",
+         `${r1.operaciones} ops · ${nf(r1.ops_anio, 0)}/año · sesgo de selección`,
+         cls(r1.bootstrap.expectativa));
+  }
+  if (!concl.length && !r1) vacio(tl, "Sin datos todavía.");
+
+  /* --- clases --- */
+  const cc = $("#clases"); cc.innerHTML = "";
+  if (!concl.length) {
+    vacio(cc, "Sin resultados por clase. Ejecuta validator/experimento_clases.py");
+  } else {
+    const ley = el("div", "leyenda");
+    [["Bot", tok("--s1")], ["Comprar y mantener", tok("--s2")]].forEach(([t, c]) => {
+      const s = el("span"); const p = el("span", "pastilla"); p.style.background = c;
+      s.appendChild(p); s.appendChild(document.createTextNode(t)); ley.appendChild(s);
+    });
+    cc.appendChild(ley);
+
+    const filas = concl.map(c => [
+      c.clase.replace(/_/g, " "),
+      c.activos, c.operaciones, nf(c.ops_anio, 1),
+      nf(c.winrate, 1) + "%",
+      { t: sg(c.expectativa, 4), c: cls(c.expectativa) },
+      nf(c.pf, 2),
+      { t: sg(c.rent_anual_pct, 2) + "%", c: cls(c.rent_anual_pct) },
+      { t: c.buy_hold_anual_pct == null ? "—" : sg(c.buy_hold_anual_pct, 2) + "%",
+        c: cls(c.buy_hold_anual_pct) },
+      nf(c.peor_dd, 1) + "%",
+      c.pasa_criterio ? "pasa" : c.concluyente_en_contra ? "en contra" : "no concluyente",
+    ]);
+
+    if (verTablas) {
+      tabla(cc, ["Clase", "Act", "Ops", "Ops/año", "WR", "Expect", "PF",
+                 "Anual bot", "Anual B&H", "Peor DD", "Veredicto"], filas);
+    } else {
+      const env = el("div", "tarjeta");
+      barras(env, concl.map(c => ({
+        etiqueta: c.clase.replace(/_/g, " "),
+        valor: c.rent_anual_pct,
+        sombra: [
+          `Bot: ${sg(c.rent_anual_pct, 2)}% anual`,
+          `Comprar y mantener: ${c.buy_hold_anual_pct == null ? "—" : sg(c.buy_hold_anual_pct, 2) + "%"}`,
+          `${c.operaciones} operaciones en ${nf(c.anios, 1)} años`,
+          `Winrate ${nf(c.winrate, 1)}% · PF ${nf(c.pf, 2)}`,
+          `Peor drawdown ${nf(c.peor_dd, 1)}%`,
+          c.nota || "",
+        ].filter(Boolean),
+      })), { sufijo: "%", dec: 2, titulo: "Rentabilidad anual del bot por clase" });
+      cc.appendChild(env);
+
+      const env2 = el("div", "tarjeta");
+      env2.style.marginTop = "12px";
+      const h = el("div", "nota", "Comparado con no hacer nada (comprar y mantener):");
+      env2.appendChild(h);
+      barras(env2, concl.map(c => ({
+        etiqueta: c.clase.replace(/_/g, " "),
+        valor: (c.rent_anual_pct || 0) - (c.buy_hold_anual_pct || 0),
+        color: ((c.rent_anual_pct || 0) - (c.buy_hold_anual_pct || 0)) >= 0 ? tok("--s3") : tok("--critical"),
+        sombra: [`Diferencia: ${sg((c.rent_anual_pct || 0) - (c.buy_hold_anual_pct || 0), 2)} puntos/año`,
+                 `Bot ${sg(c.rent_anual_pct, 2)}% vs B&H ${sg(c.buy_hold_anual_pct, 2)}%`],
+      })), { sufijo: " pp", dec: 2 });
+      cc.appendChild(env2);
+      tabla(cc, ["Clase", "Act", "Ops", "Ops/año", "WR", "Expect", "PF",
+                 "Anual bot", "Anual B&H", "Peor DD", "Veredicto"], filas);
+    }
+  }
+
+  /* --- intervalos --- */
+  const ic = $("#intervalos"); ic.innerHTML = "";
+  const its = [];
+  concl.forEach(c => its.push({
+    etiqueta: c.clase.replace(/_/g, " "), valor: c.expectativa,
+    p05: c.boot_p05, p95: c.boot_p95, prob: c.boot_prob_positiva, ops: c.operaciones,
+  }));
+  if (D.universo?.bootstrap) {
+    const b = D.universo.bootstrap;
+    its.push({ etiqueta: "universo diversificado", valor: b.expectativa,
+               p05: b.p05, p95: b.p95, prob: b.prob_positiva, ops: b.operaciones });
+  }
+  if (r1?.bootstrap) {
+    const b = r1.bootstrap;
+    its.push({ etiqueta: "4 activos producción (sesgo)", valor: b.expectativa,
+               p05: b.p05, p95: b.p95, prob: b.prob_positiva, ops: r1.operaciones });
+  }
+  if (!its.length) vacio(ic, "Sin intervalos calculados.");
+  else {
+    const env = el("div", "tarjeta");
+    if (!verTablas) intervalos(env, its);
+    tabla(env, ["Serie", "Ops", "Expectativa", "p05", "p95", "P(>0)", "Lectura"],
+      its.map(d => [d.etiqueta, d.ops,
+        { t: sg(d.valor, 4), c: cls(d.valor) },
+        sg(d.p05, 4), sg(d.p95, 4), nf(d.prob * 100, 1) + "%",
+        (d.p05 <= 0 && d.p95 >= 0) ? "cruza cero" : (d.p05 > 0 ? "a favor" : "en contra")]));
+    ic.appendChild(env);
+  }
+
+  /* --- universo --- */
+  const uc = $("#universo"); uc.innerHTML = "";
+  const cfgs = D.universo?.configuraciones || [];
+  if (!cfgs.length) vacio(uc, "Sin datos de universo. Ejecuta validator/experimento_universo.py");
+  else {
+    const env = el("div", "tarjeta");
+    if (!verTablas) barras(env, cfgs.map(c => ({
+      etiqueta: c.nombre, valor: c.rent_anual_pct,
+      sombra: [`${c.activos} activos · ${c.huecos} huecos · riesgo ${nf(c.riesgo_pct * 100, 2)}%`,
+               `${c.operaciones} ops (${nf(c.ops_anio, 1)}/año)`,
+               `Expectativa ${sg(c.expectativa, 4)} · PF ${nf(c.pf, 2)}`,
+               `Peor drawdown ${nf(c.peor_dd, 1)}%`],
+    })), { sufijo: "%", dec: 2 });
+    tabla(env, ["Configuración", "Act", "Huecos", "Riesgo", "Ops", "Ops/año",
+                "WR", "Expect", "PF", "Anual", "Peor DD"],
+      cfgs.map(c => [c.nombre, c.activos, c.huecos, nf(c.riesgo_pct * 100, 2) + "%",
+        c.operaciones, nf(c.ops_anio, 1), nf(c.winrate, 1) + "%",
+        { t: sg(c.expectativa, 4), c: cls(c.expectativa) }, nf(c.pf, 2),
+        { t: sg(c.rent_anual_pct, 2) + "%", c: cls(c.rent_anual_pct) },
+        nf(c.peor_dd, 1) + "%"]));
+    uc.appendChild(env);
+  }
+
+  /* --- barrido --- */
+  const bc = $("#barrido"); bc.innerHTML = "";
+  const bar = r1?.barrido || D.robustez_30m?.barrido || [];
+  if (!bar.length) vacio(bc, "Sin barrido. Ejecuta validator/robustez.py");
+  else {
+    const env = el("div", "tarjeta");
+    if (!verTablas) mapaCalor(env, bar);
+    tabla(env, ["SL", "TP", "R:R", "Ops", "WR", "Expectativa", "PF"],
+      [...bar].sort((a, b) => b.expectativa - a.expectativa).map(b => [
+        b.sl + (b.es_actual ? "  (actual)" : ""), b.tp, nf(b.tp / b.sl, 2),
+        b.operaciones, nf(b.winrate, 1) + "%",
+        { t: sg(b.expectativa, 4), c: cls(b.expectativa) }, nf(b.pf, 2)]));
+    bc.appendChild(env);
+  }
+
+  /* --- cuello de botella --- */
+  const qc = $("#cuello"); qc.innerHTML = "";
+  const cb = D.universo?.cuello_botella || [];
+  if (!cb.length) vacio(qc, "Sin datos de bloqueos.");
+  else {
+    const env = el("div", "tarjeta");
+    if (!verTablas) barras(env, cb.slice(0, 7).map(c => ({
+      etiqueta: c.motivo.length > 44 ? c.motivo.slice(0, 44) + "…" : c.motivo,
+      valor: c.pct_senales, color: tok("--s2"),
+      sombra: [c.motivo, `${c.veces} veces`, `${nf(c.pct_senales, 1)}% de las señales`],
+    })), { sufijo: "%", dec: 1 });
+    tabla(env, ["Motivo del bloqueo", "Veces", "% de señales"],
+      cb.map(c => [c.motivo, c.veces, nf(c.pct_senales, 1) + "%"]));
+    qc.appendChild(env);
+  }
+
+  /* --- crudo --- */
+  const rc = $("#crudo"); rc.innerHTML = "";
+  const nombres = { proveedores: "Prueba de proveedores de datos",
+                    clases: "Experimento por clase de activo",
+                    universo: "Experimento de universo",
+                    backtest_diario: "Backtest diario",
+                    backtest_intradia: "Backtest intradía" };
+  let alguno = false;
+  for (const k in nombres) {
+    const txt = D.crudo?.[k];
+    if (!txt) continue;
+    alguno = true;
+    const d = el("details");
+    d.appendChild(el("summary", null, nombres[k]));
+    d.appendChild(el("pre", null, txt));
+    rc.appendChild(d);
+  }
+  if (!alguno) vacio(rc, "Sin salidas crudas.");
+}
+
+pintar();
+addEventListener("resize", () => { clearTimeout(window.__t); window.__t = setTimeout(pintar, 180); });
+</script>
+</body>
+</html>
