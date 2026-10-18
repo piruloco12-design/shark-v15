@@ -79,6 +79,25 @@ UNIVERSO_LIMPIO = [
     "IYR",
 ]
 
+# Solo renta variable USA: indices amplios + sectores.
+#
+# Esta division esta elegida POR ADELANTADO y por una razon de
+# fondo, no mirando cuales perdieron. Las reglas del bot estan
+# calibradas sobre acciones: umbrales fijos de ADX 22 y multiplos
+# de ATR. Los bonos cortos (SHY) tienen una volatilidad diminuta y
+# las materias primas (USO, DBC) un comportamiento distinto, asi
+# que aplicarles los mismos numeros sin reescalar no es una prueba
+# justa de la hipotesis de diversificacion.
+#
+# Carver diversifica con el sistema reescalado por instrumento
+# (objetivo de volatilidad y forecast normalizado). Aqui se aplican
+# umbrales identicos a todo, asi que el universo homogeneo es el
+# que de verdad pone a prueba la idea.
+UNIVERSO_ACCIONES = [
+    "SPY", "QQQ", "IWM", "DIA", "MDY",
+    "XLE", "XLF", "XLK", "XLV", "XLI", "XLP", "XLY", "XLU", "XLB",
+]
+
 
 def cargar(tickers):
     datos = {}
@@ -126,6 +145,11 @@ def main():
     print(f"  {len(datos_limpio)} de {len(UNIVERSO_LIMPIO)} activos"
           + (f" | fallos: {fallos_l}" if fallos_l else ""))
 
+    # Subconjunto homogeneo, sin volver a descargar.
+    datos_acciones = {t: datos_limpio[t]
+                      for t in UNIVERSO_ACCIONES if t in datos_limpio}
+    print(f"  de los cuales {len(datos_acciones)} son renta variable USA")
+
     if not datos_actual and not datos_limpio:
         print("\nSin datos. No se puede experimentar.")
         return 1
@@ -163,6 +187,21 @@ def main():
             f"{len(datos_limpio)} ETFs / 20 huecos",
             backtest_cartera(datos_limpio, CAPITAL, 20, 0.005))
 
+    if datos_acciones:
+        print("\n  -- solo renta variable USA (universo homogeneo) --")
+        print("     (los umbrales del bot estan calibrados sobre acciones;")
+        print("      bonos y materias primas necesitarian reescalado)")
+        resultados["acciones_2"] = fila(
+            f"{len(datos_acciones)} ETFs accion / 2 huecos",
+            backtest_cartera(datos_acciones, CAPITAL, 2, 0.005))
+        resultados["acciones_6"] = fila(
+            f"{len(datos_acciones)} ETFs accion / 6 huecos",
+            backtest_cartera(datos_acciones, CAPITAL, 6, 0.005))
+        resultados["acciones_6_bajo"] = fila(
+            f"{len(datos_acciones)} ETFs accion / 6 huecos / 0.25%",
+            backtest_cartera(datos_acciones, CAPITAL, 6, 0.0025))
+
+    if datos_limpio:
         print("\n  -- mismo numero de huecos, riesgo ajustado --")
         print("     (mas posiciones a la vez = mas riesgo total;")
         print("      bajar el riesgo por operacion lo compensa)")
@@ -178,7 +217,9 @@ def main():
     # -----------------------------------------------------------
     # CUELLO DE BOTELLA
     # -----------------------------------------------------------
-    mejor = resultados.get("limpio_12") or resultados.get("limpio_6")
+    mejor = (resultados.get("acciones_6")
+             or resultados.get("limpio_12")
+             or resultados.get("limpio_6"))
     if mejor:
         print("\n" + "=" * 70)
         print("¿QUE ESTA LIMITANDO LAS OPERACIONES?")
@@ -204,8 +245,19 @@ def main():
         if b["p05"] > 0:
             print("  LECTURA: intervalo entero por encima de cero. Es el")
             print("           resultado mas fuerte que esta prueba puede dar.")
+        elif b["p95"] < 0:
+            # Esta rama faltaba. Sin ella, un resultado
+            # CONCLUYENTEMENTE NEGATIVO se reportaba como
+            # "no sabemos", que es el error comodo.
+            print("  LECTURA: intervalo entero por DEBAJO de cero. Esto no es")
+            print("           incertidumbre: es un resultado concluyente en")
+            print("           contra. Con esta muestra, la estrategia pierde")
+            print("           dinero en este universo, y no por mala suerte.")
         elif b["prob_positiva"] >= 0.95:
             print("  LECTURA: positivo en mas del 95% de los remuestreos.")
+        elif b["prob_positiva"] <= 0.05:
+            print("  LECTURA: negativo de forma consistente en los")
+            print("           remuestreos.")
         else:
             print("  LECTURA: el cero sigue dentro del intervalo. Mas")
             print("           operaciones reducen el ruido, pero no han")
