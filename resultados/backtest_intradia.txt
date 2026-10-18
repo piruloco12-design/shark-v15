@@ -1,0 +1,15 @@
+
+=================================================================
+  SHARK V16 SNIPER — BACKTESTER FIEL
+  Usa la misma lógica que live_engine.py
+  Timeframe: 30m | Período: 60d
+  Capital: 1000.0 | Risk/trade: 0.005
+  Sniper mode: True | Min ADX: 22.0
+  Min AI Score: 50.0 | Min Context Score: 55.0
+  Min Final Score: 55.0
+  Trading cost total: 0.08%
+  Activos: []
+=================================================================
+
+
+No se pudo descargar datos de ningún activo. Abortando.
