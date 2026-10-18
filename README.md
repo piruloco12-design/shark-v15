@@ -4,25 +4,64 @@ Bot de señales sobre acciones e índices USA en timeframe de 30
 minutos. Corre en Render como worker, opera en papel y avisa por
 Telegram.
 
-## Estado honesto
+## Estado honesto — LEER ESTO ANTES DE TOCAR NADA
 
-El bot **funciona**: descarga datos, evalúa la cadena de filtros,
-abre y cierra operaciones en papel, persiste y avisa.
+El bot **funciona** como software: descarga datos, evalúa la cadena
+de filtros, abre y cierra operaciones en papel, persiste y avisa.
 
-Lo que **todavía no está demostrado** es que tenga ventaja
-estadística. Los resultados hasta ahora son ambiguos y la razón
-principal es el tamaño de muestra, no el código:
+**Pero la estrategia no tiene ventaja.** Eso está medido, no
+supuesto, y el resultado es concluyente (2026-10-18):
 
-- yfinance da 60 días de histórico en 30m. Es un tope de la fuente.
-- Con el cooldown de 6h por activo salen ~20-25 operaciones por
-  activo en esos 60 días.
-- Con 25 operaciones, el intervalo de confianza de la expectativa
-  es tan ancho que casi cualquier conclusión cabe dentro.
+| Universo | Operaciones | Expectativa | Intervalo 90% | P(expect > 0) | Anual |
+|---|---|---|---|---|---|
+| 4 activos actuales | 407 | +0.425 | — | — | +1.11% |
+| 30 ETFs diversificados | 2966 | **−0.292** | −0.375 a −0.210 | **0.0%** | −13.16% |
+| 14 ETFs renta variable | 1265 | **−0.304** | −0.514 a −0.097 | **0.9%** | −3.35% |
 
-`validator/robustez.py` existe para medir exactamente eso en lugar
-de adivinarlo.
+Son **las mismas reglas** en los tres casos. Lo único que cambia es
+qué instrumentos. En los dos universos limpios el intervalo de
+confianza del 90% queda **entero por debajo de cero**: no es
+incertidumbre por muestra pequeña, es un resultado en contra.
 
-**No subir dinero real a esto hasta que la muestra sea grande.**
+### Por qué el resultado de los 4 activos no cuenta
+
+Los 4 activos son IWM + NVDA, AMZN y META. Las tres últimas son
+mega-caps elegidas en 2026. Backtestear NVDA 15 años atrás no mide
+la estrategia: mide que se acertó el ticker mirando el resultado.
+
+*Una lista de tickers de hoy es información del futuro.*
+
+El +1.11% anual venía de la selección de activos, no de las reglas.
+
+### Qué NO arregla esto
+
+- Más indicadores
+- Ajustar umbrales (ya se barrieron 16 combinaciones de SL/TP)
+- Más activos (se probó: empeora)
+- Más posiciones simultáneas (se probó: empeora monótonamente,
+  de −2.19% con 2 huecos a −15.75% con 20)
+- Subir el riesgo (multiplica las pérdidas: −25.97% anual al 1%)
+
+Los filtros sofisticados apenas intervienen: en el experimento, el
+39% de las señales se pierden por cuenta llena y el 13% por
+cooldown, frente a un 2% por volatilidad. Lo que decide es la
+mecánica de la cuenta, no la inteligencia de los filtros.
+
+### Para qué sirve este repositorio ahora
+
+Como banco de pruebas honesto. La infraestructura sí es buena y
+mata una hipótesis mala en una hora en vez de en cuatro meses:
+
+- backtester de cartera con capital compartido y límite real de
+  posiciones (`validator/cartera.py`)
+- universo limpio de sesgo de supervivencia
+- bootstrap y Monte Carlo de significancia (`validator/robustez.py`)
+- traducción a economía real: rentabilidad anual y capital
+  necesario para un objetivo de ingresos
+- 172 comprobaciones automáticas y validación en CI
+
+**No poner dinero real en la estrategia actual.** No por falta de
+validación: por exceso de ella.
 
 ## Arrancar
 
@@ -55,6 +94,17 @@ TIMEFRAME=1d PERIOD=15y python validator/shark_v15_backtester.py
 
 # ¿El resultado significa algo o es suerte?
 python validator/robustez.py
+
+# Backtest de CARTERA: una cuenta, capital compartido, límite
+# real de posiciones simultáneas
+python -c "
+import sys; sys.path.insert(0,'validator')
+from cartera import backtest_cartera
+"
+
+# El experimento que mató la hipótesis de diversificación:
+# config actual vs 30 ETFs vs 14 ETFs de renta variable
+python validator/experimento_universo.py
 ```
 
 Todo esto corre también en GitHub Actions
@@ -137,8 +187,10 @@ paper_broker.py         apertura y cierre en papel
 storage.py              SQLite
 telegram_alerts.py      avisos
 
-validator/shark_v15_backtester.py   backtest walk-forward fiel
+validator/shark_v15_backtester.py   backtest walk-forward por activo
+validator/cartera.py                backtest de cartera (una cuenta)
 validator/robustez.py               bootstrap, Monte Carlo, barrido
+validator/experimento_universo.py   prueba de diversificación
 tests/                              regresión, sin red
 ```
 
