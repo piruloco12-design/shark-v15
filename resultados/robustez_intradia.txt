@@ -30,23 +30,31 @@ LECTURA: INDECISO. El cero está dentro del intervalo, así que
 ==============================================================
 2) MONTE CARLO DE LA CURVA DE CAPITAL
 ==============================================================
-Capital inicial:              1000.00 €
-Drawdown mediano:             4.37%
-Drawdown percentil 95:        6.59%
-Peor drawdown simulado:       9.55%
+Capital inicial:   1000.00 €
+Operaciones:       62
 
-Capital final, percentil 5:   999.71 €
-Capital final, mediana:       999.71 €
-Capital final, percentil 95:  999.71 €
+A) MISMAS OPERACIONES, OTRO ORDEN
+   (el capital final no cambia al barajar; solo el camino)
+   Drawdown mediano:        4.37%
+   Drawdown percentil 95:   6.59%
+   Peor drawdown simulado:  9.55%
+   Capital final (fijo):    999.71 €
 
-Prob. terminar en pérdida:    100.0%
-Prob. perder la mitad:        0.0%
+B) REMUESTREO: si las próximas operaciones salieran de
+   esta misma distribución
+   Capital final, percentil 5:   927.91 €
+   Capital final, mediana:       999.66 €
+   Capital final, percentil 95:  1071.68 €
+   Drawdown percentil 95:        9.16%
+   Prob. terminar en pérdida:    50.4%
+   Prob. perder la mitad:        0.0%
 
-LECTURA: con estas operaciones en otro orden, el drawdown que hay
-         que estar dispuesto a aguantar es del 6.6%,
-         no el que salió en el histórico. El orden de las
-         operaciones es azar; la racha mala no tiene por qué
-         haber caído dentro del periodo de prueba.
+LECTURA: el drawdown que hay que estar dispuesto a aguantar es
+         del 6.6%, no el que salió en el histórico: el orden
+         de las operaciones es azar y la racha mala no tiene por
+         qué haber caído dentro del periodo de prueba.
+         El remuestreo da 50% de probabilidad de acabar
+         en pérdida sobre otras 62 operaciones.
 
 ==============================================================
 3) BARRIDO DE PARÁMETROS (SL / TP)

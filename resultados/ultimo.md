@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-18 12:54 UTC
-Commit:  888828ec
+Fecha:   2026-10-18 13:02 UTC
+Commit:  4b3a54be
 Disparo: push
 
 ## Entorno
@@ -876,23 +876,31 @@ LECTURA: INDECISO. El cero está dentro del intervalo, así que
 ==============================================================
 2) MONTE CARLO DE LA CURVA DE CAPITAL
 ==============================================================
-Capital inicial:              1000.00 €
-Drawdown mediano:             4.37%
-Drawdown percentil 95:        6.59%
-Peor drawdown simulado:       9.55%
+Capital inicial:   1000.00 €
+Operaciones:       62
 
-Capital final, percentil 5:   999.71 €
-Capital final, mediana:       999.71 €
-Capital final, percentil 95:  999.71 €
+A) MISMAS OPERACIONES, OTRO ORDEN
+   (el capital final no cambia al barajar; solo el camino)
+   Drawdown mediano:        4.37%
+   Drawdown percentil 95:   6.59%
+   Peor drawdown simulado:  9.55%
+   Capital final (fijo):    999.71 €
 
-Prob. terminar en pérdida:    100.0%
-Prob. perder la mitad:        0.0%
+B) REMUESTREO: si las próximas operaciones salieran de
+   esta misma distribución
+   Capital final, percentil 5:   927.91 €
+   Capital final, mediana:       999.66 €
+   Capital final, percentil 95:  1071.68 €
+   Drawdown percentil 95:        9.16%
+   Prob. terminar en pérdida:    50.4%
+   Prob. perder la mitad:        0.0%
 
-LECTURA: con estas operaciones en otro orden, el drawdown que hay
-         que estar dispuesto a aguantar es del 6.6%,
-         no el que salió en el histórico. El orden de las
-         operaciones es azar; la racha mala no tiene por qué
-         haber caído dentro del periodo de prueba.
+LECTURA: el drawdown que hay que estar dispuesto a aguantar es
+         del 6.6%, no el que salió en el histórico: el orden
+         de las operaciones es azar y la racha mala no tiene por
+         qué haber caído dentro del periodo de prueba.
+         El remuestreo da 50% de probabilidad de acabar
+         en pérdida sobre otras 62 operaciones.
 
 ==============================================================
 3) BARRIDO DE PARÁMETROS (SL / TP)
@@ -962,23 +970,31 @@ LECTURA: INDECISO. El cero está dentro del intervalo, así que
 ==============================================================
 2) MONTE CARLO DE LA CURVA DE CAPITAL
 ==============================================================
-Capital inicial:              1000.00 €
-Drawdown mediano:             8.76%
-Drawdown percentil 95:        13.60%
-Peor drawdown simulado:       22.34%
+Capital inicial:   1000.00 €
+Operaciones:       496
 
-Capital final, percentil 5:   1143.76 €
-Capital final, mediana:       1143.76 €
-Capital final, percentil 95:  1143.76 €
+A) MISMAS OPERACIONES, OTRO ORDEN
+   (el capital final no cambia al barajar; solo el camino)
+   Drawdown mediano:        8.76%
+   Drawdown percentil 95:   13.60%
+   Peor drawdown simulado:  22.34%
+   Capital final (fijo):    1143.76 €
 
-Prob. terminar en pérdida:    0.0%
-Prob. perder la mitad:        0.0%
+B) REMUESTREO: si las próximas operaciones salieran de
+   esta misma distribución
+   Capital final, percentil 5:   937.69 €
+   Capital final, mediana:       1144.71 €
+   Capital final, percentil 95:  1357.01 €
+   Drawdown percentil 95:        18.10%
+   Prob. terminar en pérdida:    13.2%
+   Prob. perder la mitad:        0.0%
 
-LECTURA: con estas operaciones en otro orden, el drawdown que hay
-         que estar dispuesto a aguantar es del 13.6%,
-         no el que salió en el histórico. El orden de las
-         operaciones es azar; la racha mala no tiene por qué
-         haber caído dentro del periodo de prueba.
+LECTURA: el drawdown que hay que estar dispuesto a aguantar es
+         del 13.6%, no el que salió en el histórico: el orden
+         de las operaciones es azar y la racha mala no tiene por
+         qué haber caído dentro del periodo de prueba.
+         El remuestreo da 13% de probabilidad de acabar
+         en pérdida sobre otras 496 operaciones.
 
 ==============================================================
 3) BARRIDO DE PARÁMETROS (SL / TP)
