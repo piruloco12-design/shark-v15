@@ -7,6 +7,7 @@ Descargando universo de produccion...
   4 de 4 activos
 Descargando universo limpio...
   30 de 30 activos
+  de los cuales 14 son renta variable USA
 
 ==============================================================================================================
   CONFIGURACION                      ACT  HUE  RIESGO    OPS  OPS/AÑO    WR%   EXPECT     PF   ANUAL%     DD%
@@ -22,6 +23,13 @@ Descargando universo limpio...
   30 ETFs / 12 huecos                 30   12  0.50%   2966   208.8   43.1   -0.292   0.77   -13.16    88.0
   30 ETFs / 20 huecos                 30   20  0.50%   3441   242.3   42.8   -0.265   0.78   -15.75    92.1
 
+  -- solo renta variable USA (universo homogeneo) --
+     (los umbrales del bot estan calibrados sobre acciones;
+      bonos y materias primas necesitarian reescalado)
+  14 ETFs accion / 2 huecos           14    2  0.50%    539    37.9   43.8   -0.365   0.86    -1.54    27.6
+  14 ETFs accion / 6 huecos           14    6  0.50%   1265    89.1   44.1   -0.304   0.87    -3.35    43.7
+  14 ETFs accion / 6 huecos / 0.25%   14    6  0.25%   1265    89.1   44.1   -0.163   0.88    -1.61    24.2
+
   -- mismo numero de huecos, riesgo ajustado --
      (mas posiciones a la vez = mas riesgo total;
       bajar el riesgo por operacion lo compensa)
@@ -32,24 +40,25 @@ Descargando universo limpio...
 ======================================================================
 ¿QUE ESTA LIMITANDO LAS OPERACIONES?
 ======================================================================
-    1973x ( 28.5% de las señales)  Cuenta llena (12 posiciones)
-    1127x ( 16.3% de las señales)  Cooldown por activo (6h)
-      98x (  1.4% de las señales)  Volatilidad no válida: Volatilidad demasiado comprimida
-       9x (  0.1% de las señales)  ADX insuficiente para sniper: 20.19 < 22.0 | Score final ins
-       8x (  0.1% de las señales)  ADX insuficiente para sniper: 21.01 < 22.0 | Score final ins
-       8x (  0.1% de las señales)  ADX insuficiente para sniper: 20.88 < 22.0 | Score final ins
+    1395x ( 39.2% de las señales)  Cuenta llena (6 posiciones)
+     461x ( 13.0% de las señales)  Cooldown por activo (6h)
+      81x (  2.3% de las señales)  Volatilidad no válida: Volatilidad demasiado comprimida
+       5x (  0.1% de las señales)  ADX insuficiente para sniper: 20.19 < 22.0 | Score final ins
+       5x (  0.1% de las señales)  ADX insuficiente para sniper: 20.46 < 22.0 | Score final ins
+       5x (  0.1% de las señales)  ADX insuficiente para sniper: 20.11 < 22.0 | Score final ins
 
 ======================================================================
 ¿EL RESULTADO DEL UNIVERSO LIMPIO ES SIGNIFICATIVO?
 ======================================================================
-  Operaciones:            2966
-  Expectativa observada:  -0.2920 EUR
-  Intervalo 90%:          -0.3752  a  -0.2104
-  Prob. expectativa > 0:  0.0%
+  Operaciones:            1265
+  Expectativa observada:  -0.3037 EUR
+  Intervalo 90%:          -0.5136  a  -0.0965
+  Prob. expectativa > 0:  0.9%
 
-  LECTURA: el cero sigue dentro del intervalo. Mas
-           operaciones reducen el ruido, pero no han
-           bastado para demostrar la ventaja.
+  LECTURA: intervalo entero por DEBAJO de cero. Esto no es
+           incertidumbre: es un resultado concluyente en
+           contra. Con esta muestra, la estrategia pierde
+           dinero en este universo, y no por mala suerte.
 
 ======================================================================
 VEREDICTO
@@ -57,11 +66,11 @@ VEREDICTO
   Config actual (4 activos / 2 huecos):
     28.7 ops/año | +1.11% anual | DD 8.7%
   Universo limpio diversificado:
-    208.8 ops/año | -13.16% anual | DD 88.0%
+    89.1 ops/año | -3.35% anual | DD 43.7%
 
-  Operaciones por año: x7.3
+  Operaciones por año: x3.1
   La diversificacion NO mejoro la rentabilidad
-  (+1.11% -> -13.16%)
+  (+1.11% -> -3.35%)
   Si la ventaja no se mantiene fuera de los 4 activos
   elegidos, probablemente venia de haberlos elegido.
 ======================================================================
