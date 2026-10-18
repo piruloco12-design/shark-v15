@@ -1,0 +1,134 @@
+name: Validacion SHARK V15
+
+# Corre los tests y los backtests en un entorno con red de verdad.
+# Se dispara a mano (workflow_dispatch) o en cada push a main.
+on:
+  workflow_dispatch:
+    inputs:
+      timeframe:
+        description: "Timeframe (30m, 1h, 1d)"
+        required: false
+        default: "30m"
+      period:
+        description: "Histórico (60d, 730d, 15y...). Vacío = el que toque al timeframe"
+        required: false
+        default: ""
+      assets:
+        description: "Activos separados por coma. Vacío = los de config.py"
+        required: false
+        default: ""
+  push:
+    branches: [main]
+
+jobs:
+  tests:
+    name: Tests de regresion
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Entorno
+        run: |
+          python -c "import pandas, numpy, yfinance, ta; print('pandas', pandas.__version__)"
+          python -c "import pandas as pd; print('tzdata OK:', pd.Timestamp('2026-01-01', tz='UTC').tz_convert('US/Eastern'))"
+
+      - name: test_arreglos
+        run: python tests/test_arreglos.py
+
+      - name: test_cooldown
+        run: python tests/test_cooldown.py
+
+      - name: Comprobar que todo importa
+        env:
+          TELEGRAM_TOKEN: ""
+          TELEGRAM_CHAT_ID: ""
+        run: |
+          python - <<'PY'
+          import importlib
+          modulos = [
+              "config", "storage", "indicators", "data_feed", "market_regime",
+              "signals", "opportunity_scanner", "risk_management",
+              "session_volatility_intelligence", "risk_control_engine",
+              "trade_intelligence", "ai_filter", "final_decision_engine",
+              "paper_broker", "telegram_alerts", "live_engine", "main",
+          ]
+          fallos = []
+          for m in modulos:
+              try:
+                  importlib.import_module(m)
+                  print(f"  OK    {m}")
+              except Exception as e:
+                  print(f"  FALLA {m}: {type(e).__name__}: {e}")
+                  fallos.append(m)
+          raise SystemExit(1 if fallos else 0)
+          PY
+
+  backtest:
+    name: Backtest
+    runs-on: ubuntu-latest
+    needs: tests
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Instalar dependencias
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Diagnostico del feed
+        env:
+          TIMEFRAME: ${{ github.event.inputs.timeframe || '30m' }}
+          PERIOD: ${{ github.event.inputs.period }}
+          ASSETS: ${{ github.event.inputs.assets }}
+        run: |
+          python - <<'PY'
+          import config
+          from data_feed import get_data
+          print(f"Timeframe: {config.TIMEFRAME} | Periodo: {config.PERIOD}")
+          print(f"Activos: {config.ASSETS}")
+          print(f"Providers: {config.DATA_PROVIDER_ORDER}")
+          print(f"MIN_BARS: {config.MIN_BARS}")
+          print()
+          for t in config.ASSETS:
+              try:
+                  df, prov = get_data(t, config.TIMEFRAME, config.PERIOD)
+                  idx = df.index.tz_convert("US/Eastern")
+                  dias = idx.normalize().nunique()
+                  horas = sorted(set(idx.hour))
+                  print(f"{t:6} | {prov:9} | {len(df):5} velas | {dias:4} dias "
+                        f"| {len(df)/dias:5.1f}/dia | horas ET {horas}")
+                  print(f"       | {idx[0]} -> {idx[-1]}")
+              except Exception as e:
+                  print(f"{t:6} | ERROR: {type(e).__name__}: {e}")
+          PY
+
+      - name: Backtest walk-forward
+        env:
+          TIMEFRAME: ${{ github.event.inputs.timeframe || '30m' }}
+          PERIOD: ${{ github.event.inputs.period }}
+          ASSETS: ${{ github.event.inputs.assets }}
+        run: |
+          mkdir -p salida
+          python validator/shark_v15_backtester.py 2>&1 | tee salida/backtest.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: resultados-backtest
+          path: salida/
+          retention-days: 30

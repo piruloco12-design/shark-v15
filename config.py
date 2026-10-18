@@ -35,12 +35,21 @@ BLOCK_DUPLICATE_SIGNALS = os.getenv("BLOCK_DUPLICATE_SIGNALS", "true").strip().l
 
 TIMEFRAME = os.getenv("TIMEFRAME", "30m").strip()
 
+# Histórico por defecto según el timeframe. Son los topes de
+# yfinance, no decisiones nuestras:
+#   intradía por debajo de 1h -> 60 días como máximo
+#   1h                        -> 730 días
+#   diario                    -> años (sin tope práctico)
 if TIMEFRAME in ["1m", "5m", "15m", "30m"]:
-    PERIOD = "60d"
+    _PERIOD_DEFECTO = "60d"
 elif TIMEFRAME in ["60m", "1h"]:
-    PERIOD = "730d"
+    _PERIOD_DEFECTO = "730d"
 else:
-    PERIOD = "6mo"
+    _PERIOD_DEFECTO = "15y"
+
+# Se puede forzar por entorno para validar sobre histórico largo
+# sin tocar código:  TIMEFRAME=1d PERIOD=15y
+PERIOD = os.getenv("PERIOD", _PERIOD_DEFECTO).strip()
 
 LOOP_INTERVAL = int(os.getenv("LOOP_INTERVAL", "300"))
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
@@ -49,11 +58,14 @@ REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
 # ACTIVOS CORE
 # ==========================================
 
+_ASSETS_DEFECTO = "IWM,NVDA,AMZN,META"
+
+# Configurable por entorno para poder validar sobre una cesta
+# distinta sin tocar código:  ASSETS=SPY,QQQ,AAPL,MSFT
 ASSETS = [
-    "IWM",
-    "NVDA",
-    "AMZN",
-    "META",
+    a.strip().upper()
+    for a in os.getenv("ASSETS", _ASSETS_DEFECTO).split(",")
+    if a.strip()
 ]
 
 # ==========================================
