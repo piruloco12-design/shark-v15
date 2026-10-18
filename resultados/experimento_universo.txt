@@ -1,0 +1,67 @@
+==============================================================================================================
+EXPERIMENTO DE UNIVERSO — ¿diversificar cambia la economía?
+==============================================================================================================
+Timeframe: 1d | Periodo: 15y | Capital: 1000 EUR
+
+Descargando universo de produccion...
+  4 de 4 activos
+Descargando universo limpio...
+  30 de 30 activos
+
+==============================================================================================================
+  CONFIGURACION                      ACT  HUE  RIESGO    OPS  OPS/AÑO    WR%   EXPECT     PF   ANUAL%     DD%
+==============================================================================================================
+
+  -- universo de produccion (con sesgo de seleccion) --
+  4 activos / 2 huecos (ACTUAL)        4    2  0.50%    407    28.7   49.6   +0.425   1.15    +1.11     8.7
+  4 activos / 4 huecos                 4    4  0.50%    496    34.9   48.4   +0.269   1.09    +0.86    13.1
+
+  -- universo limpio de ETFs --
+  30 ETFs / 2 huecos                  30    2  0.50%    615    43.3   44.9   -0.435   0.83    -2.19    35.6
+  30 ETFs / 6 huecos                  30    6  0.50%   1842   129.7   43.6   -0.376   0.79    -7.98    71.2
+  30 ETFs / 12 huecos                 30   12  0.50%   2966   208.8   43.1   -0.292   0.77   -13.16    88.0
+  30 ETFs / 20 huecos                 30   20  0.50%   3441   242.3   42.8   -0.265   0.78   -15.75    92.1
+
+  -- mismo numero de huecos, riesgo ajustado --
+     (mas posiciones a la vez = mas riesgo total;
+      bajar el riesgo por operacion lo compensa)
+  30 ETFs / 12 huecos / 0.25%         30   12  0.25%   2966   208.8   43.1   -0.210   0.78    -6.60    64.3
+  30 ETFs / 12 huecos / 1.0%          30   12  1.00%   2966   208.8   43.1   -0.332   0.75   -25.97    98.9
+==============================================================================================================
+
+======================================================================
+¿QUE ESTA LIMITANDO LAS OPERACIONES?
+======================================================================
+    1973x ( 28.5% de las señales)  Cuenta llena (12 posiciones)
+    1127x ( 16.3% de las señales)  Cooldown por activo (6h)
+      98x (  1.4% de las señales)  Volatilidad no válida: Volatilidad demasiado comprimida
+       9x (  0.1% de las señales)  ADX insuficiente para sniper: 20.19 < 22.0 | Score final ins
+       8x (  0.1% de las señales)  ADX insuficiente para sniper: 21.01 < 22.0 | Score final ins
+       8x (  0.1% de las señales)  ADX insuficiente para sniper: 20.88 < 22.0 | Score final ins
+
+======================================================================
+¿EL RESULTADO DEL UNIVERSO LIMPIO ES SIGNIFICATIVO?
+======================================================================
+  Operaciones:            2966
+  Expectativa observada:  -0.2920 EUR
+  Intervalo 90%:          -0.3752  a  -0.2104
+  Prob. expectativa > 0:  0.0%
+
+  LECTURA: el cero sigue dentro del intervalo. Mas
+           operaciones reducen el ruido, pero no han
+           bastado para demostrar la ventaja.
+
+======================================================================
+VEREDICTO
+======================================================================
+  Config actual (4 activos / 2 huecos):
+    28.7 ops/año | +1.11% anual | DD 8.7%
+  Universo limpio diversificado:
+    208.8 ops/año | -13.16% anual | DD 88.0%
+
+  Operaciones por año: x7.3
+  La diversificacion NO mejoro la rentabilidad
+  (+1.11% -> -13.16%)
+  Si la ventaja no se mantiene fuera de los 4 activos
+  elegidos, probablemente venia de haberlos elegido.
+======================================================================

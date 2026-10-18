@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-18 13:10 UTC
-Commit:  6a287563
+Fecha:   2026-10-18 13:28 UTC
+Commit:  a89ade99
 Disparo: push
 
 ## Entorno
@@ -40,6 +40,11 @@ RESULTADO: 28 pruebas pasadas, 0 fallos
 
 ==============================================================
 RESULTADO: 12 pruebas pasadas, 0 fallos
+==============================================================
+  PASA   con menos velas que el warmup devuelve None
+
+==============================================================
+RESULTADO: 22 pruebas pasadas, 0 fallos
 ==============================================================
   trades: 25 | señales: 270
   bloqueos por cooldown: 245
@@ -220,7 +225,7 @@ Bloqueos principales:
   Avg Win:     4.77  |  Avg Loss: 6.49
   Expectancy:  -2.74 por trade
   PF:          0.37
-  Max DD:      25.44 (2.5%)
+  Max DD:      25.43 (2.5%)
   Avg Bars:    8 velas
   Regímenes:   {'BULL_TREND': 2, 'BEAR_TREND': 6, 'TREND': 1}
   Señales:     {'BUY': 2, 'SELL': 7}
@@ -865,7 +870,7 @@ Operaciones totales con la config actual: 62
 ==============================================================
 Operaciones:            62
 Expectativa observada:  -0.0047 € por operación
-Intervalo 90%:          -1.1911  a  +1.1424
+Intervalo 90%:          -1.1910  a  +1.1424
 Prob. expectativa > 0:  49.5%
 
 LECTURA: INDECISO. El cero está dentro del intervalo, así que
@@ -912,18 +917,18 @@ LECTURA: el drawdown que hay que estar dispuesto a aguantar es
   1.5   2.5  1.67    70   41.4   -0.5514   0.84
   1.5   3.0  2.00    64   40.6   -0.0192   0.99
   1.5   3.5  2.33    62   38.7 +  0.3381   1.09
-  2.0   2.0  1.00    69   52.2   -0.5876   0.79
+  2.0   2.0  1.00    69   52.2   -0.5875   0.79
   2.0   2.5  1.25    62   51.6   -0.0047   1.00 <-- CONFIG ACTUAL
   2.0   3.0  1.50    58   50.0 +  0.4205   1.14
   2.0   3.5  1.75    58   43.1 +  0.0923   1.03
-  2.5   2.0  0.80    68   57.4   -0.4915   0.80
+  2.5   2.0  0.80    68   57.4   -0.4914   0.80
   2.5   2.5  1.00    62   56.5   -0.0131   0.99
   2.5   3.0  1.20    57   54.4 +  0.3172   1.12
   2.5   3.5  1.40    56   46.4   -0.0963   0.97
-  3.0   2.0  0.67    66   60.6   -0.4968   0.77
+  3.0   2.0  0.67    66   60.6   -0.4967   0.77
   3.0   2.5  0.83    60   60.0   -0.0520   0.98
   3.0   3.0  1.00    57   56.1 +  0.0606   1.02
-  3.0   3.5  1.17    54   50.0   -0.1321   0.95
+  3.0   3.5  1.17    54   50.0   -0.1320   0.95
 
 Combinaciones con expectativa positiva: 5 de 16
 Configuración actual (SL 2.0 / TP 2.5): expectativa -0.0047, PF 1.00
@@ -942,14 +947,14 @@ Riesgo por operación:   5.00 € (0.5% de 1000 €)
 Expectativa en riesgo:  -0.001 R por operación
 
 RENTABILIDAD ANUAL SOBRE 1000 €
-  pesimista (p05)  :  -310.15 €/año  =  -31.02% anual
+  pesimista (p05)  :  -310.15 €/año  =  -31.01% anual
   central          :    -1.23 €/año  =   -0.12% anual
-  optimista (p95)  :  +297.48 €/año  =  +29.75% anual
+  optimista (p95)  :  +297.49 €/año  =  +29.75% anual
 
 CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
   pesimista (p05)  : imposible, la expectativa es negativa
   central          : imposible, la expectativa es negativa
-  optimista (p95)  :         40,339 €
+  optimista (p95)  :         40,338 €
 
 LECTURA: con expectativa central negativa no hay capital que
          arregle esto. El problema no es el tamaño de la cuenta.
@@ -1077,5 +1082,76 @@ LECTURA: 1.0% anual. Eso está por debajo de lo que
          el riesgo solo multiplica también las pérdidas.
 
 ==============================================================
+```
+
+## Experimento de universo (diversificacion)
+```
+==============================================================================================================
+EXPERIMENTO DE UNIVERSO — ¿diversificar cambia la economía?
+==============================================================================================================
+Timeframe: 1d | Periodo: 15y | Capital: 1000 EUR
+
+Descargando universo de produccion...
+  4 de 4 activos
+Descargando universo limpio...
+  30 de 30 activos
+
+==============================================================================================================
+  CONFIGURACION                      ACT  HUE  RIESGO    OPS  OPS/AÑO    WR%   EXPECT     PF   ANUAL%     DD%
+==============================================================================================================
+
+  -- universo de produccion (con sesgo de seleccion) --
+  4 activos / 2 huecos (ACTUAL)        4    2  0.50%    407    28.7   49.6   +0.425   1.15    +1.11     8.7
+  4 activos / 4 huecos                 4    4  0.50%    496    34.9   48.4   +0.269   1.09    +0.86    13.1
+
+  -- universo limpio de ETFs --
+  30 ETFs / 2 huecos                  30    2  0.50%    615    43.3   44.9   -0.435   0.83    -2.19    35.6
+  30 ETFs / 6 huecos                  30    6  0.50%   1842   129.7   43.6   -0.376   0.79    -7.98    71.2
+  30 ETFs / 12 huecos                 30   12  0.50%   2966   208.8   43.1   -0.292   0.77   -13.16    88.0
+  30 ETFs / 20 huecos                 30   20  0.50%   3441   242.3   42.8   -0.265   0.78   -15.75    92.1
+
+  -- mismo numero de huecos, riesgo ajustado --
+     (mas posiciones a la vez = mas riesgo total;
+      bajar el riesgo por operacion lo compensa)
+  30 ETFs / 12 huecos / 0.25%         30   12  0.25%   2966   208.8   43.1   -0.210   0.78    -6.60    64.3
+  30 ETFs / 12 huecos / 1.0%          30   12  1.00%   2966   208.8   43.1   -0.332   0.75   -25.97    98.9
+==============================================================================================================
+
+======================================================================
+¿QUE ESTA LIMITANDO LAS OPERACIONES?
+======================================================================
+    1973x ( 28.5% de las señales)  Cuenta llena (12 posiciones)
+    1127x ( 16.3% de las señales)  Cooldown por activo (6h)
+      98x (  1.4% de las señales)  Volatilidad no válida: Volatilidad demasiado comprimida
+       9x (  0.1% de las señales)  ADX insuficiente para sniper: 20.19 < 22.0 | Score final ins
+       8x (  0.1% de las señales)  ADX insuficiente para sniper: 21.01 < 22.0 | Score final ins
+       8x (  0.1% de las señales)  ADX insuficiente para sniper: 20.88 < 22.0 | Score final ins
+
+======================================================================
+¿EL RESULTADO DEL UNIVERSO LIMPIO ES SIGNIFICATIVO?
+======================================================================
+  Operaciones:            2966
+  Expectativa observada:  -0.2920 EUR
+  Intervalo 90%:          -0.3752  a  -0.2104
+  Prob. expectativa > 0:  0.0%
+
+  LECTURA: el cero sigue dentro del intervalo. Mas
+           operaciones reducen el ruido, pero no han
+           bastado para demostrar la ventaja.
+
+======================================================================
+VEREDICTO
+======================================================================
+  Config actual (4 activos / 2 huecos):
+    28.7 ops/año | +1.11% anual | DD 8.7%
+  Universo limpio diversificado:
+    208.8 ops/año | -13.16% anual | DD 88.0%
+
+  Operaciones por año: x7.3
+  La diversificacion NO mejoro la rentabilidad
+  (+1.11% -> -13.16%)
+  Si la ventaja no se mantiene fuera de los 4 activos
+  elegidos, probablemente venia de haberlos elegido.
+======================================================================
 ```
 
