@@ -63,6 +63,7 @@ from config import (
     TIMEFRAME,
     PERIOD,
     CAPITAL,
+    RISK_PER_TRADE,
     SL_ATR_MULT,
     TP_ATR_MULT,
 )
@@ -438,6 +439,93 @@ def informe_montecarlo(mc):
     print(f"         en pérdida sobre otras {mc['n_operaciones']} operaciones.")
 
 
+def informe_economia(pnls, boot, datos):
+    """
+    Traduce la expectativa a lo único que importa para decidir:
+    cuánto renta al año y cuánto capital haría falta para vivir
+    de esto.
+
+    Esta sección existe porque es muy fácil mirar "PF 1.11,
+    expectativa positiva" y no darse cuenta de que son 33
+    operaciones al año de 5 € de riesgo.
+    """
+    print("\n" + "=" * 62)
+    print("4) ECONOMÍA REAL: ¿QUÉ SIGNIFICA ESTO EN DINERO?")
+    print("=" * 62)
+
+    if not pnls or boot is None:
+        print("Sin operaciones suficientes.")
+        return
+
+    # Años cubiertos, sacados del activo con más histórico.
+    velas_max = max(len(df) for df in datos.values())
+    if TIMEFRAME in ["1d", "1wk", "1mo"]:
+        anios = velas_max / 252.0
+    else:
+        # Intradía: 13 velas de 30m por día, 6.5 por hora.
+        velas_por_dia = 13.0 if TIMEFRAME == "30m" else 6.5
+        anios = velas_max / velas_por_dia / 252.0
+
+    if anios <= 0:
+        print("No se pudo estimar el periodo.")
+        return
+
+    ops_anio = len(pnls) / anios
+    riesgo_eur = CAPITAL * RISK_PER_TRADE
+
+    print(f"Periodo cubierto:       {anios:.1f} años")
+    print(f"Operaciones:            {len(pnls)}  ->  {ops_anio:.1f} al año")
+    print(f"Riesgo por operación:   {riesgo_eur:.2f} € "
+          f"({RISK_PER_TRADE * 100:.1f}% de {CAPITAL:.0f} €)")
+
+    if riesgo_eur > 0:
+        print(f"Expectativa en riesgo:  {boot['expectativa_real'] / riesgo_eur:+.3f} R "
+              f"por operación")
+
+    print()
+    print(f"RENTABILIDAD ANUAL SOBRE {CAPITAL:.0f} €")
+    escenarios = [
+        ("pesimista (p05)", boot["p05"]),
+        ("central", boot["expectativa_real"]),
+        ("optimista (p95)", boot["p95"]),
+    ]
+    for nombre, e in escenarios:
+        anual = ops_anio * e
+        print(f"  {nombre:17}: {anual:+8.2f} €/año  =  "
+              f"{anual / CAPITAL * 100:+6.2f}% anual")
+
+    print()
+    print("CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)")
+    alguno = False
+    for nombre, e in escenarios:
+        r = ops_anio * e / CAPITAL
+        if r > 0:
+            print(f"  {nombre:17}: {12000 / r:>14,.0f} €")
+            alguno = True
+        else:
+            print(f"  {nombre:17}: imposible, la expectativa es negativa")
+    print()
+
+    central_anual = ops_anio * boot["expectativa_real"] / CAPITAL
+
+    if not alguno or central_anual <= 0:
+        print("LECTURA: con expectativa central negativa no hay capital que")
+        print("         arregle esto. El problema no es el tamaño de la cuenta.")
+    elif central_anual < 0.05:
+        print(f"LECTURA: {central_anual * 100:.1f}% anual. Eso está por debajo de lo que")
+        print("         da un índice sin hacer nada, y muy por debajo de lo que")
+        print("         haría falta para vivir de esto con una cuenta pequeña.")
+        print("         El cuello de botella no es el código ni los filtros:")
+        print(f"         son {ops_anio:.0f} operaciones al año con una ventaja de")
+        print(f"         {boot['expectativa_real'] / riesgo_eur:.3f} R. Para cambiarlo hace falta más")
+        print("         ventaja por operación o muchas más operaciones, y subir")
+        print("         el riesgo solo multiplica también las pérdidas.")
+    else:
+        print(f"LECTURA: {central_anual * 100:.1f}% anual en el escenario central. Comparar")
+        print("         con lo que da un índice en el mismo periodo antes de")
+        print("         dar por bueno el resultado.")
+
+
 def main():
     print("=" * 62)
     print("ANÁLISIS DE ROBUSTEZ — SHARK V15")
@@ -471,13 +559,17 @@ def main():
         print("       casi cualquier conclusión cabe dentro. Lo que sigue hay")
         print("       que leerlo sabiendo eso.")
 
-    informe_bootstrap(bootstrap_expectativa(pnls))
+    boot = bootstrap_expectativa(pnls)
+
+    informe_bootstrap(boot)
     informe_montecarlo(montecarlo_drawdown(pnls))
 
     print("\n" + "=" * 62)
     print("3) BARRIDO DE PARÁMETROS (SL / TP)")
     print("=" * 62)
     interpretar_barrido(barrido_parametros(datos))
+
+    informe_economia(pnls, boot, datos)
 
     print("\n" + "=" * 62)
     return 0
