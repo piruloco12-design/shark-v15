@@ -27,84 +27,111 @@ Descargando META...
 ============================================================
 IWM | FULL | Bars: 3572
 ============================================================
-Capital:     1000.00 → 1000.00  (+0.00)
-Señales:     471 generadas | 0 ALLOW | 471 BLOCK
-Trades:      0 cerrados | 0 wins | 0 losses
-Winrate:     0.0%
-Avg Trade:   0.00
-Avg Win:     0.00  |  Avg Loss: 0.00
-Expectancy:  0.00 por trade
-PF:          0.00
-Max DD:      0.00 (0.0%)
-Avg Bars:    0 velas
+Capital:     1000.00 → 932.83  (-67.17)
+Señales:     180 generadas | 104 ALLOW | 76 BLOCK
+Trades:      103 cerrados | 42 wins | 61 losses
+Winrate:     40.8%
+Avg Trade:   -0.65
+Avg Win:     5.89  |  Avg Loss: 5.15
+Expectancy:  -0.65 por trade
+PF:          0.79
+Max DD:      101.75 (10.2%)
+Avg Bars:    12 velas
+Regímenes:   {'TREND': 29, 'BULL_TREND': 38, 'BEAR_TREND': 36}
+Señales:     {'BUY': 54, 'SELL': 49}
 Bloqueos principales:
-   471x  Sesión no válida: Fuera de horario principal
+    38x  Cooldown por activo (6h)
+    14x  Volatilidad no válida: Volatilidad demasiado comprimida
+     2x  ADX insuficiente para sniper: 21.78 < 22.0 | Score final insuficiente para sniper: 54.86 <
+     1x  ADX insuficiente para sniper: 20.09 < 22.0 | Score final insuficiente para sniper: 53.80 <
+     1x  ADX insuficiente para sniper: 21.29 < 22.0 | Score final insuficiente para sniper: 54.56 <
 
 ============================================================
 NVDA | FULL | Bars: 3572
 ============================================================
-Capital:     1000.00 → 1000.00  (+0.00)
-Señales:     589 generadas | 0 ALLOW | 589 BLOCK
-Trades:      0 cerrados | 0 wins | 0 losses
-Winrate:     0.0%
-Avg Trade:   0.00
-Avg Win:     0.00  |  Avg Loss: 0.00
-Expectancy:  0.00 por trade
-PF:          0.00
-Max DD:      0.00 (0.0%)
-Avg Bars:    0 velas
+Capital:     1000.00 → 1168.13  (+168.13)
+Señales:     214 generadas | 136 ALLOW | 78 BLOCK
+Trades:      136 cerrados | 76 wins | 60 losses
+Winrate:     55.9%
+Avg Trade:   1.24
+Avg Win:     6.49  |  Avg Loss: 5.42
+Expectancy:  1.24 por trade
+PF:          1.52
+Max DD:      35.48 (3.5%)
+Avg Bars:    10 velas
+Regímenes:   {'BULL_TREND': 78, 'TREND': 34, 'BEAR_TREND': 24}
+Señales:     {'BUY': 108, 'SELL': 28}
 Bloqueos principales:
-   589x  Sesión no válida: Fuera de horario principal
+    56x  Cooldown por activo (6h)
+     3x  Volatilidad no válida: Volatilidad demasiado comprimida
+     1x  ADX insuficiente para sniper: 21.94 < 22.0 | Score final insuficiente para sniper: 54.96 <
+     1x  ADX insuficiente para sniper: 21.59 < 22.0 | Score final insuficiente para sniper: 54.75 <
+     1x  ADX insuficiente para sniper: 20.79 < 22.0 | Score final insuficiente para sniper: 54.24 <
 
 ============================================================
 AMZN | FULL | Bars: 3572
 ============================================================
-Capital:     1000.00 → 1000.00  (+0.00)
-Señales:     636 generadas | 0 ALLOW | 636 BLOCK
-Trades:      0 cerrados | 0 wins | 0 losses
-Winrate:     0.0%
-Avg Trade:   0.00
-Avg Win:     0.00  |  Avg Loss: 0.00
-Expectancy:  0.00 por trade
-PF:          0.00
-Max DD:      0.00 (0.0%)
-Avg Bars:    0 velas
+Capital:     1000.00 → 1006.90  (+6.90)
+Señales:     218 generadas | 131 ALLOW | 87 BLOCK
+Trades:      131 cerrados | 61 wins | 70 losses
+Winrate:     46.6%
+Avg Trade:   0.05
+Avg Win:     6.24  |  Avg Loss: 5.33
+Expectancy:  0.05 por trade
+PF:          1.02
+Max DD:      69.68 (7.0%)
+Avg Bars:    12 velas
+Regímenes:   {'BULL_TREND': 66, 'BEAR_TREND': 32, 'TREND': 33}
+Señales:     {'BUY': 88, 'SELL': 43}
 Bloqueos principales:
-   636x  Sesión no válida: Fuera de horario principal
+    49x  Cooldown por activo (6h)
+    11x  Volatilidad no válida: Volatilidad demasiado comprimida
+     1x  ADX insuficiente para sniper: 20.18 < 22.0 | Score final insuficiente para sniper: 53.86 <
+     1x  ADX insuficiente para sniper: 20.15 < 22.0 | Score final insuficiente para sniper: 53.84 <
+     1x  ADX insuficiente para sniper: 20.87 < 22.0 | Score final insuficiente para sniper: 54.29 <
 
 ============================================================
 META | FULL | Bars: 3424
 ============================================================
-Capital:     1000.00 → 1000.00  (+0.00)
-Señales:     526 generadas | 0 ALLOW | 526 BLOCK
-Trades:      0 cerrados | 0 wins | 0 losses
-Winrate:     0.0%
-Avg Trade:   0.00
-Avg Win:     0.00  |  Avg Loss: 0.00
-Expectancy:  0.00 por trade
-PF:          0.00
-Max DD:      0.00 (0.0%)
-Avg Bars:    0 velas
+Capital:     1000.00 → 1035.71  (+35.71)
+Señales:     182 generadas | 127 ALLOW | 55 BLOCK
+Trades:      126 cerrados | 61 wins | 65 losses
+Winrate:     48.4%
+Avg Trade:   0.28
+Avg Win:     6.19  |  Avg Loss: 5.26
+Expectancy:  0.28 por trade
+PF:          1.10
+Max DD:      60.29 (6.0%)
+Avg Bars:    12 velas
+Regímenes:   {'BULL_TREND': 74, 'BEAR_TREND': 31, 'TREND': 21}
+Señales:     {'BUY': 93, 'SELL': 33}
 Bloqueos principales:
-   526x  Sesión no válida: Fuera de horario principal
+    41x  Cooldown por activo (6h)
+     2x  ADX insuficiente para sniper: 20.42 < 22.0 | Score final insuficiente para sniper: 54.01 <
+     1x  ADX insuficiente para sniper: 20.81 < 22.0 | Score final insuficiente para sniper: 54.26 <
+     1x  ADX insuficiente para sniper: 20.34 < 22.0 | Score final insuficiente para sniper: 53.96 <
+     1x  ADX insuficiente para sniper: 21.96 < 22.0 | Score final insuficiente para sniper: 54.97 <
 
 
 #################################################################
   CONSOLIDADO FULL PERIOD — 4 activos
 #################################################################
-  Señales:     2222 generadas | 0 ALLOW | 2222 BLOCK
-  Trades:      0 cerrados | 0 wins | 0 losses
-  Winrate:     0.0%
-  Avg Trade:   0.00
-  Avg Win:     0.00  |  Avg Loss: 0.00
-  Expectancy:  0.00 por trade
-  PF:          0.00
-  PnL total:   +0.00
-  Peor DD:     0.00
+  Señales:     794 generadas | 498 ALLOW | 296 BLOCK
+  Trades:      496 cerrados | 240 wins | 256 losses
+  Winrate:     48.4%
+  Avg Trade:   0.29
+  Avg Win:     6.24  |  Avg Loss: 5.29
+  Expectancy:  0.29 por trade
+  PF:          1.11
+  PnL total:   +143.57
+  Peor DD:     101.75
+  -------------------------------------------------------------
+  Suma PnL trades:  +143.76   (debe cuadrar con PnL total)
+  ✅ Cuadra (dif. 0.20, son costes de trades aún abiertos)
 #################################################################
 
   VEREDICTO:
-  ⚠️  Muy pocos trades para conclusiones fiables.
+  🟡  Edge marginal. Positivo pero débil.
 
 
 =================================================================
@@ -115,173 +142,225 @@ Bloqueos principales:
   ============================================================
   IWM | TRAIN | Bars: 2440
   ============================================================
-  Capital:     1000.00 → 1000.00  (+0.00)
-  Señales:     338 generadas | 0 ALLOW | 338 BLOCK
-  Trades:      0 cerrados | 0 wins | 0 losses
-  Winrate:     0.0%
-  Avg Trade:   0.00
-  Avg Win:     0.00  |  Avg Loss: 0.00
-  Expectancy:  0.00 por trade
-  PF:          0.00
-  Max DD:      0.00 (0.0%)
-  Avg Bars:    0 velas
+  Capital:     1000.00 → 986.90  (-13.10)
+  Señales:     130 generadas | 75 ALLOW | 55 BLOCK
+  Trades:      75 cerrados | 34 wins | 41 losses
+  Winrate:     45.3%
+  Avg Trade:   -0.17
+  Avg Win:     5.94  |  Avg Loss: 5.25
+  Expectancy:  -0.17 por trade
+  PF:          0.94
+  Max DD:      56.62 (5.7%)
+  Avg Bars:    11 velas
+  Regímenes:   {'TREND': 19, 'BULL_TREND': 28, 'BEAR_TREND': 28}
+  Señales:     {'BUY': 40, 'SELL': 35}
   Bloqueos principales:
-     338x  Sesión no válida: Fuera de horario principal
+      28x  Cooldown por activo (6h)
+      14x  Volatilidad no válida: Volatilidad demasiado comprimida
+       1x  ADX insuficiente para sniper: 20.09 < 22.0 | Score final insuficiente para sniper: 53.80 <
+       1x  ADX insuficiente para sniper: 21.29 < 22.0 | Score final insuficiente para sniper: 54.56 <
+       1x  ADX insuficiente para sniper: 20.74 < 22.0 | Score final insuficiente para sniper: 54.21 <
 
 --- IWM TEST ---
   ============================================================
   IWM | TEST | Bars: 1132
   ============================================================
-  Capital:     1000.00 → 1000.00  (+0.00)
-  Señales:     133 generadas | 0 ALLOW | 133 BLOCK
-  Trades:      0 cerrados | 0 wins | 0 losses
-  Winrate:     0.0%
-  Avg Trade:   0.00
-  Avg Win:     0.00  |  Avg Loss: 0.00
-  Expectancy:  0.00 por trade
-  PF:          0.00
-  Max DD:      0.00 (0.0%)
-  Avg Bars:    0 velas
+  Capital:     1000.00 → 945.21  (-54.79)
+  Señales:     50 generadas | 29 ALLOW | 21 BLOCK
+  Trades:      28 cerrados | 8 wins | 20 losses
+  Winrate:     28.6%
+  Avg Trade:   -1.95
+  Avg Win:     5.73  |  Avg Loss: 5.03
+  Expectancy:  -1.95 por trade
+  PF:          0.46
+  Max DD:      68.17 (6.8%)
+  Avg Bars:    13 velas
+  Regímenes:   {'TREND': 10, 'BEAR_TREND': 8, 'BULL_TREND': 10}
+  Señales:     {'SELL': 14, 'BUY': 14}
   Bloqueos principales:
-     133x  Sesión no válida: Fuera de horario principal
+      10x  Cooldown por activo (6h)
+       1x  ADX insuficiente para sniper: 21.62 < 22.0 | Score final insuficiente para sniper: 54.76 <
+       1x  ADX insuficiente para sniper: 20.92 < 22.0 | Score final insuficiente para sniper: 54.32 <
+       1x  ADX insuficiente para sniper: 20.38 < 22.0 | Score final insuficiente para sniper: 53.99 <
+       1x  ADX insuficiente para sniper: 20.19 < 22.0 | Score final insuficiente para sniper: 53.87 <
 
 --- NVDA TRAIN ---
   ============================================================
   NVDA | TRAIN | Bars: 2440
   ============================================================
-  Capital:     1000.00 → 1000.00  (+0.00)
-  Señales:     415 generadas | 0 ALLOW | 415 BLOCK
-  Trades:      0 cerrados | 0 wins | 0 losses
-  Winrate:     0.0%
-  Avg Trade:   0.00
-  Avg Win:     0.00  |  Avg Loss: 0.00
-  Expectancy:  0.00 por trade
-  PF:          0.00
-  Max DD:      0.00 (0.0%)
-  Avg Bars:    0 velas
+  Capital:     1000.00 → 1082.41  (+82.41)
+  Señales:     154 generadas | 97 ALLOW | 57 BLOCK
+  Trades:      96 cerrados | 51 wins | 45 losses
+  Winrate:     53.1%
+  Avg Trade:   0.86
+  Avg Win:     6.28  |  Avg Loss: 5.29
+  Expectancy:  0.86 por trade
+  PF:          1.35
+  Max DD:      35.48 (3.5%)
+  Avg Bars:    10 velas
+  Regímenes:   {'BULL_TREND': 54, 'TREND': 23, 'BEAR_TREND': 19}
+  Señales:     {'BUY': 76, 'SELL': 20}
   Bloqueos principales:
-     415x  Sesión no válida: Fuera de horario principal
+      41x  Cooldown por activo (6h)
+       3x  Volatilidad no válida: Volatilidad demasiado comprimida
+       1x  ADX insuficiente para sniper: 21.94 < 22.0 | Score final insuficiente para sniper: 54.96 <
+       1x  ADX insuficiente para sniper: 21.59 < 22.0 | Score final insuficiente para sniper: 54.75 <
+       1x  ADX insuficiente para sniper: 20.79 < 22.0 | Score final insuficiente para sniper: 54.24 <
 
 --- NVDA TEST ---
   ============================================================
   NVDA | TEST | Bars: 1132
   ============================================================
-  Capital:     1000.00 → 1000.00  (+0.00)
-  Señales:     174 generadas | 0 ALLOW | 174 BLOCK
-  Trades:      0 cerrados | 0 wins | 0 losses
-  Winrate:     0.0%
-  Avg Trade:   0.00
-  Avg Win:     0.00  |  Avg Loss: 0.00
-  Expectancy:  0.00 por trade
-  PF:          0.00
-  Max DD:      0.00 (0.0%)
-  Avg Bars:    0 velas
+  Capital:     1000.00 → 1067.08  (+67.08)
+  Señales:     63 generadas | 40 ALLOW | 23 BLOCK
+  Trades:      40 cerrados | 24 wins | 16 losses
+  Winrate:     60.0%
+  Avg Trade:   1.68
+  Avg Win:     6.33  |  Avg Loss: 5.30
+  Expectancy:  1.68 por trade
+  PF:          1.79
+  Max DD:      17.79 (1.8%)
+  Avg Bars:    9 velas
+  Regímenes:   {'BEAR_TREND': 6, 'BULL_TREND': 24, 'TREND': 10}
+  Señales:     {'SELL': 8, 'BUY': 32}
   Bloqueos principales:
-     174x  Sesión no válida: Fuera de horario principal
+      16x  Cooldown por activo (6h)
+       1x  ADX insuficiente para sniper: 20.01 < 22.0 | Score final insuficiente para sniper: 53.76 <
+       1x  ADX insuficiente para sniper: 20.82 < 22.0 | Score final insuficiente para sniper: 54.26 <
+       1x  ADX insuficiente para sniper: 20.90 < 22.0 | Score final insuficiente para sniper: 54.31 <
+       1x  ADX insuficiente para sniper: 20.41 < 22.0 | Score final insuficiente para sniper: 54.01 <
 
 --- AMZN TRAIN ---
   ============================================================
   AMZN | TRAIN | Bars: 2440
   ============================================================
-  Capital:     1000.00 → 1000.00  (+0.00)
-  Señales:     477 generadas | 0 ALLOW | 477 BLOCK
-  Trades:      0 cerrados | 0 wins | 0 losses
-  Winrate:     0.0%
-  Avg Trade:   0.00
-  Avg Win:     0.00  |  Avg Loss: 0.00
-  Expectancy:  0.00 por trade
-  PF:          0.00
-  Max DD:      0.00 (0.0%)
-  Avg Bars:    0 velas
+  Capital:     1000.00 → 1017.29  (+17.29)
+  Señales:     164 generadas | 95 ALLOW | 69 BLOCK
+  Trades:      94 cerrados | 45 wins | 49 losses
+  Winrate:     47.9%
+  Avg Trade:   0.18
+  Avg Win:     6.24  |  Avg Loss: 5.38
+  Expectancy:  0.18 por trade
+  PF:          1.07
+  Max DD:      56.27 (5.6%)
+  Avg Bars:    12 velas
+  Regímenes:   {'BULL_TREND': 52, 'BEAR_TREND': 18, 'TREND': 24}
+  Señales:     {'BUY': 67, 'SELL': 27}
   Bloqueos principales:
-     477x  Sesión no válida: Fuera de horario principal
+      40x  Cooldown por activo (6h)
+       8x  Volatilidad no válida: Volatilidad demasiado comprimida
+       1x  ADX insuficiente para sniper: 20.18 < 22.0 | Score final insuficiente para sniper: 53.86 <
+       1x  ADX insuficiente para sniper: 20.15 < 22.0 | Score final insuficiente para sniper: 53.84 <
+       1x  ADX insuficiente para sniper: 20.87 < 22.0 | Score final insuficiente para sniper: 54.29 <
 
 --- AMZN TEST ---
   ============================================================
   AMZN | TEST | Bars: 1132
   ============================================================
-  Capital:     1000.00 → 1000.00  (+0.00)
-  Señales:     159 generadas | 0 ALLOW | 159 BLOCK
-  Trades:      0 cerrados | 0 wins | 0 losses
-  Winrate:     0.0%
-  Avg Trade:   0.00
-  Avg Win:     0.00  |  Avg Loss: 0.00
-  Expectancy:  0.00 por trade
-  PF:          0.00
-  Max DD:      0.00 (0.0%)
-  Avg Bars:    0 velas
+  Capital:     1000.00 → 994.82  (-5.18)
+  Señales:     54 generadas | 36 ALLOW | 18 BLOCK
+  Trades:      36 cerrados | 16 wins | 20 losses
+  Winrate:     44.4%
+  Avg Trade:   -0.14
+  Avg Win:     6.15  |  Avg Loss: 5.18
+  Expectancy:  -0.14 por trade
+  PF:          0.95
+  Max DD:      35.22 (3.5%)
+  Avg Bars:    12 velas
+  Regímenes:   {'BEAR_TREND': 14, 'BULL_TREND': 14, 'TREND': 8}
+  Señales:     {'SELL': 16, 'BUY': 20}
   Bloqueos principales:
-     159x  Sesión no válida: Fuera de horario principal
+       9x  Cooldown por activo (6h)
+       3x  Volatilidad no válida: Volatilidad demasiado comprimida
+       1x  ADX insuficiente para sniper: 21.56 < 22.0 | Score final insuficiente para sniper: 54.72 <
+       1x  ADX insuficiente para sniper: 20.63 < 22.0 | Score final insuficiente para sniper: 54.14 <
+       1x  ADX insuficiente para sniper: 20.23 < 22.0 | Score final insuficiente para sniper: 53.89 <
 
 --- META TRAIN ---
   ============================================================
   META | TRAIN | Bars: 2336
   ============================================================
-  Capital:     1000.00 → 1000.00  (+0.00)
-  Señales:     339 generadas | 0 ALLOW | 339 BLOCK
-  Trades:      0 cerrados | 0 wins | 0 losses
-  Winrate:     0.0%
-  Avg Trade:   0.00
-  Avg Win:     0.00  |  Avg Loss: 0.00
-  Expectancy:  0.00 por trade
-  PF:          0.00
-  Max DD:      0.00 (0.0%)
-  Avg Bars:    0 velas
+  Capital:     1000.00 → 997.78  (-2.22)
+  Señales:     119 generadas | 83 ALLOW | 36 BLOCK
+  Trades:      83 cerrados | 38 wins | 45 losses
+  Winrate:     45.8%
+  Avg Trade:   -0.03
+  Avg Win:     6.14  |  Avg Loss: 5.23
+  Expectancy:  -0.03 por trade
+  PF:          0.99
+  Max DD:      48.04 (4.8%)
+  Avg Bars:    12 velas
+  Regímenes:   {'BULL_TREND': 49, 'BEAR_TREND': 21, 'TREND': 13}
+  Señales:     {'BUY': 62, 'SELL': 21}
   Bloqueos principales:
-     339x  Sesión no válida: Fuera de horario principal
+      24x  Cooldown por activo (6h)
+       2x  ADX insuficiente para sniper: 20.42 < 22.0 | Score final insuficiente para sniper: 54.01 <
+       1x  ADX insuficiente para sniper: 20.81 < 22.0 | Score final insuficiente para sniper: 54.26 <
+       1x  ADX insuficiente para sniper: 20.34 < 22.0 | Score final insuficiente para sniper: 53.96 <
+       1x  ADX insuficiente para sniper: 21.96 < 22.0 | Score final insuficiente para sniper: 54.97 <
 
 --- META TEST ---
   ============================================================
   META | TEST | Bars: 1088
   ============================================================
-  Capital:     1000.00 → 1000.00  (+0.00)
-  Señales:     187 generadas | 0 ALLOW | 187 BLOCK
-  Trades:      0 cerrados | 0 wins | 0 losses
-  Winrate:     0.0%
-  Avg Trade:   0.00
-  Avg Win:     0.00  |  Avg Loss: 0.00
-  Expectancy:  0.00 por trade
-  PF:          0.00
-  Max DD:      0.00 (0.0%)
-  Avg Bars:    0 velas
+  Capital:     1000.00 → 1038.02  (+38.02)
+  Señales:     63 generadas | 44 ALLOW | 19 BLOCK
+  Trades:      43 cerrados | 23 wins | 20 losses
+  Winrate:     53.5%
+  Avg Trade:   0.89
+  Avg Win:     6.28  |  Avg Loss: 5.32
+  Expectancy:  0.89 por trade
+  PF:          1.36
+  Max DD:      43.85 (4.4%)
+  Avg Bars:    13 velas
+  Regímenes:   {'BEAR_TREND': 10, 'BULL_TREND': 25, 'TREND': 8}
+  Señales:     {'SELL': 12, 'BUY': 31}
   Bloqueos principales:
-     187x  Sesión no válida: Fuera de horario principal
+      17x  Cooldown por activo (6h)
+       1x  ADX insuficiente para sniper: 20.71 < 22.0 | Score final insuficiente para sniper: 54.19 <
+       1x  ADX insuficiente para sniper: 21.91 < 22.0 | Score final insuficiente para sniper: 54.94 <
 
 
 #################################################################
   CONSOLIDADO TRAIN (IN-SAMPLE) — 4 activos
 #################################################################
-  Señales:     1569 generadas | 0 ALLOW | 1569 BLOCK
-  Trades:      0 cerrados | 0 wins | 0 losses
-  Winrate:     0.0%
-  Avg Trade:   0.00
-  Avg Win:     0.00  |  Avg Loss: 0.00
-  Expectancy:  0.00 por trade
-  PF:          0.00
-  PnL total:   +0.00
-  Peor DD:     0.00
+  Señales:     567 generadas | 350 ALLOW | 217 BLOCK
+  Trades:      348 cerrados | 168 wins | 180 losses
+  Winrate:     48.3%
+  Avg Trade:   0.24
+  Avg Win:     6.17  |  Avg Loss: 5.29
+  Expectancy:  0.24 por trade
+  PF:          1.09
+  PnL total:   +84.38
+  Peor DD:     56.62
+  -------------------------------------------------------------
+  Suma PnL trades:  +84.47   (debe cuadrar con PnL total)
+  ✅ Cuadra (dif. 0.09, son costes de trades aún abiertos)
 #################################################################
 
   VEREDICTO:
-  ⚠️  Muy pocos trades para conclusiones fiables.
+  🟡  Edge marginal. Positivo pero débil.
 
 
 #################################################################
   CONSOLIDADO TEST (OUT-OF-SAMPLE) — 4 activos
 #################################################################
-  Señales:     653 generadas | 0 ALLOW | 653 BLOCK
-  Trades:      0 cerrados | 0 wins | 0 losses
-  Winrate:     0.0%
-  Avg Trade:   0.00
-  Avg Win:     0.00  |  Avg Loss: 0.00
-  Expectancy:  0.00 por trade
-  PF:          0.00
-  PnL total:   +0.00
-  Peor DD:     0.00
+  Señales:     230 generadas | 149 ALLOW | 81 BLOCK
+  Trades:      147 cerrados | 71 wins | 76 losses
+  Winrate:     48.3%
+  Avg Trade:   0.31
+  Avg Win:     6.20  |  Avg Loss: 5.20
+  Expectancy:  0.31 por trade
+  PF:          1.11
+  PnL total:   +45.12
+  Peor DD:     68.17
+  -------------------------------------------------------------
+  Suma PnL trades:  +45.32   (debe cuadrar con PnL total)
+  ✅ Cuadra (dif. 0.20, son costes de trades aún abiertos)
 #################################################################
 
   VEREDICTO:
-  ⚠️  Muy pocos trades para conclusiones fiables.
+  🟡  Edge marginal. Positivo pero débil.
 
 
 =================================================================
@@ -289,24 +368,24 @@ Bloqueos principales:
 =================================================================
 
   IWM:
-    TRAIN: 0 trades | WR 0.0% | PF 0.00 | Exp 0.00
-    TEST:  0 trades | WR 0.0% | PF 0.00 | Exp 0.00
-    ⚠️  Pocos trades para comparar
+    TRAIN: 75 trades | WR 45.3% | PF 0.94 | Exp -0.17
+    TEST:  28 trades | WR 28.6% | PF 0.46 | Exp -1.95
+    ⚠️  Degradación significativa train→test
 
   NVDA:
-    TRAIN: 0 trades | WR 0.0% | PF 0.00 | Exp 0.00
-    TEST:  0 trades | WR 0.0% | PF 0.00 | Exp 0.00
-    ⚠️  Pocos trades para comparar
+    TRAIN: 96 trades | WR 53.1% | PF 1.35 | Exp 0.86
+    TEST:  40 trades | WR 60.0% | PF 1.79 | Exp 1.68
+    ✅  Consistente entre train y test
 
   AMZN:
-    TRAIN: 0 trades | WR 0.0% | PF 0.00 | Exp 0.00
-    TEST:  0 trades | WR 0.0% | PF 0.00 | Exp 0.00
-    ⚠️  Pocos trades para comparar
+    TRAIN: 94 trades | WR 47.9% | PF 1.07 | Exp 0.18
+    TEST:  36 trades | WR 44.4% | PF 0.95 | Exp -0.14
+    ✅  Consistente entre train y test
 
   META:
-    TRAIN: 0 trades | WR 0.0% | PF 0.00 | Exp 0.00
-    TEST:  0 trades | WR 0.0% | PF 0.00 | Exp 0.00
-    ⚠️  Pocos trades para comparar
+    TRAIN: 83 trades | WR 45.8% | PF 0.99 | Exp -0.03
+    TEST:  43 trades | WR 53.5% | PF 1.36 | Exp 0.89
+    ✅  Consistente entre train y test
 
 
 =================================================================

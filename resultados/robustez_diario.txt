@@ -12,6 +12,72 @@ Descargando 1d / 15y ...
   AMZN    yfinance     3772 velas
   META    yfinance     3624 velas
 
-Operaciones totales con la config actual: 0
-Muy pocas operaciones para cualquier análisis estadístico.
-Eso ya es el resultado: no hay nada que medir.
+Operaciones totales con la config actual: 496
+
+==============================================================
+1) BOOTSTRAP DE LA EXPECTATIVA
+==============================================================
+Operaciones:            496
+Expectativa observada:  +0.2898 € por operación
+Intervalo 90%:          -0.1286  a  +0.7187
+Prob. expectativa > 0:  86.6%
+
+LECTURA: INDECISO. El cero está dentro del intervalo, así que
+         esta muestra no distingue la estrategia de una moneda.
+         No significa que no funcione: significa que todavía no
+         se sabe. La única cura es más operaciones.
+
+==============================================================
+2) MONTE CARLO DE LA CURVA DE CAPITAL
+==============================================================
+Capital inicial:              1000.00 €
+Drawdown mediano:             8.76%
+Drawdown percentil 95:        13.60%
+Peor drawdown simulado:       22.34%
+
+Capital final, percentil 5:   1143.76 €
+Capital final, mediana:       1143.76 €
+Capital final, percentil 95:  1143.76 €
+
+Prob. terminar en pérdida:    0.0%
+Prob. perder la mitad:        0.0%
+
+LECTURA: con estas operaciones en otro orden, el drawdown que hay
+         que estar dispuesto a aguantar es del 13.6%,
+         no el que salió en el histórico. El orden de las
+         operaciones es azar; la racha mala no tiene por qué
+         haber caído dentro del periodo de prueba.
+
+==============================================================
+3) BARRIDO DE PARÁMETROS (SL / TP)
+==============================================================
+
+   SL    TP   R:R   OPS    WR%    EXPECT     PF  VEREDICTO
+--------------------------------------------------------------
+  1.5   2.0  1.33   614   45.4 +  0.1033   1.04
+  1.5   2.5  1.67   551   39.2 +  0.0279   1.01
+  1.5   3.0  2.00   519   34.7   -0.0216   0.99
+  1.5   3.5  2.33   486   32.7 +  0.2238   1.06
+  2.0   2.0  1.00   559   53.1 +  0.1645   1.07
+  2.0   2.5  1.25   496   48.4 +  0.2898   1.11 <-- CONFIG ACTUAL
+  2.0   3.0  1.50   466   42.1 +  0.0927   1.03
+  2.0   3.5  1.75   435   39.3 +  0.2376   1.07
+  2.5   2.0  0.80   525   57.5 +  0.0545   1.02
+  2.5   2.5  1.00   463   51.8 +  0.0657   1.03
+  2.5   3.0  1.20   424   46.0   -0.0649   0.98
+  2.5   3.5  1.40   394   44.2 +  0.1773   1.06
+  3.0   2.0  0.67   501   62.5 +  0.0936   1.05
+  3.0   2.5  0.83   439   56.9 +  0.1076   1.05
+  3.0   3.0  1.00   402   52.2 +  0.1120   1.05
+  3.0   3.5  1.17   372   50.8 +  0.4022   1.16
+
+Combinaciones con expectativa positiva: 14 de 16
+Configuración actual (SL 2.0 / TP 2.5): expectativa +0.2898, PF 1.11
+Vecinos inmediatos con expectativa positiva: 6 de 8
+
+LECTURA: MESETA. La configuración actual y la mayoría de sus
+         vecinos funcionan. No demuestra que haya edge, pero
+         es compatible con que el efecto sea real y no el
+         número exacto elegido.
+
+==============================================================
