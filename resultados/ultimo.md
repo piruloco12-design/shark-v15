@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-18 13:38 UTC
-Commit:  abeb7111
+Fecha:   2026-10-18 14:37 UTC
+Commit:  a7f4e8d3
 Disparo: push
 
 ## Entorno
@@ -70,7 +70,7 @@ RESULTADO: 4 pruebas pasadas, 0 fallos
 ## Diagnostico del feed
 ```
 Timeframe 30m | Periodo 60d | MIN_BARS 220
-Providers ['yfinance', 'finnhub', 'alpha_vantage', 'twelve_data']
+Providers ['yfinance', 'stooq', 'finnhub', 'alpha_vantage', 'twelve_data']
 
 ACTIVO  PROVIDER    VELAS  DIAS  X/DIA  HORAS ET
 IWM     yfinance      780    60   13.0  [9, 10, 11, 12, 13, 14, 15]
@@ -959,6 +959,8 @@ CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
 LECTURA: con expectativa central negativa no hay capital que
          arregle esto. El problema no es el tamaño de la cuenta.
 
+JSON escrito en resultados/robustez_30m.json
+
 ==============================================================
 ```
 
@@ -1081,6 +1083,8 @@ LECTURA: 1.0% anual. Eso está por debajo de lo que
          ventaja por operación o muchas más operaciones, y subir
          el riesgo solo multiplica también las pérdidas.
 
+JSON escrito en resultados/robustez_1d.json
+
 ==============================================================
 ```
 
@@ -1161,6 +1165,190 @@ VEREDICTO
   (+1.11% -> -3.35%)
   Si la ventaja no se mantiene fuera de los 4 activos
   elegidos, probablemente venia de haberlos elegido.
+
+  JSON escrito en resultados/universo.json
+======================================================================
+```
+
+## Proveedores de datos
+```
+PRUEBA DE PROVEEDORES — cada uno por separado
+Cascada por defecto: ['yfinance', 'stooq', 'finnhub', 'alpha_vantage', 'twelve_data']
+
+  OK    yfinance   SPY         3772 velas  2011-10-17 -> 2026-10-16
+  FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: 404 C
+  OK    yfinance   BTC-USD     4415 velas  2014-09-17 -> 2026-10-18
+  OK    coinbase   BTC-USD     4109 velas  2015-07-20 -> 2026-10-18
+  FALLA stooq      GLD       ValueError: No se pudo descargar GLD con ningún provider. Detalles: ['stooq: 404 C
+
+CRUCE yfinance vs stooq en SPY (ultimos cierres comunes)
+  no se pudo cruzar: ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: 404 Client Error: Not Found for url: https://stooq.com/q/d/l/?s=spy.us&i=d']
+```
+
+## Experimento por clase de activo
+```
+======================================================================
+EXPERIMENTO POR CLASE DE ACTIVO
+======================================================================
+Periodo: 15y | Capital: 1000 EUR | Timeframe: 1d
+
+Criterio de exito, fijado ANTES de ver los resultados:
+  1. intervalo del 90% del bootstrap entero por encima de cero
+  2. y que bata a comprar y mantener
+
+======================================================================
+CLASE: CRIPTO
+======================================================================
+  24/7. BTC tiene el sesgo de supervivencia mas fuerte que existe.
+  Descargando con providers: coinbase,yfinance
+    BTC-USD    coinbase     4109 velas  2015-07-20 -> 2026-10-18
+    ETH-USD    coinbase     3804 velas  2016-05-18 -> 2026-10-18
+    LTC-USD    coinbase     3714 velas  2016-08-17 -> 2026-10-18
+    BCH-USD    coinbase     3221 velas  2017-12-20 -> 2026-10-18
+
+  4 activos | 4 huecos | 551 operaciones en 10.7 años
+  Winrate 47.9% | PF 1.10 | Expectativa +0.3153
+  Rentabilidad anual del bot:       +1.47%
+  Comprar y mantener (referencia):  +57.85%
+  Peor drawdown: 14.7%
+
+  Bootstrap (551 ops):
+    Intervalo 90%: -0.1573  a  +0.7777
+    Prob. expectativa > 0: 86.6%
+
+  Largos:  362 ops | exp +0.8026 | WR 51.7%
+  Cortos:  189 ops | exp -0.6180 | WR 40.7%
+
+  >>> NO CONCLUYENTE: el cero esta dentro del intervalo.
+
+======================================================================
+CLASE: MATERIAS PRIMAS
+======================================================================
+  ETFs de materias primas, todos anteriores a 2011.
+  Descargando con providers: yfinance,stooq
+    GLD        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    SLV        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    USO        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    DBC        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    DBA        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    UNG        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    PPLT       yfinance     3772 velas  2011-10-17 -> 2026-10-16
+
+  7 activos | 6 huecos | 892 operaciones en 14.2 años
+  Winrate 45.4% | PF 0.94 | Expectativa -0.1684
+  Rentabilidad anual del bot:       -1.11%
+  Comprar y mantener (referencia):   +1.26%
+  Peor drawdown: 30.8%
+
+  Bootstrap (892 ops):
+    Intervalo 90%: -0.4670  a  +0.1292
+    Prob. expectativa > 0: 17.3%
+
+  Largos:  480 ops | exp -0.1527 | WR 46.0%
+  Cortos:  412 ops | exp -0.1866 | WR 44.7%
+
+  >>> NO CONCLUYENTE: el cero esta dentro del intervalo.
+
+======================================================================
+CLASE: RENTA VARIABLE
+======================================================================
+  Indices amplios y sectores. El universo que ya perdio.
+  Descargando con providers: yfinance,stooq
+    SPY        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    QQQ        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    IWM        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    DIA        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    MDY        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    XLE        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    XLF        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    XLK        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    XLV        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    XLI        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    XLP        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    XLY        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    XLU        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    XLB        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+
+  14 activos | 6 huecos | 1265 operaciones en 14.2 años
+  Winrate 44.1% | PF 0.87 | Expectativa -0.3037
+  Rentabilidad anual del bot:       -3.35%
+  Comprar y mantener (referencia):  +11.97%
+  Peor drawdown: 43.7%
+
+  Bootstrap (1265 ops):
+    Intervalo 90%: -0.5136  a  -0.0965
+    Prob. expectativa > 0: 0.9%
+
+  Largos:  856 ops | exp +0.0613 | WR 48.5%
+  Cortos:  409 ops | exp -1.0676 | WR 35.0%
+
+  >>> CONCLUYENTE EN CONTRA: intervalo entero por debajo de cero.
+
+======================================================================
+CLASE: BONOS
+======================================================================
+  Renta fija. Volatilidad muy distinta a la renta variable.
+  Descargando con providers: yfinance,stooq
+    TLT        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    IEF        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    LQD        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    HYG        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    SHY        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+
+  5 activos | 5 huecos | 585 operaciones en 14.2 años
+  Winrate 42.7% | PF 0.57 | Expectativa -0.9936
+  Rentabilidad anual del bot:       -5.93%
+  Comprar y mantener (referencia):   -1.37%
+  Peor drawdown: 58.8%
+
+  Bootstrap (585 ops):
+    Intervalo 90%: -1.2513  a  -0.7335
+    Prob. expectativa > 0: 0.0%
+
+  Largos:  239 ops | exp -1.2276 | WR 40.6%
+  Cortos:  346 ops | exp -0.8319 | WR 44.2%
+
+  >>> CONCLUYENTE EN CONTRA: intervalo entero por debajo de cero.
+
+======================================================================
+CLASE: DIVISAS
+======================================================================
+  ETFs de divisas contra el dolar.
+  Descargando con providers: yfinance,stooq
+    FXE        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    FXY        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    FXB        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    FXF        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+    UUP        yfinance     3772 velas  2011-10-17 -> 2026-10-16
+
+  5 activos | 5 huecos | 572 operaciones en 14.2 años
+  Winrate 43.4% | PF 0.74 | Expectativa -0.6986
+  Rentabilidad anual del bot:       -3.58%
+  Comprar y mantener (referencia):   -0.76%
+  Peor drawdown: 42.2%
+
+  Bootstrap (572 ops):
+    Intervalo 90%: -1.0267  a  -0.3762
+    Prob. expectativa > 0: 0.0%
+
+  Largos:  266 ops | exp -1.0258 | WR 39.8%
+  Cortos:  306 ops | exp -0.4142 | WR 46.4%
+
+  >>> CONCLUYENTE EN CONTRA: intervalo entero por debajo de cero.
+
+======================================================================
+RESUMEN
+======================================================================
+  CLASE                OPS    EXPECT   ANUAL%     B&H%   P(>0)  VEREDICTO
+  cripto               551   +0.3153    +1.47   +57.85   86.6%  no concluyente
+  materias_primas      892   -0.1684    -1.11    +1.26   17.3%  no concluyente
+  renta_variable      1265   -0.3037    -3.35   +11.97    0.9%  en contra
+  bonos                585   -0.9936    -5.93    -1.37    0.0%  en contra
+  divisas              572   -0.6986    -3.58    -0.76    0.0%  en contra
+
+  Ninguna clase pasa el criterio fijado de antemano.
+
+  JSON escrito en resultados/clases.json
 ======================================================================
 ```
 

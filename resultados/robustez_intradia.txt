@@ -108,4 +108,6 @@ CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
 LECTURA: con expectativa central negativa no hay capital que
          arregle esto. El problema no es el tamaño de la cuenta.
 
+JSON escrito en resultados/robustez_30m.json
+
 ==============================================================

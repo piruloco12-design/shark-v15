@@ -1,0 +1,183 @@
+{
+  "timeframe": "1d",
+  "periodo": "15y",
+  "activos": [
+    "AMZN",
+    "IWM",
+    "META",
+    "NVDA"
+  ],
+  "capital": 1000.0,
+  "riesgo_pct": 0.005,
+  "sl_mult": 2.0,
+  "tp_mult": 2.5,
+  "anios": 14.968253968253968,
+  "operaciones": 496,
+  "ops_anio": 33.13679745493107,
+  "bootstrap": {
+    "expectativa": 0.2898466632361572,
+    "p05": -0.1286231045483405,
+    "p50": 0.2892971462986759,
+    "p95": 0.7186805883644332,
+    "prob_positiva": 0.8656
+  },
+  "montecarlo": {
+    "dd_mediano": 8.757050681734125,
+    "dd_p95": 13.601324196260613,
+    "dd_peor": 22.33925863298369,
+    "final_p05": 937.6866918863606,
+    "final_p50": 1144.712405519485,
+    "final_p95": 1357.0147723737825,
+    "dd_remuestreo_p95": 18.102307016333345,
+    "prob_perder_mitad": 0.0,
+    "prob_terminar_en_perdida": 0.1316,
+    "capital_final_real": 1143.763944965134,
+    "n_operaciones": 496
+  },
+  "barrido": [
+    {
+      "sl": 1.5,
+      "tp": 2.0,
+      "operaciones": 614,
+      "winrate": 45.43973941368078,
+      "expectativa": 0.10328747777910591,
+      "pf": 1.0355424941519131,
+      "es_actual": false
+    },
+    {
+      "sl": 1.5,
+      "tp": 2.5,
+      "operaciones": 551,
+      "winrate": 39.201451905626136,
+      "expectativa": 0.02794412219376914,
+      "pf": 1.00868219140704,
+      "es_actual": false
+    },
+    {
+      "sl": 1.5,
+      "tp": 3.0,
+      "operaciones": 519,
+      "winrate": 34.68208092485549,
+      "expectativa": -0.021610114783774836,
+      "pf": 0.993679373742499,
+      "es_actual": false
+    },
+    {
+      "sl": 1.5,
+      "tp": 3.5,
+      "operaciones": 486,
+      "winrate": 32.71604938271605,
+      "expectativa": 0.2237884858581264,
+      "pf": 1.0621186946063559,
+      "es_actual": false
+    },
+    {
+      "sl": 2.0,
+      "tp": 2.0,
+      "operaciones": 559,
+      "winrate": 53.13059033989267,
+      "expectativa": 0.1644932187197796,
+      "pf": 1.0672184116379453,
+      "es_actual": false
+    },
+    {
+      "sl": 2.0,
+      "tp": 2.5,
+      "operaciones": 496,
+      "winrate": 48.38709677419355,
+      "expectativa": 0.2898466632361572,
+      "pf": 1.106125196360176,
+      "es_actual": true
+    },
+    {
+      "sl": 2.0,
+      "tp": 3.0,
+      "operaciones": 466,
+      "winrate": 42.06008583690987,
+      "expectativa": 0.0927427958251661,
+      "pf": 1.0308177601461521,
+      "es_actual": false
+    },
+    {
+      "sl": 2.0,
+      "tp": 3.5,
+      "operaciones": 435,
+      "winrate": 39.310344827586206,
+      "expectativa": 0.23764819909926724,
+      "pf": 1.0742735415886508,
+      "es_actual": false
+    },
+    {
+      "sl": 2.5,
+      "tp": 2.0,
+      "operaciones": 525,
+      "winrate": 57.52380952380952,
+      "expectativa": 0.05448020155653605,
+      "pf": 1.0247722821685168,
+      "es_actual": false
+    },
+    {
+      "sl": 2.5,
+      "tp": 2.5,
+      "operaciones": 463,
+      "winrate": 51.83585313174947,
+      "expectativa": 0.06565345112630418,
+      "pf": 1.0262569457292339,
+      "es_actual": false
+    },
+    {
+      "sl": 2.5,
+      "tp": 3.0,
+      "operaciones": 424,
+      "winrate": 45.990566037735846,
+      "expectativa": -0.06490222414214022,
+      "pf": 0.9765751501785613,
+      "es_actual": false
+    },
+    {
+      "sl": 2.5,
+      "tp": 3.5,
+      "operaciones": 394,
+      "winrate": 44.16243654822335,
+      "expectativa": 0.17731999030247342,
+      "pf": 1.0606816872160592,
+      "es_actual": false
+    },
+    {
+      "sl": 3.0,
+      "tp": 2.0,
+      "operaciones": 501,
+      "winrate": 62.4750499001996,
+      "expectativa": 0.09360206667250547,
+      "pf": 1.0484672871520795,
+      "es_actual": false
+    },
+    {
+      "sl": 3.0,
+      "tp": 2.5,
+      "operaciones": 439,
+      "winrate": 56.947608200455576,
+      "expectativa": 0.1075922987461377,
+      "pf": 1.0483401385918245,
+      "es_actual": false
+    },
+    {
+      "sl": 3.0,
+      "tp": 3.0,
+      "operaciones": 402,
+      "winrate": 52.23880597014925,
+      "expectativa": 0.11202682033594631,
+      "pf": 1.0455851729555126,
+      "es_actual": false
+    },
+    {
+      "sl": 3.0,
+      "tp": 3.5,
+      "operaciones": 372,
+      "winrate": 50.806451612903224,
+      "expectativa": 0.40224422052455605,
+      "pf": 1.1555446946042958,
+      "es_actual": false
+    }
+  ]
+}

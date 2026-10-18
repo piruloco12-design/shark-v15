@@ -73,4 +73,6 @@ VEREDICTO
   (+1.11% -> -3.35%)
   Si la ventaja no se mantiene fuera de los 4 activos
   elegidos, probablemente venia de haberlos elegido.
+
+  JSON escrito en resultados/universo.json
 ======================================================================

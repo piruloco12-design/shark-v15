@@ -115,4 +115,6 @@ LECTURA: 1.0% anual. Eso está por debajo de lo que
          ventaja por operación o muchas más operaciones, y subir
          el riesgo solo multiplica también las pérdidas.
 
+JSON escrito en resultados/robustez_1d.json
+
 ==============================================================

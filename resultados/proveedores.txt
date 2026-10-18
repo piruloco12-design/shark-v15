@@ -1,0 +1,11 @@
+PRUEBA DE PROVEEDORES — cada uno por separado
+Cascada por defecto: ['yfinance', 'stooq', 'finnhub', 'alpha_vantage', 'twelve_data']
+
+  OK    yfinance   SPY         3772 velas  2011-10-17 -> 2026-10-16
+  FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: 404 C
+  OK    yfinance   BTC-USD     4415 velas  2014-09-17 -> 2026-10-18
+  OK    coinbase   BTC-USD     4109 velas  2015-07-20 -> 2026-10-18
+  FALLA stooq      GLD       ValueError: No se pudo descargar GLD con ningún provider. Detalles: ['stooq: 404 C
+
+CRUCE yfinance vs stooq en SPY (ultimos cierres comunes)
+  no se pudo cruzar: ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: 404 Client Error: Not Found for url: https://stooq.com/q/d/l/?s=spy.us&i=d']

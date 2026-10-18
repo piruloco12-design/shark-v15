@@ -1,0 +1,196 @@
+{
+  "configuraciones": [
+    {
+      "nombre": "4 activos / 2 huecos (ACTUAL)",
+      "activos": 4,
+      "huecos": 2,
+      "riesgo_pct": 0.005,
+      "operaciones": 407,
+      "ops_anio": 28.65396106399383,
+      "winrate": 49.631449631449634,
+      "expectativa": 0.4253689048531403,
+      "pf": 1.1505331034802124,
+      "rent_anual_pct": 1.109840866224343,
+      "peor_dd": 8.673953309139366
+    },
+    {
+      "nombre": "4 activos / 4 huecos",
+      "activos": 4,
+      "huecos": 4,
+      "riesgo_pct": 0.005,
+      "operaciones": 496,
+      "ops_anio": 34.91981495759445,
+      "winrate": 48.38709677419355,
+      "expectativa": 0.2687083156018196,
+      "pf": 1.092345604865393,
+      "rent_anual_pct": 0.8641573530707491,
+      "peor_dd": 13.054991112346666
+    },
+    {
+      "nombre": "30 ETFs / 2 huecos",
+      "activos": 30,
+      "huecos": 2,
+      "riesgo_pct": 0.005,
+      "operaciones": 615,
+      "ops_anio": 43.29775443330763,
+      "winrate": 44.87804878048781,
+      "expectativa": -0.43548725178035863,
+      "pf": 0.8282106320398689,
+      "rent_anual_pct": -2.1862061224554696,
+      "peor_dd": 35.58289312817141
+    },
+    {
+      "nombre": "30 ETFs / 6 huecos",
+      "activos": 30,
+      "huecos": 6,
+      "riesgo_pct": 0.005,
+      "operaciones": 1842,
+      "ops_anio": 129.68205474171162,
+      "winrate": 43.648208469055376,
+      "expectativa": -0.37589404928549364,
+      "pf": 0.7890825182866361,
+      "rent_anual_pct": -7.977795195155601,
+      "peor_dd": 71.22132952771415
+    },
+    {
+      "nombre": "30 ETFs / 12 huecos",
+      "activos": 30,
+      "huecos": 12,
+      "riesgo_pct": 0.005,
+      "operaciones": 2966,
+      "ops_anio": 208.81486121819583,
+      "winrate": 43.054619015509104,
+      "expectativa": -0.29197033188020094,
+      "pf": 0.7722567337528357,
+      "rent_anual_pct": -13.16480683906155,
+      "peor_dd": 88.0256789953134
+    },
+    {
+      "nombre": "30 ETFs / 20 huecos",
+      "activos": 30,
+      "huecos": 20,
+      "riesgo_pct": 0.005,
+      "operaciones": 3441,
+      "ops_anio": 242.25621626831148,
+      "winrate": 42.77826213310084,
+      "expectativa": -0.2653173778316687,
+      "pf": 0.776406723292112,
+      "rent_anual_pct": -15.74506226526321,
+      "peor_dd": 92.13786706314391
+    },
+    {
+      "nombre": "14 ETFs accion / 2 huecos",
+      "activos": 14,
+      "huecos": 2,
+      "riesgo_pct": 0.005,
+      "operaciones": 539,
+      "ops_anio": 37.94713762528913,
+      "winrate": 43.7847866419295,
+      "expectativa": -0.3650518157691323,
+      "pf": 0.8590592291839184,
+      "rent_anual_pct": -1.5409385636420359,
+      "peor_dd": 27.584188154380683
+    },
+    {
+      "nombre": "14 ETFs accion / 6 huecos",
+      "activos": 14,
+      "huecos": 6,
+      "riesgo_pct": 0.005,
+      "operaciones": 1265,
+      "ops_anio": 89.05960871241325,
+      "winrate": 44.11067193675889,
+      "expectativa": -0.30372271605054213,
+      "pf": 0.8728115930676398,
+      "rent_anual_pct": -3.349135739708531,
+      "peor_dd": 43.66906746718827
+    },
+    {
+      "nombre": "14 ETFs accion / 6 huecos / 0.25%",
+      "activos": 14,
+      "huecos": 6,
+      "riesgo_pct": 0.0025,
+      "operaciones": 1265,
+      "ops_anio": 89.05960871241325,
+      "winrate": 44.11067193675889,
+      "expectativa": -0.16315384792595944,
+      "pf": 0.877652260058363,
+      "rent_anual_pct": -1.6109518499315745,
+      "peor_dd": 24.183912095785555
+    },
+    {
+      "nombre": "30 ETFs / 12 huecos / 0.25%",
+      "activos": 30,
+      "huecos": 12,
+      "riesgo_pct": 0.0025,
+      "operaciones": 2966,
+      "ops_anio": 208.81486121819583,
+      "winrate": 43.054619015509104,
+      "expectativa": -0.2096853804380569,
+      "pf": 0.784347752851519,
+      "rent_anual_pct": -6.602860165498936,
+      "peor_dd": 64.3186695277849
+    },
+    {
+      "nombre": "30 ETFs / 12 huecos / 1.0%",
+      "activos": 30,
+      "huecos": 12,
+      "riesgo_pct": 0.01,
+      "operaciones": 2966,
+      "ops_anio": 208.81486121819583,
+      "winrate": 43.054619015509104,
+      "expectativa": -0.3324880135127498,
+      "pf": 0.7539541228755133,
+      "rent_anual_pct": -25.967394938625297,
+      "peor_dd": 98.88167860672252
+    }
+  ],
+  "cuello_botella": [
+    {
+      "motivo": "Cuenta llena (6 posiciones)",
+      "veces": 1395,
+      "pct_senales": 39.19640348412475
+    },
+    {
+      "motivo": "Cooldown por activo (6h)",
+      "veces": 461,
+      "pct_senales": 12.95307670694015
+    },
+    {
+      "motivo": "Volatilidad no válida: Volatilidad demasiado comprimida",
+      "veces": 81,
+      "pct_senales": 2.275920202304018
+    },
+    {
+      "motivo": "ADX insuficiente para sniper: 20.19 < 22.0 | Score final insuficiente para sniper: 53.87 < 55.0",
+      "veces": 5,
+      "pct_senales": 0.14048890137679124
+    },
+    {
+      "motivo": "ADX insuficiente para sniper: 20.46 < 22.0 | Score final insuficiente para sniper: 54.04 < 55.0",
+      "veces": 5,
+      "pct_senales": 0.14048890137679124
+    },
+    {
+      "motivo": "ADX insuficiente para sniper: 20.11 < 22.0 | Score final insuficiente para sniper: 53.82 < 55.0",
+      "veces": 5,
+      "pct_senales": 0.14048890137679124
+    },
+    {
+      "motivo": "ADX insuficiente para sniper: 20.34 < 22.0 | Score final insuficiente para sniper: 53.96 < 55.0",
+      "veces": 5,
+      "pct_senales": 0.14048890137679124
+    },
+    {
+      "motivo": "ADX insuficiente para sniper: 21.34 < 22.0 | Score final insuficiente para sniper: 54.59 < 55.0",
+      "veces": 4,
+      "pct_senales": 0.112391121101433
+    }
+  ],
+  "bootstrap": {
+    "operaciones": 1265,
+    "expectativa": -0.30372271605054213,
+    "p05": -0.5135506293843745,
+    "p95": -0.09648935962939068,
+    "prob_positiva": 0.0093
+  }
+}

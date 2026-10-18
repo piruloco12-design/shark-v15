@@ -1,0 +1,211 @@
+{
+  "periodo": "15y",
+  "capital": 1000.0,
+  "clases": [
+    {
+      "clase": "cripto",
+      "nota": "24/7. BTC tiene el sesgo de supervivencia mas fuerte que existe.",
+      "activos": 4,
+      "tickers": [
+        "BCH-USD",
+        "BTC-USD",
+        "ETH-USD",
+        "LTC-USD"
+      ],
+      "fallos": [],
+      "huecos": 4,
+      "operaciones": 551,
+      "anios": 10.699520876112253,
+      "ops_anio": 51.49763306038894,
+      "winrate": 47.91288566243194,
+      "pf": 1.0984916611114417,
+      "expectativa": 0.3153042739967296,
+      "rent_anual_pct": 1.468978250404196,
+      "peor_dd": 14.730793391866717,
+      "boot_p05": -0.1573253231979648,
+      "boot_p95": 0.7777429828967695,
+      "boot_prob_positiva": 0.8663,
+      "buy_hold_anual_pct": 57.84653511642483,
+      "largos": {
+        "n": 362,
+        "expectativa": 0.8025697946322925,
+        "wr": 51.657458563535904
+      },
+      "cortos": {
+        "n": 189,
+        "expectativa": -0.617976776109479,
+        "wr": 40.74074074074074
+      },
+      "concluyente": true,
+      "pasa_criterio": false,
+      "concluyente_en_contra": false
+    },
+    {
+      "clase": "materias_primas",
+      "nota": "ETFs de materias primas, todos anteriores a 2011.",
+      "activos": 7,
+      "tickers": [
+        "DBA",
+        "DBC",
+        "GLD",
+        "PPLT",
+        "SLV",
+        "UNG",
+        "USO"
+      ],
+      "fallos": [],
+      "huecos": 6,
+      "operaciones": 892,
+      "anios": 14.203969883641342,
+      "ops_anio": 62.79934464148034,
+      "winrate": 45.403587443946186,
+      "pf": 0.9389122118253735,
+      "expectativa": -0.16835873169672547,
+      "rent_anual_pct": -1.1057722210791154,
+      "peor_dd": 30.755715762520403,
+      "boot_p05": -0.46695924406273837,
+      "boot_p95": 0.1291572578223151,
+      "boot_prob_positiva": 0.1735,
+      "buy_hold_anual_pct": 1.2607609347035975,
+      "largos": {
+        "n": 480,
+        "expectativa": -0.1527002134521082,
+        "wr": 46.041666666666664
+      },
+      "cortos": {
+        "n": 412,
+        "expectativa": -0.18660166557394936,
+        "wr": 44.66019417475729
+      },
+      "concluyente": true,
+      "pasa_criterio": false,
+      "concluyente_en_contra": false
+    },
+    {
+      "clase": "renta_variable",
+      "nota": "Indices amplios y sectores. El universo que ya perdio.",
+      "activos": 14,
+      "tickers": [
+        "DIA",
+        "IWM",
+        "MDY",
+        "QQQ",
+        "SPY",
+        "XLB",
+        "XLE",
+        "XLF",
+        "XLI",
+        "XLK",
+        "XLP",
+        "XLU",
+        "XLV",
+        "XLY"
+      ],
+      "fallos": [],
+      "huecos": 6,
+      "operaciones": 1265,
+      "anios": 14.203969883641342,
+      "ops_anio": 89.05960871241325,
+      "winrate": 44.11067193675889,
+      "pf": 0.8728115930676398,
+      "expectativa": -0.30372271605054213,
+      "rent_anual_pct": -3.349135739708531,
+      "peor_dd": 43.66906746718827,
+      "boot_p05": -0.5135506293843745,
+      "boot_p95": -0.09648935962939068,
+      "boot_prob_positiva": 0.0093,
+      "buy_hold_anual_pct": 11.966041162091923,
+      "largos": {
+        "n": 856,
+        "expectativa": 0.06127503350064477,
+        "wr": 48.481308411214954
+      },
+      "cortos": {
+        "n": 409,
+        "expectativa": -1.0676299865048617,
+        "wr": 34.96332518337408
+      },
+      "concluyente": true,
+      "pasa_criterio": false,
+      "concluyente_en_contra": true
+    },
+    {
+      "clase": "bonos",
+      "nota": "Renta fija. Volatilidad muy distinta a la renta variable.",
+      "activos": 5,
+      "tickers": [
+        "HYG",
+        "IEF",
+        "LQD",
+        "SHY",
+        "TLT"
+      ],
+      "fallos": [],
+      "huecos": 5,
+      "operaciones": 585,
+      "anios": 14.203969883641342,
+      "ops_anio": 41.18566885119506,
+      "winrate": 42.73504273504273,
+      "pf": 0.5702020960194578,
+      "expectativa": -0.993558513992587,
+      "rent_anual_pct": -5.930930885820251,
+      "peor_dd": 58.82949164053052,
+      "boot_p05": -1.2512844139970356,
+      "boot_p95": -0.7334580489384511,
+      "boot_prob_positiva": 0.0,
+      "buy_hold_anual_pct": -1.373960474335978,
+      "largos": {
+        "n": 239,
+        "expectativa": -1.227569454300377,
+        "wr": 40.58577405857741
+      },
+      "cortos": {
+        "n": 346,
+        "expectativa": -0.8319151188088805,
+        "wr": 44.21965317919075
+      },
+      "concluyente": true,
+      "pasa_criterio": false,
+      "concluyente_en_contra": true
+    },
+    {
+      "clase": "divisas",
+      "nota": "ETFs de divisas contra el dolar.",
+      "activos": 5,
+      "tickers": [
+        "FXB",
+        "FXE",
+        "FXF",
+        "FXY",
+        "UUP"
+      ],
+      "fallos": [],
+      "huecos": 5,
+      "operaciones": 572,
+      "anios": 14.203969883641342,
+      "ops_anio": 40.270431765612955,
+      "winrate": 43.35664335664335,
+      "pf": 0.742336924454941,
+      "expectativa": -0.6986082705619115,
+      "rent_anual_pct": -3.582973689162383,
+      "peor_dd": 42.20409137976984,
+      "boot_p05": -1.0267415710054595,
+      "boot_p95": -0.37617621746077756,
+      "boot_prob_positiva": 0.0001,
+      "buy_hold_anual_pct": -0.7625567470987304,
+      "largos": {
+        "n": 266,
+        "expectativa": -1.0258351577498677,
+        "wr": 39.849624060150376
+      },
+      "cortos": {
+        "n": 306,
+        "expectativa": -0.41415613986911215,
+        "wr": 46.40522875816993
+      },
+      "concluyente": true,
+      "pasa_criterio": false,
+      "concluyente_en_contra": true
+    }
+  ]
+}
