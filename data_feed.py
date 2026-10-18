@@ -8,12 +8,23 @@ import yfinance as yf
 from config import (
     REQUEST_TIMEOUT,
     DATA_PROVIDER_ORDER,
+    MIN_BARS,
     POLYGON_API_KEY,
     POLYGON_BASE_URL,
     TWELVE_DATA_API_KEY,
     ALPHA_VANTAGE_API_KEY,
     FINNHUB_API_KEY,
 )
+
+# Horario regular del mercado USA (Regular Trading Hours).
+# yfinance devuelve SOLO RTH por defecto. Polygon y Finnhub
+# devuelven también pre-market y after-hours, que son velas de
+# muy poca liquidez: ensucian ATR, ADX y EMA200, y además el
+# filtro de sesión las bloquea todas después. Hay que recortarlas
+# en el origen para que todos los providers den lo mismo.
+RTH_INICIO = "09:30"
+RTH_FIN = "16:00"
+ZONA_MERCADO = "US/Eastern"
 
 YF_INTERVAL_MAP = {
     "1m": "1m",
@@ -111,10 +122,60 @@ def _normalize_df(df: pd.DataFrame) -> pd.DataFrame:
 
     df = df.dropna(subset=["Open", "High", "Low", "Close"])
 
-    if len(df) < 50:
-        raise ValueError("Muy pocas velas descargadas")
+    if len(df) < MIN_BARS:
+        raise ValueError(
+            f"Muy pocas velas descargadas: {len(df)} < {MIN_BARS} "
+            f"(ema200 necesita 200 velas o el bot deja de señalizar en silencio)"
+        )
 
     return df
+
+
+def _recortar_a_rth(df: pd.DataFrame, timeframe: str) -> pd.DataFrame:
+    """
+    Deja solo las velas del horario regular del mercado USA.
+
+    Sin esto, Polygon y Finnhub entregan 4:00-20:00 ET (unas 32
+    velas de 30m al día) mientras yfinance entrega 9:30-16:00
+    (13 velas al día). Comparar un backtest de Polygon con uno de
+    yfinance sin recortar NO es comparar lo mismo: son universos
+    de datos distintos.
+    """
+    if df is None or df.empty:
+        return df
+
+    if not isinstance(df.index, pd.DatetimeIndex):
+        return df
+
+    # En diario no hay horario intradía que recortar.
+    if timeframe in ["1d", "1wk", "1mo"]:
+        return df
+
+    try:
+        if df.index.tz is None:
+            idx_et = df.index.tz_localize("UTC").tz_convert(ZONA_MERCADO)
+        else:
+            idx_et = df.index.tz_convert(ZONA_MERCADO)
+    except Exception as e:
+        print(
+            f"FEED | AVISO: no se pudo convertir a {ZONA_MERCADO} ({e}). "
+            f"Los datos van SIN recortar a horario regular. "
+            f"¿falta el paquete tzdata?"
+        )
+        return df
+
+    original = df.copy()
+    original.index = idx_et
+
+    # Días de semana y dentro de RTH. El cierre es exclusivo: la
+    # última vela de 30m arranca a las 15:30, nunca a las 16:00.
+    recortado = original[original.index.dayofweek < 5]
+    recortado = recortado.between_time(RTH_INICIO, RTH_FIN, inclusive="left")
+
+    if recortado.empty:
+        return df
+
+    return recortado
 
 
 def _period_to_date_range(period: str):
@@ -179,6 +240,7 @@ def _polygon_download(symbol: str, timeframe: str, period: str):
         })
 
     df = pd.DataFrame(rows).set_index("Datetime")
+    df = _recortar_a_rth(df, timeframe)
     return _normalize_df(df), "polygon"
 
 
@@ -192,6 +254,7 @@ def _yf_download(symbol: str, timeframe: str, period: str):
         auto_adjust=False,
         progress=False,
         threads=False,
+        prepost=False,  # explícito: solo horario regular
     )
 
     return _normalize_df(df), "yfinance"
@@ -209,7 +272,9 @@ def _twelve_data_download(symbol: str, timeframe: str, period: str):
     params = {
         "symbol": symbol,
         "interval": interval,
-        "outputsize": 500,
+        # 500 velas no llegaban a MIN_BARS después de recortar
+        # a horario regular. Pedimos holgura.
+        "outputsize": 5000,
         "apikey": TWELVE_DATA_API_KEY,
         "format": "JSON",
     }
@@ -231,6 +296,7 @@ def _twelve_data_download(symbol: str, timeframe: str, period: str):
         "volume": "Volume",
     })
     df = df.set_index("datetime")
+    df = _recortar_a_rth(df, timeframe)
 
     return _normalize_df(df), "twelve_data"
 
@@ -281,6 +347,7 @@ def _alpha_vantage_download(symbol: str, timeframe: str, period: str):
         "symbol": symbol,
         "interval": interval,
         "outputsize": "full",
+        "extended_hours": "false",  # solo horario regular
         "apikey": ALPHA_VANTAGE_API_KEY,
     }
 
@@ -306,6 +373,7 @@ def _alpha_vantage_download(symbol: str, timeframe: str, period: str):
     df = pd.DataFrame(rows)
     df["Datetime"] = pd.to_datetime(df["Datetime"], errors="coerce", utc=True)
     df = df.set_index("Datetime")
+    df = _recortar_a_rth(df, timeframe)
 
     return _normalize_df(df), "alpha_vantage"
 
@@ -352,6 +420,7 @@ def _finnhub_download(symbol: str, timeframe: str, period: str):
         "Volume": data["v"],
     }).set_index("Datetime")
 
+    df = _recortar_a_rth(df, timeframe)
     return _normalize_df(df), "finnhub"
 
 

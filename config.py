@@ -4,10 +4,10 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # ==========================================
-# SHARK V15/V16 SIMPLE + POLYGON
+# SHARK V15 SNIPER — yfinance
 # ==========================================
 
-APP_NAME = "SHARK V16 SNIPER"
+APP_NAME = "SHARK V15 SNIPER"
 APP_ENV = os.getenv("APP_ENV", "production").strip().lower()
 
 # ==========================================
@@ -66,17 +66,39 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 
 # ==========================================
 # DATA PROVIDERS
+#
+# yfinance es el primario. La suscripción de Polygon está
+# cancelada, así que polygon queda FUERA de la cascada:
+# dejarlo dentro gastaba una llamada HTTP fallida por cada
+# activo y cada ciclo antes de caer al siguiente provider.
+#
+# El código de Polygon sigue intacto en data_feed.py. Para
+# reactivarlo basta una variable de entorno en Render:
+#     DATA_PROVIDER_ORDER=polygon,yfinance
+#
+# Límite de yfinance intradía: 60 días de histórico. Es de la
+# fuente, no del bot.
 # ==========================================
 
-PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "polygon").strip().lower()
+PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "yfinance").strip().lower()
+
+_ORDEN_PROVIDERS_DEFECTO = "yfinance,finnhub,alpha_vantage,twelve_data"
 
 DATA_PROVIDER_ORDER = [
-    "polygon",
-    "yfinance",
-    "finnhub",
-    "alpha_vantage",
-    "twelve_data",
+    p.strip().lower()
+    for p in os.getenv("DATA_PROVIDER_ORDER", _ORDEN_PROVIDERS_DEFECTO).split(",")
+    if p.strip()
 ]
+
+# ==========================================
+# MÍNIMO DE VELAS
+#
+# ema200 necesita 200 velas. Con menos, el indicador sale NaN,
+# todas las comparaciones de signals.py dan False y el bot NUNCA
+# señaliza — sin error, sin aviso, sin nada. 220 deja margen.
+# ==========================================
+
+MIN_BARS = int(os.getenv("MIN_BARS", "220"))
 
 POLYGON_API_KEY = os.getenv("POLYGON_API_KEY", "").strip()
 POLYGON_BASE_URL = os.getenv("POLYGON_BASE_URL", "https://api.polygon.io").strip().rstrip("/")
@@ -156,3 +178,21 @@ if REQUEST_TIMEOUT < 5:
 
 if MAX_OPEN_TRADES < 1:
     raise ValueError("MAX_OPEN_TRADES debe ser al menos 1")
+
+if MIN_BARS < 220:
+    raise ValueError(
+        "MIN_BARS no puede ser menor a 220: ema200 necesita 200 velas "
+        "y por debajo de eso el bot deja de señalizar en silencio"
+    )
+
+_PROVIDERS_VALIDOS = {"polygon", "yfinance", "finnhub", "alpha_vantage", "twelve_data"}
+
+_desconocidos = [p for p in DATA_PROVIDER_ORDER if p not in _PROVIDERS_VALIDOS]
+if _desconocidos:
+    raise ValueError(
+        f"DATA_PROVIDER_ORDER contiene providers desconocidos: {_desconocidos}. "
+        f"Válidos: {sorted(_PROVIDERS_VALIDOS)}"
+    )
+
+if not DATA_PROVIDER_ORDER:
+    raise ValueError("DATA_PROVIDER_ORDER no puede estar vacío")

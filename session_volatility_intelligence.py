@@ -1,4 +1,21 @@
+import math
+
 import pandas as pd
+
+# Zona del mercado USA. Necesita la base de datos de zonas
+# horarias (paquete tzdata) instalada. Sin ella, pandas no sabe
+# convertir a "US/Eastern" y este módulo no puede clasificar nada.
+ZONA_MERCADO = "US/Eastern"
+
+
+def _a_float(valor, defecto=0.0):
+    try:
+        valor = float(valor)
+    except (TypeError, ValueError):
+        return defecto
+    if not math.isfinite(valor):
+        return defecto
+    return valor
 
 
 def classify_market_session(df):
@@ -15,20 +32,31 @@ def classify_market_session(df):
 
     ts = df.index[-1]
 
+    error_tz = None
+
     try:
         ts = pd.Timestamp(ts)
         if ts.tzinfo is None:
             ts = ts.tz_localize("UTC")
-        ts_et = ts.tz_convert("US/Eastern")
+        ts_et = ts.tz_convert(ZONA_MERCADO)
         hour_et = ts_et.hour
-    except Exception:
+    except Exception as e:
         hour_et = None
+        error_tz = e
 
     if hour_et is None:
+        # Esto hay que verlo en los logs, no tragárselo. Si falta
+        # el paquete tzdata, TODAS las velas acaban aquí y el
+        # filtro de sesión deja de filtrar.
+        print(
+            f"SESSION | ERROR convirtiendo a {ZONA_MERCADO}: {error_tz} "
+            f"| ¿falta el paquete tzdata? El filtro de sesión va a bloquear "
+            f"todo por seguridad hasta que se arregle."
+        )
         return {
             "session": "UNKNOWN",
             "hour_et": None,
-            "reason": "No se pudo convertir zona horaria"
+            "reason": f"No se pudo convertir zona horaria ({error_tz})"
         }
 
     if 9 <= hour_et < 11:
@@ -66,7 +94,19 @@ def evaluate_session_filter(df, regime):
         }
 
     last = df.iloc[-1]
-    adx = float(last.get("adx", 0))
+    adx = _a_float(last.get("adx", 0))
+
+    # FALLA CERRADA. Antes, una sesión UNKNOWN caía hasta el
+    # "allow: True" del final: si la zona horaria no se podía
+    # resolver, el filtro de sesión se apagaba por completo y el
+    # bot podía abrir trades con velas de las 3 de la mañana.
+    # Si no sabemos en qué sesión estamos, no se opera.
+    if session == "UNKNOWN":
+        return {
+            "allow": False,
+            "session": session,
+            "reason": f"Sesión indeterminada, no se opera a ciegas ({session_info.get('reason')})"
+        }
 
     if session == "OFF_HOURS":
         return {

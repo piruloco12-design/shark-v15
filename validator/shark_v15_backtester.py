@@ -20,6 +20,8 @@ import os
 import sys
 from collections import Counter
 
+import pandas as pd
+
 # =========================================================
 # FIX DE PATH
 # =========================================================
@@ -40,6 +42,7 @@ from config import (
     SNIPER_MIN_AI_SCORE,
     SNIPER_MIN_CONTEXT_SCORE,
     SNIPER_MIN_FINAL_SCORE,
+    COOLDOWN_HOURS_PER_ASSET,
 )
 
 from data_feed import get_data
@@ -66,6 +69,19 @@ BACKTEST_TIMEFRAME = TIMEFRAME
 MIN_WARMUP_BARS = 200
 TRADING_COST_PCT = 0.0008   # 0.08%
 TRAIN_RATIO = 0.70
+
+# El bot en real aplica un cooldown por activo después de cada
+# trade (risk_control_engine.check_asset_cooldown). El backtester
+# lo ignoraba: permitía reentrar en la vela siguiente al cierre.
+# Eso infla el número de trades respecto a lo que de verdad hace
+# el bot, y los trades extra no son aleatorios — son justo los
+# inmediatamente posteriores a otro trade.
+#
+# Con 30m y 6 horas de cooldown, en la práctica salen como mucho
+# 1 ó 2 trades por activo y día.
+#
+# Poner en False solo para comparar contra resultados viejos.
+APLICAR_COOLDOWN = True
 
 
 # =========================================================
@@ -115,6 +131,10 @@ def run_v16_backtest_single_asset(ticker, df, capital_start, label="FULL"):
     total_allowed = 0
     total_blocked = 0
     block_reasons = Counter()
+
+    # Momento (timestamp de la vela) en que termina el cooldown de
+    # este activo. None = sin cooldown activo.
+    cooldown_hasta = None
 
     for i in range(MIN_WARMUP_BARS, len(df)):
         data = df.iloc[: i + 1].copy()
@@ -191,9 +211,23 @@ def run_v16_backtest_single_asset(ticker, df, capital_start, label="FULL"):
 
                 open_position = None
 
+                # Arranca el cooldown desde el cierre, igual que en
+                # real: get_latest_trade_timestamp_for_ticker toma
+                # el MAX(apertura, cierre).
+                if APLICAR_COOLDOWN:
+                    cooldown_hasta = data.index[-1] + pd.Timedelta(
+                        hours=COOLDOWN_HOURS_PER_ASSET
+                    )
+
         # -------------------------------------------------
         # APERTURA DE NUEVO TRADE
         # -------------------------------------------------
+        en_cooldown = (
+            APLICAR_COOLDOWN
+            and cooldown_hasta is not None
+            and data.index[-1] < cooldown_hasta
+        )
+
         if open_position is None:
             regime = detect_market_regime(data)
 
@@ -206,7 +240,16 @@ def run_v16_backtest_single_asset(ticker, df, capital_start, label="FULL"):
                 if scanner_info.get("signal") in ["BUY", "SELL"]:
                     signal = scanner_info["signal"]
 
-            if signal in ["BUY", "SELL"]:
+            if signal in ["BUY", "SELL"] and en_cooldown:
+                # Hubo señal de verdad, pero el bot en real no la
+                # habría podido tomar. Se cuenta como señal y como
+                # bloqueo, para que se vea cuántas se come el
+                # cooldown.
+                total_signals += 1
+                total_blocked += 1
+                block_reasons[f"Cooldown por activo ({COOLDOWN_HOURS_PER_ASSET}h)"] += 1
+
+            elif signal in ["BUY", "SELL"]:
                 total_signals += 1
 
                 adx_value = float(last["adx"])

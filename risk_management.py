@@ -1,3 +1,43 @@
+import math
+
+
+def _es_numero_util(*valores):
+    """
+    True solo si todos los valores son números finitos.
+
+    Esto existe por un fallo real: si el ATR venía NaN (pasa con
+    pocas velas o con un hueco en los datos), el stop y el target
+    salían NaN. Y NaN rompe las validaciones de forma silenciosa,
+    porque en Python:
+
+        float('nan') <= 0   -->  False
+
+    Es decir, un stop NaN pasaba el chequeo "stop_loss <= 0" de
+    paper_broker, pasaba el chequeo "position_size <= 0" de
+    live_engine, y acababa guardado en la base de datos como un
+    trade con niveles NaN que nunca podía cerrarse.
+    """
+    for v in valores:
+        try:
+            if not math.isfinite(float(v)):
+                return False
+        except (TypeError, ValueError):
+            return False
+    return True
+
+
+def _setup_vacio(price):
+    return {
+        "entry": price,
+        "stop_loss": None,
+        "take_profit": None,
+        "position_size": 0,
+        "risk_amount": 0,
+        "risk_per_unit": 0,
+        "rr_ratio": 0,
+    }
+
+
 def calculate_trade_levels(df, signal, capital=1000, risk_per_trade=0.005):
     """
     Gestión de riesgo — SL 2.0 ATR / TP 2.5 ATR.
@@ -5,9 +45,20 @@ def calculate_trade_levels(df, signal, capital=1000, risk_per_trade=0.005):
     WR subió de 30% a 47% al dar más espacio al trade para respirar.
     """
 
+    if df is None or len(df) == 0:
+        return _setup_vacio(0.0)
+
     last = df.iloc[-1]
-    price = float(last["Close"])
-    atr = float(last["atr"])
+
+    try:
+        price = float(last["Close"])
+        atr = float(last["atr"])
+    except (KeyError, TypeError, ValueError):
+        return _setup_vacio(0.0)
+
+    # Sin precio y ATR finitos no hay trade posible.
+    if not _es_numero_util(price, atr) or price <= 0 or atr <= 0:
+        return _setup_vacio(price if _es_numero_util(price) else 0.0)
 
     if signal == "BUY":
         stop_loss = price - (2.0 * atr)
@@ -16,23 +67,28 @@ def calculate_trade_levels(df, signal, capital=1000, risk_per_trade=0.005):
         stop_loss = price + (2.0 * atr)
         take_profit = price - (2.5 * atr)
     else:
-        return {
-            "entry": price,
-            "stop_loss": None,
-            "take_profit": None,
-            "position_size": 0,
-            "risk_amount": 0,
-            "risk_per_unit": 0,
-            "rr_ratio": 0,
-        }
+        return _setup_vacio(price)
+
+    # Un ATR enorme sobre un precio bajo puede dejar el stop (en
+    # SELL: el target) por debajo de cero. No es operable.
+    if stop_loss <= 0 or take_profit <= 0:
+        return _setup_vacio(price)
 
     risk_amount = capital * risk_per_trade
     risk_per_unit = abs(price - stop_loss)
 
-    position_size = 0 if risk_per_unit == 0 else risk_amount / risk_per_unit
+    if risk_per_unit <= 0:
+        return _setup_vacio(price)
+
+    position_size = risk_amount / risk_per_unit
 
     reward_per_unit = abs(take_profit - price)
-    rr_ratio = reward_per_unit / risk_per_unit if risk_per_unit > 0 else 0
+    rr_ratio = reward_per_unit / risk_per_unit
+
+    # Última red: si algo salió no finito, devolvemos setup vacío
+    # en lugar de un trade corrupto.
+    if not _es_numero_util(stop_loss, take_profit, position_size, rr_ratio):
+        return _setup_vacio(price)
 
     return {
         "entry": price,

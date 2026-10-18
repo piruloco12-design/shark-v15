@@ -1,5 +1,5 @@
 import time
-from datetime import datetime
+from datetime import datetime, timezone
 
 from config import (
     ASSETS,
@@ -8,6 +8,7 @@ from config import (
     CAPITAL,
     RISK_PER_TRADE,
     LOOP_INTERVAL,
+    MIN_BARS,
     STARTUP_MESSAGE_ENABLED,
     VERBOSE_LOGS,
     SAVE_ALL_SIGNALS,
@@ -71,9 +72,18 @@ from telegram_alerts import send_telegram_message
 
 def _safe_float(value, default=0.0):
     try:
-        return float(value)
-    except Exception:
+        value = float(value)
+    except (TypeError, ValueError):
         return default
+    # NaN se trata como dato ausente: si pasa como número, las
+    # comparaciones de más abajo fallan en silencio.
+    if value != value:
+        return default
+    return value
+
+
+def _ahora_utc():
+    return datetime.now(timezone.utc).isoformat()
 
 
 def _send_startup_message():
@@ -124,6 +134,10 @@ def _send_mobile_signal_message(
     tp = _safe_float(trade_setup.get("take_profit"))
     rr = _safe_float(trade_setup.get("rr_ratio"))
     size = _safe_float(trade_setup.get("position_size"))
+    # Antes esta línea decía "5.00 €" fijo en el mensaje. Daba la
+    # cifra correcta solo mientras CAPITAL=1000 y RISK=0.005; al
+    # cambiar cualquiera de los dos, mentía.
+    riesgo = _safe_float(trade_setup.get("risk_amount"), CAPITAL * RISK_PER_TRADE)
     ai_score = _safe_float(ai_result.get("score", 50))
     ctx_score = _safe_float(context_result.get("final_score", 55))
 
@@ -156,7 +170,7 @@ def _send_mobile_signal_message(
         f"Stop: {stop:.2f} USD\n"
         f"Take Profit: {tp:.2f} USD\n\n"
         f"R:R: {rr:.2f}\n"
-        f"Riesgo estimado: 5.00 €\n"
+        f"Riesgo estimado: {riesgo:.2f} €\n"
         f"Size: {size:.4f}\n\n"
         f"RSI: {rsi:.2f}\n"
         f"ADX: {adx:.2f}\n"
@@ -183,12 +197,13 @@ def _log(msg):
 
 def run_live_cycle():
     _log("\n=== SHARK V15 SNIPER LIVE CYCLE ===")
-    _log(f"Hora: {datetime.utcnow().isoformat()}")
+    _log(f"Hora: {_ahora_utc()}")
 
     # -------------------------------------------------
     # 1) DESCARGAR DATOS DE TODOS LOS ACTIVOS
     # -------------------------------------------------
     latest_prices = {}
+    rangos_barra = {}
     market_data = {}
 
     for ticker in ASSETS:
@@ -196,12 +211,21 @@ def run_live_cycle():
             df, provider = get_data(ticker, TIMEFRAME, PERIOD)
             df = add_indicators(df)
 
-            if df is not None and len(df) >= 50:
-                latest_prices[ticker] = float(df.iloc[-1]["Close"])
+            if df is not None and len(df) >= MIN_BARS:
+                ultima = df.iloc[-1]
+                latest_prices[ticker] = float(ultima["Close"])
+                # El máximo y el mínimo de la vela en curso. Sin
+                # esto, el cierre de trades solo ve el Close y se
+                # pierde los toques de stop/target intravela.
+                rangos_barra[ticker] = {
+                    "high": float(ultima["High"]),
+                    "low": float(ultima["Low"]),
+                }
                 market_data[ticker] = df
                 _log(f"FEED OK | {ticker} | {provider} | {len(df)} velas")
             else:
-                _log(f"FEED SKIP | {ticker} | datos insuficientes")
+                velas = 0 if df is None else len(df)
+                _log(f"FEED SKIP | {ticker} | datos insuficientes ({velas} < {MIN_BARS})")
 
         except Exception as e:
             _log(f"FEED ERROR | {ticker} | {e}")
@@ -211,7 +235,7 @@ def run_live_cycle():
     # -------------------------------------------------
     if latest_prices:
         try:
-            check_and_close_trades(latest_prices)
+            check_and_close_trades(latest_prices, rangos_barra)
         except Exception as e:
             _log(f"ERROR check_and_close_trades: {e}")
 
@@ -325,6 +349,24 @@ def run_live_cycle():
                 continue
 
             # --- ABRIR TRADE ---
+            # El orden importa y antes estaba al revés: se mandaba
+            # la alerta a Telegram y DESPUÉS se intentaba abrir el
+            # trade. Si open_trade lo rechazaba (setup inválido,
+            # duplicado) o la base de datos fallaba, la alerta ya
+            # estaba enviada. Eso producía avisos de trades que no
+            # existían en la base de datos.
+            #
+            # Ahora: abrir primero, comprobar que quedó guardado de
+            # verdad, y solo entonces avisar.
+            open_trade(ticker, signal, regime, trade_setup)
+
+            if not has_open_trade_for_ticker(ticker):
+                _log(
+                    f"--> NO PERSISTIDO | {ticker} | open_trade no dejó el trade "
+                    f"en la base de datos, no se envía alerta"
+                )
+                continue
+
             _send_mobile_signal_message(
                 ticker=ticker,
                 signal=signal,
@@ -339,8 +381,6 @@ def run_live_cycle():
                 final_result=final_result,
             )
 
-            open_trade(ticker, signal, regime, trade_setup)
-
         except Exception as e:
             err = f"{ticker} | ERROR live cycle: {e}"
             print(err)
@@ -353,7 +393,7 @@ def run_live_engine():
     print("=" * 50)
     print("SHARK V15 SNIPER - INICIO")
     print("=" * 50)
-    print(f"Hora inicio: {datetime.utcnow().isoformat()}")
+    print(f"Hora inicio: {_ahora_utc()}")
     print("Entorno: production")
     print(f"Loop interval: {LOOP_INTERVAL} segundos")
     print("=" * 50)

@@ -6,3 +6,9 @@ python-dotenv
 streamlit
 matplotlib
 ta
+# Base de datos de zonas horarias. Sin esto, pandas no puede
+# convertir a US/Eastern y el filtro de sesión no sabe en qué
+# horario del mercado está cada vela. Estaba de forma implícita
+# (como dependencia de pandas); ahora es explícita para que no
+# desaparezca en un cambio de versión.
+tzdata
