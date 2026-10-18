@@ -89,3 +89,30 @@ LECTURA: MESETA. La configuración actual y la mayoría de sus
          número exacto elegido.
 
 ==============================================================
+4) ECONOMÍA REAL: ¿QUÉ SIGNIFICA ESTO EN DINERO?
+==============================================================
+Periodo cubierto:       15.0 años
+Operaciones:            496  ->  33.1 al año
+Riesgo por operación:   5.00 € (0.5% de 1000 €)
+Expectativa en riesgo:  +0.058 R por operación
+
+RENTABILIDAD ANUAL SOBRE 1000 €
+  pesimista (p05)  :    -4.26 €/año  =   -0.43% anual
+  central          :    +9.60 €/año  =   +0.96% anual
+  optimista (p95)  :   +23.81 €/año  =   +2.38% anual
+
+CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
+  pesimista (p05)  : imposible, la expectativa es negativa
+  central          :      1,249,403 €
+  optimista (p95)  :        503,889 €
+
+LECTURA: 1.0% anual. Eso está por debajo de lo que
+         da un índice sin hacer nada, y muy por debajo de lo que
+         haría falta para vivir de esto con una cuenta pequeña.
+         El cuello de botella no es el código ni los filtros:
+         son 33 operaciones al año con una ventaja de
+         0.058 R. Para cambiarlo hace falta más
+         ventaja por operación o muchas más operaciones, y subir
+         el riesgo solo multiplica también las pérdidas.
+
+==============================================================

@@ -88,3 +88,24 @@ LECTURA: la configuración actual no tiene expectativa positiva
          ahora la mejor de la tabla ES sobreajustar.
 
 ==============================================================
+4) ECONOMÍA REAL: ¿QUÉ SIGNIFICA ESTO EN DINERO?
+==============================================================
+Periodo cubierto:       0.2 años
+Operaciones:            62  ->  260.4 al año
+Riesgo por operación:   5.00 € (0.5% de 1000 €)
+Expectativa en riesgo:  -0.001 R por operación
+
+RENTABILIDAD ANUAL SOBRE 1000 €
+  pesimista (p05)  :  -310.15 €/año  =  -31.02% anual
+  central          :    -1.23 €/año  =   -0.12% anual
+  optimista (p95)  :  +297.48 €/año  =  +29.75% anual
+
+CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
+  pesimista (p05)  : imposible, la expectativa es negativa
+  central          : imposible, la expectativa es negativa
+  optimista (p95)  :         40,339 €
+
+LECTURA: con expectativa central negativa no hay capital que
+         arregle esto. El problema no es el tamaño de la cuenta.
+
+==============================================================

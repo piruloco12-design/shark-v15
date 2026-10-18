@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-18 13:02 UTC
-Commit:  4b3a54be
+Fecha:   2026-10-18 13:10 UTC
+Commit:  6a287563
 Disparo: push
 
 ## Entorno
@@ -934,6 +934,27 @@ LECTURA: la configuración actual no tiene expectativa positiva
          ahora la mejor de la tabla ES sobreajustar.
 
 ==============================================================
+4) ECONOMÍA REAL: ¿QUÉ SIGNIFICA ESTO EN DINERO?
+==============================================================
+Periodo cubierto:       0.2 años
+Operaciones:            62  ->  260.4 al año
+Riesgo por operación:   5.00 € (0.5% de 1000 €)
+Expectativa en riesgo:  -0.001 R por operación
+
+RENTABILIDAD ANUAL SOBRE 1000 €
+  pesimista (p05)  :  -310.15 €/año  =  -31.02% anual
+  central          :    -1.23 €/año  =   -0.12% anual
+  optimista (p95)  :  +297.48 €/año  =  +29.75% anual
+
+CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
+  pesimista (p05)  : imposible, la expectativa es negativa
+  central          : imposible, la expectativa es negativa
+  optimista (p95)  :         40,339 €
+
+LECTURA: con expectativa central negativa no hay capital que
+         arregle esto. El problema no es el tamaño de la cuenta.
+
+==============================================================
 ```
 
 ## Robustez (diario, 15 anos)
@@ -1027,6 +1048,33 @@ LECTURA: MESETA. La configuración actual y la mayoría de sus
          vecinos funcionan. No demuestra que haya edge, pero
          es compatible con que el efecto sea real y no el
          número exacto elegido.
+
+==============================================================
+4) ECONOMÍA REAL: ¿QUÉ SIGNIFICA ESTO EN DINERO?
+==============================================================
+Periodo cubierto:       15.0 años
+Operaciones:            496  ->  33.1 al año
+Riesgo por operación:   5.00 € (0.5% de 1000 €)
+Expectativa en riesgo:  +0.058 R por operación
+
+RENTABILIDAD ANUAL SOBRE 1000 €
+  pesimista (p05)  :    -4.26 €/año  =   -0.43% anual
+  central          :    +9.60 €/año  =   +0.96% anual
+  optimista (p95)  :   +23.81 €/año  =   +2.38% anual
+
+CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
+  pesimista (p05)  : imposible, la expectativa es negativa
+  central          :      1,249,403 €
+  optimista (p95)  :        503,889 €
+
+LECTURA: 1.0% anual. Eso está por debajo de lo que
+         da un índice sin hacer nada, y muy por debajo de lo que
+         haría falta para vivir de esto con una cuenta pequeña.
+         El cuello de botella no es el código ni los filtros:
+         son 33 operaciones al año con una ventaja de
+         0.058 R. Para cambiarlo hace falta más
+         ventaja por operación o muchas más operaciones, y subir
+         el riesgo solo multiplica también las pérdidas.
 
 ==============================================================
 ```
