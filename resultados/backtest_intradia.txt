@@ -8,8 +8,341 @@
   Min AI Score: 50.0 | Min Context Score: 55.0
   Min Final Score: 55.0
   Trading cost total: 0.08%
-  Activos: []
+  Activos: ['IWM', 'NVDA', 'AMZN', 'META']
 =================================================================
 
+Descargando IWM...
+  OK | yfinance | 780 velas
+Descargando NVDA...
+  OK | yfinance | 780 velas
+Descargando AMZN...
+  OK | yfinance | 780 velas
+Descargando META...
+  OK | yfinance | 780 velas
 
-No se pudo descargar datos de ningún activo. Abortando.
+=================================================================
+  FASE 1: BACKTEST COMPLETO (todo el período)
+=================================================================
+
+============================================================
+IWM | FULL | Bars: 580
+============================================================
+Capital:     1000.00 → 982.73  (-17.27)
+Señales:     67 generadas | 14 ALLOW | 53 BLOCK
+Trades:      13 cerrados | 6 wins | 7 losses
+Winrate:     46.1%
+Avg Trade:   -0.55
+Avg Win:     5.44  |  Avg Loss: 5.70
+Expectancy:  -0.55 por trade
+PF:          0.82
+Max DD:      28.85 (2.9%)
+Avg Bars:    9 velas
+Regímenes:   {'BULL_TREND': 2, 'BEAR_TREND': 8, 'TREND': 3}
+Señales:     {'BUY': 2, 'SELL': 11}
+Bloqueos principales:
+    43x  Cooldown por activo (6h)
+     1x  ADX insuficiente para sniper: 21.64 < 22.0 | Score final insuficiente para sniper: 54.78 <
+     1x  ADX insuficiente para sniper: 21.41 < 22.0 | Score final insuficiente para sniper: 54.63 <
+     1x  ADX insuficiente para sniper: 20.47 < 22.0 | Score final insuficiente para sniper: 54.04 <
+     1x  ADX insuficiente para sniper: 20.26 < 22.0 | Score final insuficiente para sniper: 53.91 <
+
+============================================================
+NVDA | FULL | Bars: 580
+============================================================
+Capital:     1000.00 → 977.10  (-22.90)
+Señales:     47 generadas | 19 ALLOW | 28 BLOCK
+Trades:      18 cerrados | 7 wins | 11 losses
+Winrate:     38.9%
+Avg Trade:   -0.95
+Avg Win:     5.77  |  Avg Loss: 5.22
+Expectancy:  -0.95 por trade
+PF:          0.70
+Max DD:      33.90 (3.4%)
+Avg Bars:    12 velas
+Regímenes:   {'BULL_TREND': 7, 'BEAR_TREND': 7, 'TREND': 4}
+Señales:     {'BUY': 10, 'SELL': 8}
+Bloqueos principales:
+    28x  Cooldown por activo (6h)
+
+============================================================
+AMZN | FULL | Bars: 580
+============================================================
+Capital:     1000.00 → 1025.87  (+25.87)
+Señales:     84 generadas | 18 ALLOW | 66 BLOCK
+Trades:      17 cerrados | 11 wins | 6 losses
+Winrate:     64.7%
+Avg Trade:   1.92
+Avg Win:     5.96  |  Avg Loss: 5.49
+Expectancy:  1.92 por trade
+PF:          1.99
+Max DD:      14.72 (1.5%)
+Avg Bars:    13 velas
+Regímenes:   {'BEAR_TREND': 10, 'TREND': 4, 'BULL_TREND': 3}
+Señales:     {'SELL': 12, 'BUY': 5}
+Bloqueos principales:
+    66x  Cooldown por activo (6h)
+
+============================================================
+META | FULL | Bars: 580
+============================================================
+Capital:     1000.00 → 1012.71  (+12.71)
+Señales:     66 generadas | 14 ALLOW | 52 BLOCK
+Trades:      14 cerrados | 8 wins | 6 losses
+Winrate:     57.1%
+Avg Trade:   1.16
+Avg Win:     6.02  |  Avg Loss: 5.32
+Expectancy:  1.16 por trade
+PF:          1.51
+Max DD:      22.82 (2.3%)
+Avg Bars:    17 velas
+Regímenes:   {'TREND': 3, 'BEAR_TREND': 2, 'BULL_TREND': 9}
+Señales:     {'SELL': 4, 'BUY': 10}
+Bloqueos principales:
+    52x  Cooldown por activo (6h)
+
+
+#################################################################
+  CONSOLIDADO FULL PERIOD — 4 activos
+#################################################################
+  Señales:     264 generadas | 65 ALLOW | 199 BLOCK
+  Trades:      62 cerrados | 32 wins | 30 losses
+  Winrate:     51.6%
+  Avg Trade:   0.40
+  Avg Win:     5.84  |  Avg Loss: 5.40
+  Expectancy:  0.40 por trade
+  PF:          1.15
+  PnL total:   -1.59
+  Peor DD:     33.90
+#################################################################
+
+  VEREDICTO:
+  🟡  Edge marginal. Positivo pero débil.
+
+
+=================================================================
+  FASE 2: WALK-FORWARD (70% train / 30% test)
+=================================================================
+
+--- IWM TRAIN ---
+  ============================================================
+  IWM | TRAIN | Bars: 346
+  ============================================================
+  Capital:     1000.00 → 975.35  (-24.65)
+  Señales:     46 generadas | 9 ALLOW | 37 BLOCK
+  Trades:      9 cerrados | 3 wins | 6 losses
+  Winrate:     33.3%
+  Avg Trade:   -1.99
+  Avg Win:     5.48  |  Avg Loss: 5.73
+  Expectancy:  -1.99 por trade
+  PF:          0.48
+  Max DD:      25.44 (2.5%)
+  Avg Bars:    8 velas
+  Regímenes:   {'BULL_TREND': 2, 'BEAR_TREND': 6, 'TREND': 1}
+  Señales:     {'BUY': 2, 'SELL': 7}
+  Bloqueos principales:
+      28x  Cooldown por activo (6h)
+       1x  ADX insuficiente para sniper: 21.64 < 22.0 | Score final insuficiente para sniper: 54.78 <
+       1x  ADX insuficiente para sniper: 21.41 < 22.0 | Score final insuficiente para sniper: 54.63 <
+       1x  ADX insuficiente para sniper: 20.47 < 22.0 | Score final insuficiente para sniper: 54.04 <
+       1x  ADX insuficiente para sniper: 20.26 < 22.0 | Score final insuficiente para sniper: 53.91 <
+
+--- IWM TEST ---
+  ============================================================
+  IWM | TEST | Bars: 234
+  ============================================================
+  Capital:     1000.00 → 1007.57  (+7.57)
+  Señales:     21 generadas | 5 ALLOW | 16 BLOCK
+  Trades:      4 cerrados | 3 wins | 1 losses
+  Winrate:     75.0%
+  Avg Trade:   2.75
+  Avg Win:     5.55  |  Avg Loss: 5.65
+  Expectancy:  2.75 por trade
+  PF:          2.95
+  Max DD:      8.54 (0.8%)
+  Avg Bars:    9 velas
+  Regímenes:   {'BEAR_TREND': 2, 'TREND': 2}
+  Señales:     {'SELL': 4}
+  Bloqueos principales:
+      15x  Cooldown por activo (6h)
+       1x  ADX insuficiente para sniper: 20.88 < 22.0 | Score final insuficiente para sniper: 54.30 <
+
+--- NVDA TRAIN ---
+  ============================================================
+  NVDA | TRAIN | Bars: 346
+  ============================================================
+  Capital:     1000.00 → 977.53  (-22.47)
+  Señales:     27 generadas | 11 ALLOW | 16 BLOCK
+  Trades:      10 cerrados | 3 wins | 7 losses
+  Winrate:     30.0%
+  Avg Trade:   -1.92
+  Avg Win:     5.76  |  Avg Loss: 5.21
+  Expectancy:  -1.92 por trade
+  PF:          0.47
+  Max DD:      33.90 (3.4%)
+  Avg Bars:    11 velas
+  Regímenes:   {'BULL_TREND': 5, 'BEAR_TREND': 3, 'TREND': 2}
+  Señales:     {'BUY': 6, 'SELL': 4}
+  Bloqueos principales:
+      16x  Cooldown por activo (6h)
+
+--- NVDA TEST ---
+  ============================================================
+  NVDA | TEST | Bars: 234
+  ============================================================
+  Capital:     1000.00 → 1004.97  (+4.97)
+  Señales:     20 generadas | 8 ALLOW | 12 BLOCK
+  Trades:      7 cerrados | 4 wins | 3 losses
+  Winrate:     57.1%
+  Avg Trade:   1.09
+  Avg Win:     5.94  |  Avg Loss: 5.38
+  Expectancy:  1.09 por trade
+  PF:          1.47
+  Max DD:      14.31 (1.4%)
+  Avg Bars:    15 velas
+  Regímenes:   {'BULL_TREND': 1, 'TREND': 2, 'BEAR_TREND': 4}
+  Señales:     {'BUY': 3, 'SELL': 4}
+  Bloqueos principales:
+      12x  Cooldown por activo (6h)
+
+--- AMZN TRAIN ---
+  ============================================================
+  AMZN | TRAIN | Bars: 346
+  ============================================================
+  Capital:     1000.00 → 1026.87  (+26.87)
+  Señales:     49 generadas | 10 ALLOW | 39 BLOCK
+  Trades:      9 cerrados | 7 wins | 2 losses
+  Winrate:     77.8%
+  Avg Trade:   3.40
+  Avg Win:     5.92  |  Avg Loss: 5.40
+  Expectancy:  3.40 por trade
+  PF:          3.84
+  Max DD:      12.59 (1.3%)
+  Avg Bars:    12 velas
+  Regímenes:   {'BEAR_TREND': 7, 'TREND': 2}
+  Señales:     {'SELL': 7, 'BUY': 2}
+  Bloqueos principales:
+      39x  Cooldown por activo (6h)
+
+--- AMZN TEST ---
+  ============================================================
+  AMZN | TEST | Bars: 234
+  ============================================================
+  Capital:     1000.00 → 993.27  (-6.73)
+  Señales:     28 generadas | 8 ALLOW | 20 BLOCK
+  Trades:      7 cerrados | 3 wins | 4 losses
+  Winrate:     42.9%
+  Avg Trade:   -0.55
+  Avg Win:     5.86  |  Avg Loss: 5.36
+  Expectancy:  -0.55 por trade
+  PF:          0.82
+  Max DD:      14.25 (1.4%)
+  Avg Bars:    16 velas
+  Regímenes:   {'BEAR_TREND': 3, 'TREND': 1, 'BULL_TREND': 3}
+  Señales:     {'SELL': 4, 'BUY': 3}
+  Bloqueos principales:
+      20x  Cooldown por activo (6h)
+
+--- META TRAIN ---
+  ============================================================
+  META | TRAIN | Bars: 346
+  ============================================================
+  Capital:     1000.00 → 1006.41  (+6.41)
+  Señales:     36 generadas | 10 ALLOW | 26 BLOCK
+  Trades:      9 cerrados | 5 wins | 4 losses
+  Winrate:     55.6%
+  Avg Trade:   0.98
+  Avg Win:     5.98  |  Avg Loss: 5.27
+  Expectancy:  0.98 por trade
+  PF:          1.42
+  Max DD:      22.82 (2.3%)
+  Avg Bars:    15 velas
+  Regímenes:   {'TREND': 3, 'BEAR_TREND': 1, 'BULL_TREND': 5}
+  Señales:     {'SELL': 3, 'BUY': 6}
+  Bloqueos principales:
+      26x  Cooldown por activo (6h)
+
+--- META TEST ---
+  ============================================================
+  META | TEST | Bars: 234
+  ============================================================
+  Capital:     1000.00 → 994.83  (-5.17)
+  Señales:     24 generadas | 5 ALLOW | 19 BLOCK
+  Trades:      5 cerrados | 2 wins | 3 losses
+  Winrate:     40.0%
+  Avg Trade:   -0.77
+  Avg Win:     5.97  |  Avg Loss: 5.27
+  Expectancy:  -0.77 por trade
+  PF:          0.76
+  Max DD:      9.49 (0.9%)
+  Avg Bars:    17 velas
+  Regímenes:   {'BULL_TREND': 4, 'BEAR_TREND': 1}
+  Señales:     {'BUY': 4, 'SELL': 1}
+  Bloqueos principales:
+      19x  Cooldown por activo (6h)
+
+
+#################################################################
+  CONSOLIDADO TRAIN (IN-SAMPLE) — 4 activos
+#################################################################
+  Señales:     158 generadas | 40 ALLOW | 118 BLOCK
+  Trades:      37 cerrados | 18 wins | 19 losses
+  Winrate:     48.6%
+  Avg Trade:   0.06
+  Avg Win:     5.84  |  Avg Loss: 5.41
+  Expectancy:  0.06 por trade
+  PF:          1.02
+  PnL total:   -13.84
+  Peor DD:     33.90
+#################################################################
+
+  VEREDICTO:
+  🟡  Edge marginal. Positivo pero débil.
+
+
+#################################################################
+  CONSOLIDADO TEST (OUT-OF-SAMPLE) — 4 activos
+#################################################################
+  Señales:     93 generadas | 26 ALLOW | 67 BLOCK
+  Trades:      23 cerrados | 12 wins | 11 losses
+  Winrate:     52.2%
+  Avg Trade:   0.47
+  Avg Win:     5.82  |  Avg Loss: 5.37
+  Expectancy:  0.47 por trade
+  PF:          1.18
+  PnL total:   +0.65
+  Peor DD:     14.31
+#################################################################
+
+  VEREDICTO:
+  🟡  Edge marginal. Positivo pero débil.
+
+
+=================================================================
+  COMPARACIÓN TRAIN vs TEST
+=================================================================
+
+  IWM:
+    TRAIN: 9 trades | WR 33.3% | PF 0.48 | Exp -1.99
+    TEST:  4 trades | WR 75.0% | PF 2.95 | Exp 2.75
+    ⚠️  Pocos trades para comparar
+
+  NVDA:
+    TRAIN: 10 trades | WR 30.0% | PF 0.47 | Exp -1.92
+    TEST:  7 trades | WR 57.1% | PF 1.47 | Exp 1.09
+    ✅  Consistente entre train y test
+
+  AMZN:
+    TRAIN: 9 trades | WR 77.8% | PF 3.84 | Exp 3.40
+    TEST:  7 trades | WR 42.9% | PF 0.82 | Exp -0.55
+    ⚠️  Degradación significativa train→test
+
+  META:
+    TRAIN: 9 trades | WR 55.6% | PF 1.42 | Exp 0.98
+    TEST:  5 trades | WR 40.0% | PF 0.76 | Exp -0.77
+    ⚠️  Pocos trades para comparar
+
+
+=================================================================
+  BACKTEST COMPLETO
+=================================================================
+

@@ -1,0 +1,315 @@
+
+=================================================================
+  SHARK V16 SNIPER — BACKTESTER FIEL
+  Usa la misma lógica que live_engine.py
+  Timeframe: 1d | Período: 15y
+  Capital: 1000.0 | Risk/trade: 0.005
+  Sniper mode: True | Min ADX: 22.0
+  Min AI Score: 50.0 | Min Context Score: 55.0
+  Min Final Score: 55.0
+  Trading cost total: 0.08%
+  Activos: ['IWM', 'NVDA', 'AMZN', 'META']
+=================================================================
+
+Descargando IWM...
+  OK | yfinance | 3772 velas
+Descargando NVDA...
+  OK | yfinance | 3772 velas
+Descargando AMZN...
+  OK | yfinance | 3772 velas
+Descargando META...
+  OK | yfinance | 3624 velas
+
+=================================================================
+  FASE 1: BACKTEST COMPLETO (todo el período)
+=================================================================
+
+============================================================
+IWM | FULL | Bars: 3572
+============================================================
+Capital:     1000.00 → 1000.00  (+0.00)
+Señales:     471 generadas | 0 ALLOW | 471 BLOCK
+Trades:      0 cerrados | 0 wins | 0 losses
+Winrate:     0.0%
+Avg Trade:   0.00
+Avg Win:     0.00  |  Avg Loss: 0.00
+Expectancy:  0.00 por trade
+PF:          0.00
+Max DD:      0.00 (0.0%)
+Avg Bars:    0 velas
+Bloqueos principales:
+   471x  Sesión no válida: Fuera de horario principal
+
+============================================================
+NVDA | FULL | Bars: 3572
+============================================================
+Capital:     1000.00 → 1000.00  (+0.00)
+Señales:     589 generadas | 0 ALLOW | 589 BLOCK
+Trades:      0 cerrados | 0 wins | 0 losses
+Winrate:     0.0%
+Avg Trade:   0.00
+Avg Win:     0.00  |  Avg Loss: 0.00
+Expectancy:  0.00 por trade
+PF:          0.00
+Max DD:      0.00 (0.0%)
+Avg Bars:    0 velas
+Bloqueos principales:
+   589x  Sesión no válida: Fuera de horario principal
+
+============================================================
+AMZN | FULL | Bars: 3572
+============================================================
+Capital:     1000.00 → 1000.00  (+0.00)
+Señales:     636 generadas | 0 ALLOW | 636 BLOCK
+Trades:      0 cerrados | 0 wins | 0 losses
+Winrate:     0.0%
+Avg Trade:   0.00
+Avg Win:     0.00  |  Avg Loss: 0.00
+Expectancy:  0.00 por trade
+PF:          0.00
+Max DD:      0.00 (0.0%)
+Avg Bars:    0 velas
+Bloqueos principales:
+   636x  Sesión no válida: Fuera de horario principal
+
+============================================================
+META | FULL | Bars: 3424
+============================================================
+Capital:     1000.00 → 1000.00  (+0.00)
+Señales:     526 generadas | 0 ALLOW | 526 BLOCK
+Trades:      0 cerrados | 0 wins | 0 losses
+Winrate:     0.0%
+Avg Trade:   0.00
+Avg Win:     0.00  |  Avg Loss: 0.00
+Expectancy:  0.00 por trade
+PF:          0.00
+Max DD:      0.00 (0.0%)
+Avg Bars:    0 velas
+Bloqueos principales:
+   526x  Sesión no válida: Fuera de horario principal
+
+
+#################################################################
+  CONSOLIDADO FULL PERIOD — 4 activos
+#################################################################
+  Señales:     2222 generadas | 0 ALLOW | 2222 BLOCK
+  Trades:      0 cerrados | 0 wins | 0 losses
+  Winrate:     0.0%
+  Avg Trade:   0.00
+  Avg Win:     0.00  |  Avg Loss: 0.00
+  Expectancy:  0.00 por trade
+  PF:          0.00
+  PnL total:   +0.00
+  Peor DD:     0.00
+#################################################################
+
+  VEREDICTO:
+  ⚠️  Muy pocos trades para conclusiones fiables.
+
+
+=================================================================
+  FASE 2: WALK-FORWARD (70% train / 30% test)
+=================================================================
+
+--- IWM TRAIN ---
+  ============================================================
+  IWM | TRAIN | Bars: 2440
+  ============================================================
+  Capital:     1000.00 → 1000.00  (+0.00)
+  Señales:     338 generadas | 0 ALLOW | 338 BLOCK
+  Trades:      0 cerrados | 0 wins | 0 losses
+  Winrate:     0.0%
+  Avg Trade:   0.00
+  Avg Win:     0.00  |  Avg Loss: 0.00
+  Expectancy:  0.00 por trade
+  PF:          0.00
+  Max DD:      0.00 (0.0%)
+  Avg Bars:    0 velas
+  Bloqueos principales:
+     338x  Sesión no válida: Fuera de horario principal
+
+--- IWM TEST ---
+  ============================================================
+  IWM | TEST | Bars: 1132
+  ============================================================
+  Capital:     1000.00 → 1000.00  (+0.00)
+  Señales:     133 generadas | 0 ALLOW | 133 BLOCK
+  Trades:      0 cerrados | 0 wins | 0 losses
+  Winrate:     0.0%
+  Avg Trade:   0.00
+  Avg Win:     0.00  |  Avg Loss: 0.00
+  Expectancy:  0.00 por trade
+  PF:          0.00
+  Max DD:      0.00 (0.0%)
+  Avg Bars:    0 velas
+  Bloqueos principales:
+     133x  Sesión no válida: Fuera de horario principal
+
+--- NVDA TRAIN ---
+  ============================================================
+  NVDA | TRAIN | Bars: 2440
+  ============================================================
+  Capital:     1000.00 → 1000.00  (+0.00)
+  Señales:     415 generadas | 0 ALLOW | 415 BLOCK
+  Trades:      0 cerrados | 0 wins | 0 losses
+  Winrate:     0.0%
+  Avg Trade:   0.00
+  Avg Win:     0.00  |  Avg Loss: 0.00
+  Expectancy:  0.00 por trade
+  PF:          0.00
+  Max DD:      0.00 (0.0%)
+  Avg Bars:    0 velas
+  Bloqueos principales:
+     415x  Sesión no válida: Fuera de horario principal
+
+--- NVDA TEST ---
+  ============================================================
+  NVDA | TEST | Bars: 1132
+  ============================================================
+  Capital:     1000.00 → 1000.00  (+0.00)
+  Señales:     174 generadas | 0 ALLOW | 174 BLOCK
+  Trades:      0 cerrados | 0 wins | 0 losses
+  Winrate:     0.0%
+  Avg Trade:   0.00
+  Avg Win:     0.00  |  Avg Loss: 0.00
+  Expectancy:  0.00 por trade
+  PF:          0.00
+  Max DD:      0.00 (0.0%)
+  Avg Bars:    0 velas
+  Bloqueos principales:
+     174x  Sesión no válida: Fuera de horario principal
+
+--- AMZN TRAIN ---
+  ============================================================
+  AMZN | TRAIN | Bars: 2440
+  ============================================================
+  Capital:     1000.00 → 1000.00  (+0.00)
+  Señales:     477 generadas | 0 ALLOW | 477 BLOCK
+  Trades:      0 cerrados | 0 wins | 0 losses
+  Winrate:     0.0%
+  Avg Trade:   0.00
+  Avg Win:     0.00  |  Avg Loss: 0.00
+  Expectancy:  0.00 por trade
+  PF:          0.00
+  Max DD:      0.00 (0.0%)
+  Avg Bars:    0 velas
+  Bloqueos principales:
+     477x  Sesión no válida: Fuera de horario principal
+
+--- AMZN TEST ---
+  ============================================================
+  AMZN | TEST | Bars: 1132
+  ============================================================
+  Capital:     1000.00 → 1000.00  (+0.00)
+  Señales:     159 generadas | 0 ALLOW | 159 BLOCK
+  Trades:      0 cerrados | 0 wins | 0 losses
+  Winrate:     0.0%
+  Avg Trade:   0.00
+  Avg Win:     0.00  |  Avg Loss: 0.00
+  Expectancy:  0.00 por trade
+  PF:          0.00
+  Max DD:      0.00 (0.0%)
+  Avg Bars:    0 velas
+  Bloqueos principales:
+     159x  Sesión no válida: Fuera de horario principal
+
+--- META TRAIN ---
+  ============================================================
+  META | TRAIN | Bars: 2336
+  ============================================================
+  Capital:     1000.00 → 1000.00  (+0.00)
+  Señales:     339 generadas | 0 ALLOW | 339 BLOCK
+  Trades:      0 cerrados | 0 wins | 0 losses
+  Winrate:     0.0%
+  Avg Trade:   0.00
+  Avg Win:     0.00  |  Avg Loss: 0.00
+  Expectancy:  0.00 por trade
+  PF:          0.00
+  Max DD:      0.00 (0.0%)
+  Avg Bars:    0 velas
+  Bloqueos principales:
+     339x  Sesión no válida: Fuera de horario principal
+
+--- META TEST ---
+  ============================================================
+  META | TEST | Bars: 1088
+  ============================================================
+  Capital:     1000.00 → 1000.00  (+0.00)
+  Señales:     187 generadas | 0 ALLOW | 187 BLOCK
+  Trades:      0 cerrados | 0 wins | 0 losses
+  Winrate:     0.0%
+  Avg Trade:   0.00
+  Avg Win:     0.00  |  Avg Loss: 0.00
+  Expectancy:  0.00 por trade
+  PF:          0.00
+  Max DD:      0.00 (0.0%)
+  Avg Bars:    0 velas
+  Bloqueos principales:
+     187x  Sesión no válida: Fuera de horario principal
+
+
+#################################################################
+  CONSOLIDADO TRAIN (IN-SAMPLE) — 4 activos
+#################################################################
+  Señales:     1569 generadas | 0 ALLOW | 1569 BLOCK
+  Trades:      0 cerrados | 0 wins | 0 losses
+  Winrate:     0.0%
+  Avg Trade:   0.00
+  Avg Win:     0.00  |  Avg Loss: 0.00
+  Expectancy:  0.00 por trade
+  PF:          0.00
+  PnL total:   +0.00
+  Peor DD:     0.00
+#################################################################
+
+  VEREDICTO:
+  ⚠️  Muy pocos trades para conclusiones fiables.
+
+
+#################################################################
+  CONSOLIDADO TEST (OUT-OF-SAMPLE) — 4 activos
+#################################################################
+  Señales:     653 generadas | 0 ALLOW | 653 BLOCK
+  Trades:      0 cerrados | 0 wins | 0 losses
+  Winrate:     0.0%
+  Avg Trade:   0.00
+  Avg Win:     0.00  |  Avg Loss: 0.00
+  Expectancy:  0.00 por trade
+  PF:          0.00
+  PnL total:   +0.00
+  Peor DD:     0.00
+#################################################################
+
+  VEREDICTO:
+  ⚠️  Muy pocos trades para conclusiones fiables.
+
+
+=================================================================
+  COMPARACIÓN TRAIN vs TEST
+=================================================================
+
+  IWM:
+    TRAIN: 0 trades | WR 0.0% | PF 0.00 | Exp 0.00
+    TEST:  0 trades | WR 0.0% | PF 0.00 | Exp 0.00
+    ⚠️  Pocos trades para comparar
+
+  NVDA:
+    TRAIN: 0 trades | WR 0.0% | PF 0.00 | Exp 0.00
+    TEST:  0 trades | WR 0.0% | PF 0.00 | Exp 0.00
+    ⚠️  Pocos trades para comparar
+
+  AMZN:
+    TRAIN: 0 trades | WR 0.0% | PF 0.00 | Exp 0.00
+    TEST:  0 trades | WR 0.0% | PF 0.00 | Exp 0.00
+    ⚠️  Pocos trades para comparar
+
+  META:
+    TRAIN: 0 trades | WR 0.0% | PF 0.00 | Exp 0.00
+    TEST:  0 trades | WR 0.0% | PF 0.00 | Exp 0.00
+    ⚠️  Pocos trades para comparar
+
+
+=================================================================
+  BACKTEST COMPLETO
+=================================================================
+

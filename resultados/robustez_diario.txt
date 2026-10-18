@@ -1,0 +1,17 @@
+==============================================================
+ANÁLISIS DE ROBUSTEZ — SHARK V15
+==============================================================
+Timeframe: 1d | Periodo: 15y
+Activos: ['IWM', 'NVDA', 'AMZN', 'META']
+Config actual: SL 2.0 ATR / TP 2.5 ATR
+Bootstrap: 10000 | Monte Carlo: 5000
+
+Descargando 1d / 15y ...
+  IWM     yfinance     3772 velas
+  NVDA    yfinance     3772 velas
+  AMZN    yfinance     3772 velas
+  META    yfinance     3624 velas
+
+Operaciones totales con la config actual: 0
+Muy pocas operaciones para cualquier análisis estadístico.
+Eso ya es el resultado: no hay nada que medir.
