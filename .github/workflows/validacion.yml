@@ -82,6 +82,7 @@ jobs:
           python tests/test_arreglos.py  2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_historial.py 2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_costes.py    2>&1 | tail -12 | tee -a resultados/ultimo.md
+          python tests/test_cartera.py   2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_cooldown.py  2>&1 | tail -14 | tee -a resultados/ultimo.md
           { echo '```'; echo; } >> resultados/ultimo.md
 
@@ -215,6 +216,19 @@ jobs:
             echo '## Robustez (diario, 15 anos)'
             echo '```'
             cat resultados/robustez_diario.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
+      - name: Experimento de universo
+        if: ${{ always() && github.event.inputs.historico_largo != 'false' }}
+        run: |
+          set -o pipefail
+          python validator/experimento_universo.py 2>&1 | tee resultados/experimento_universo.txt
+          {
+            echo '## Experimento de universo (diversificacion)'
+            echo '```'
+            cat resultados/experimento_universo.txt
             echo '```'
             echo
           } >> resultados/ultimo.md
