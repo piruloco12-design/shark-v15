@@ -78,8 +78,9 @@ jobs:
             echo '```'
           } >> resultados/ultimo.md
           set -o pipefail
-          python tests/test_arreglos.py  2>&1 | tail -6  | tee -a resultados/ultimo.md
-          python tests/test_historial.py 2>&1 | tail -6  | tee -a resultados/ultimo.md
+          python tests/test_config.py    2>&1 | tail -5  | tee -a resultados/ultimo.md
+          python tests/test_arreglos.py  2>&1 | tail -5  | tee -a resultados/ultimo.md
+          python tests/test_historial.py 2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_cooldown.py  2>&1 | tail -14 | tee -a resultados/ultimo.md
           { echo '```'; echo; } >> resultados/ultimo.md
 
@@ -180,6 +181,39 @@ jobs:
             echo
             echo '```'
             cat resultados/backtest_diario.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
+      - name: Analisis de robustez (intradia)
+        if: always()
+        env:
+          TIMEFRAME: ${{ github.event.inputs.timeframe || '30m' }}
+          ASSETS: ${{ github.event.inputs.assets }}
+        run: |
+          set -o pipefail
+          python validator/robustez.py 2>&1 | tee resultados/robustez_intradia.txt
+          {
+            echo '## Robustez (intradia)'
+            echo '```'
+            cat resultados/robustez_intradia.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
+      - name: Analisis de robustez (diario)
+        if: ${{ always() && github.event.inputs.historico_largo != 'false' }}
+        env:
+          TIMEFRAME: "1d"
+          PERIOD: "15y"
+          ASSETS: ${{ github.event.inputs.assets }}
+        run: |
+          set -o pipefail
+          python validator/robustez.py 2>&1 | tee resultados/robustez_diario.txt
+          {
+            echo '## Robustez (diario, 15 anos)'
+            echo '```'
+            cat resultados/robustez_diario.txt
             echo '```'
             echo
           } >> resultados/ultimo.md

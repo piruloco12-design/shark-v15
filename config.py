@@ -3,6 +3,22 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+
+def _env(nombre, defecto):
+    """
+    Lee una variable de entorno tratando el valor vacío como
+    "no definida".
+
+    os.getenv("X", defecto) devuelve "" cuando la variable existe
+    pero está vacía, no el valor por defecto. Eso rompió el bot en
+    CI: GitHub Actions pasa "" a las entradas no rellenadas, ASSETS
+    quedó en lista vacía y el backtest abortó sin activos.
+    """
+    valor = os.getenv(nombre)
+    if valor is None or not valor.strip():
+        return defecto
+    return valor.strip()
+
 # ==========================================
 # SHARK V15 SNIPER — yfinance
 # ==========================================
@@ -14,7 +30,7 @@ APP_ENV = os.getenv("APP_ENV", "production").strip().lower()
 # DATABASE
 # ==========================================
 
-DATABASE_NAME = os.getenv("DATABASE_NAME", "shark_v8.db")
+DATABASE_NAME = _env("DATABASE_NAME", "shark_v8.db")
 
 # ==========================================
 # CAPITAL / RISK
@@ -24,6 +40,12 @@ CAPITAL = float(os.getenv("CAPITAL", "1000"))
 RISK_PER_TRADE = float(os.getenv("RISK_PER_TRADE", "0.005"))
 
 MAX_OPEN_TRADES = int(os.getenv("MAX_OPEN_TRADES", "2"))
+
+# Múltiplos de ATR para stop y objetivo. Estaban fijos dentro de
+# risk_management.py; aquí se pueden barrer para comprobar si el
+# resultado es un pico (sobreajuste) o una meseta (quizá real).
+SL_ATR_MULT = float(os.getenv("SL_ATR_MULT", "2.0"))
+TP_ATR_MULT = float(os.getenv("TP_ATR_MULT", "2.5"))
 MAX_DAILY_LOSS_PCT = float(os.getenv("MAX_DAILY_LOSS_PCT", "0.015"))
 MAX_DRAWDOWN_PCT = float(os.getenv("MAX_DRAWDOWN_PCT", "0.10"))
 COOLDOWN_HOURS_PER_ASSET = int(os.getenv("COOLDOWN_HOURS_PER_ASSET", "6"))
@@ -33,7 +55,7 @@ BLOCK_DUPLICATE_SIGNALS = os.getenv("BLOCK_DUPLICATE_SIGNALS", "true").strip().l
 # MARKET DATA
 # ==========================================
 
-TIMEFRAME = os.getenv("TIMEFRAME", "30m").strip()
+TIMEFRAME = _env("TIMEFRAME", "30m")
 
 # Histórico por defecto según el timeframe. Son los topes de
 # yfinance, no decisiones nuestras:
@@ -49,7 +71,7 @@ else:
 
 # Se puede forzar por entorno para validar sobre histórico largo
 # sin tocar código:  TIMEFRAME=1d PERIOD=15y
-PERIOD = os.getenv("PERIOD", _PERIOD_DEFECTO).strip()
+PERIOD = _env("PERIOD", _PERIOD_DEFECTO)
 
 LOOP_INTERVAL = int(os.getenv("LOOP_INTERVAL", "300"))
 REQUEST_TIMEOUT = int(os.getenv("REQUEST_TIMEOUT", "15"))
@@ -64,7 +86,7 @@ _ASSETS_DEFECTO = "IWM,NVDA,AMZN,META"
 # distinta sin tocar código:  ASSETS=SPY,QQQ,AAPL,MSFT
 ASSETS = [
     a.strip().upper()
-    for a in os.getenv("ASSETS", _ASSETS_DEFECTO).split(",")
+    for a in _env("ASSETS", _ASSETS_DEFECTO).split(",")
     if a.strip()
 ]
 
@@ -92,13 +114,13 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 # fuente, no del bot.
 # ==========================================
 
-PRIMARY_PROVIDER = os.getenv("PRIMARY_PROVIDER", "yfinance").strip().lower()
+PRIMARY_PROVIDER = _env("PRIMARY_PROVIDER", "yfinance").lower()
 
 _ORDEN_PROVIDERS_DEFECTO = "yfinance,finnhub,alpha_vantage,twelve_data"
 
 DATA_PROVIDER_ORDER = [
     p.strip().lower()
-    for p in os.getenv("DATA_PROVIDER_ORDER", _ORDEN_PROVIDERS_DEFECTO).split(",")
+    for p in _env("DATA_PROVIDER_ORDER", _ORDEN_PROVIDERS_DEFECTO).split(",")
     if p.strip()
 ]
 
@@ -110,7 +132,7 @@ DATA_PROVIDER_ORDER = [
 # señaliza — sin error, sin aviso, sin nada. 220 deja margen.
 # ==========================================
 
-MIN_BARS = int(os.getenv("MIN_BARS", "220"))
+MIN_BARS = int(_env("MIN_BARS", "220"))
 
 POLYGON_API_KEY = os.getenv("POLYGON_API_KEY", "").strip()
 POLYGON_BASE_URL = os.getenv("POLYGON_BASE_URL", "https://api.polygon.io").strip().rstrip("/")
@@ -208,3 +230,12 @@ if _desconocidos:
 
 if not DATA_PROVIDER_ORDER:
     raise ValueError("DATA_PROVIDER_ORDER no puede estar vacío")
+
+if not ASSETS:
+    raise ValueError(
+        "ASSETS está vacío: el bot no tiene nada que vigilar. "
+        "Revisa la variable de entorno ASSETS"
+    )
+
+if SL_ATR_MULT <= 0 or TP_ATR_MULT <= 0:
+    raise ValueError("SL_ATR_MULT y TP_ATR_MULT deben ser mayores que 0")

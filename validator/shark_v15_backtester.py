@@ -121,7 +121,10 @@ def _simulate_risk_result():
 # MOTOR BACKTEST
 # =========================================================
 
-def run_v16_backtest_single_asset(ticker, df, capital_start, label="FULL"):
+def run_v16_backtest_single_asset(
+    ticker, df, capital_start, label="FULL",
+    sl_mult=None, tp_mult=None,
+):
     capital = capital_start
     open_position = None
     closed_trades = []
@@ -280,6 +283,8 @@ def run_v16_backtest_single_asset(ticker, df, capital_start, label="FULL"):
                         signal=signal,
                         capital=capital,
                         risk_per_trade=RISK_PER_TRADE,
+                        sl_mult=sl_mult,
+                        tp_mult=tp_mult,
                     )
 
                     if float(trade_setup.get("position_size", 0)) > 0:

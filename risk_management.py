@@ -1,5 +1,7 @@
 import math
 
+from config import SL_ATR_MULT, TP_ATR_MULT
+
 
 def _es_numero_util(*valores):
     """
@@ -38,12 +40,27 @@ def _setup_vacio(price):
     }
 
 
-def calculate_trade_levels(df, signal, capital=1000, risk_per_trade=0.005):
+def calculate_trade_levels(
+    df,
+    signal,
+    capital=1000,
+    risk_per_trade=0.005,
+    sl_mult=None,
+    tp_mult=None,
+):
     """
-    Gestión de riesgo — SL 2.0 ATR / TP 2.5 ATR.
+    Gestión de riesgo — SL 2.0 ATR / TP 2.5 ATR por defecto.
     Este fue el cambio más impactante de toda la optimización.
     WR subió de 30% a 47% al dar más espacio al trade para respirar.
+
+    sl_mult y tp_mult existen para poder barrer los múltiplos en el
+    análisis de robustez. Si no se pasan, se usan los de config, que
+    son los mismos valores de siempre: el comportamiento por defecto
+    no cambia.
     """
+
+    sl_mult = SL_ATR_MULT if sl_mult is None else float(sl_mult)
+    tp_mult = TP_ATR_MULT if tp_mult is None else float(tp_mult)
 
     if df is None or len(df) == 0:
         return _setup_vacio(0.0)
@@ -61,11 +78,11 @@ def calculate_trade_levels(df, signal, capital=1000, risk_per_trade=0.005):
         return _setup_vacio(price if _es_numero_util(price) else 0.0)
 
     if signal == "BUY":
-        stop_loss = price - (2.0 * atr)
-        take_profit = price + (2.5 * atr)
+        stop_loss = price - (sl_mult * atr)
+        take_profit = price + (tp_mult * atr)
     elif signal == "SELL":
-        stop_loss = price + (2.0 * atr)
-        take_profit = price - (2.5 * atr)
+        stop_loss = price + (sl_mult * atr)
+        take_profit = price - (tp_mult * atr)
     else:
         return _setup_vacio(price)
 
