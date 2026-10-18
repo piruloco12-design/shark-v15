@@ -1,29 +1,38 @@
 name: Validacion SHARK V15
 
-# Corre los tests y los backtests en un entorno con red de verdad.
-# Se dispara a mano (workflow_dispatch) o en cada push a main.
+# Corre tests y backtests en un entorno con red de verdad y deja
+# los resultados escritos en resultados/, para que queden en el
+# repositorio y no solo en los logs de Actions.
 on:
   workflow_dispatch:
     inputs:
       timeframe:
-        description: "Timeframe (30m, 1h, 1d)"
+        description: "Timeframe intradia (30m, 1h)"
         required: false
         default: "30m"
-      period:
-        description: "Histórico (60d, 730d, 15y...). Vacío = el que toque al timeframe"
-        required: false
-        default: ""
       assets:
-        description: "Activos separados por coma. Vacío = los de config.py"
+        description: "Activos separados por coma. Vacio = los de config.py"
         required: false
         default: ""
+      historico_largo:
+        description: "Correr tambien el backtest diario de 15 anos"
+        type: boolean
+        required: false
+        default: true
   push:
     branches: [main]
+    paths-ignore:
+      - "resultados/**"
+      - "**.md"
+
+permissions:
+  contents: write
 
 jobs:
-  tests:
-    name: Tests de regresion
+  validacion:
     runs-on: ubuntu-latest
+    timeout-minutes: 120
+
     steps:
       - uses: actions/checkout@v4
 
@@ -37,98 +46,166 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Preparar carpeta de resultados
+        run: |
+          mkdir -p resultados
+          {
+            echo "# Validacion SHARK V15"
+            echo
+            echo "Fecha:   $(date -u '+%Y-%m-%d %H:%M UTC')"
+            echo "Commit:  ${GITHUB_SHA::8}"
+            echo "Disparo: ${GITHUB_EVENT_NAME}"
+            echo
+          } > resultados/ultimo.md
+
       - name: Entorno
         run: |
-          python -c "import pandas, numpy, yfinance, ta; print('pandas', pandas.__version__)"
-          python -c "import pandas as pd; print('tzdata OK:', pd.Timestamp('2026-01-01', tz='UTC').tz_convert('US/Eastern'))"
+          {
+            echo '## Entorno'
+            echo '```'
+            python -c "import pandas; print('pandas  ', pandas.__version__)"
+            python -c "import numpy; print('numpy   ', numpy.__version__)"
+            python -c "import yfinance; print('yfinance', yfinance.__version__)"
+            python -c "import pandas as pd; print('tzdata OK:', pd.Timestamp('2026-01-01', tz='UTC').tz_convert('US/Eastern'))"
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
 
-      - name: test_arreglos
-        run: python tests/test_arreglos.py
-
-      - name: test_cooldown
-        run: python tests/test_cooldown.py
+      - name: Tests de regresion
+        run: |
+          {
+            echo '## Tests de regresion'
+            echo '```'
+          } >> resultados/ultimo.md
+          set -o pipefail
+          python tests/test_arreglos.py  2>&1 | tail -6  | tee -a resultados/ultimo.md
+          python tests/test_historial.py 2>&1 | tail -6  | tee -a resultados/ultimo.md
+          python tests/test_cooldown.py  2>&1 | tail -14 | tee -a resultados/ultimo.md
+          { echo '```'; echo; } >> resultados/ultimo.md
 
       - name: Comprobar que todo importa
         env:
           TELEGRAM_TOKEN: ""
           TELEGRAM_CHAT_ID: ""
         run: |
-          python - <<'PY'
+          python - <<'PY' 2>&1 | tee /tmp/imports.txt
           import importlib
           modulos = [
               "config", "storage", "indicators", "data_feed", "market_regime",
               "signals", "opportunity_scanner", "risk_management",
               "session_volatility_intelligence", "risk_control_engine",
               "trade_intelligence", "ai_filter", "final_decision_engine",
-              "paper_broker", "telegram_alerts", "live_engine", "main",
+              "paper_broker", "telegram_alerts", "historial_mercado",
+              "live_engine", "main",
           ]
           fallos = []
           for m in modulos:
               try:
                   importlib.import_module(m)
-                  print(f"  OK    {m}")
               except Exception as e:
-                  print(f"  FALLA {m}: {type(e).__name__}: {e}")
+                  print(f"FALLA {m}: {type(e).__name__}: {e}")
                   fallos.append(m)
+          print(f"{len(modulos) - len(fallos)}/{len(modulos)} modulos importan")
           raise SystemExit(1 if fallos else 0)
           PY
-
-  backtest:
-    name: Backtest
-    runs-on: ubuntu-latest
-    needs: tests
-    steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-          cache: pip
-
-      - name: Instalar dependencias
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          {
+            echo '## Imports'
+            echo '```'
+            cat /tmp/imports.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
 
       - name: Diagnostico del feed
         env:
           TIMEFRAME: ${{ github.event.inputs.timeframe || '30m' }}
-          PERIOD: ${{ github.event.inputs.period }}
           ASSETS: ${{ github.event.inputs.assets }}
         run: |
-          python - <<'PY'
+          python - <<'PY' 2>&1 | tee /tmp/feed.txt
           import config
           from data_feed import get_data
-          print(f"Timeframe: {config.TIMEFRAME} | Periodo: {config.PERIOD}")
-          print(f"Activos: {config.ASSETS}")
-          print(f"Providers: {config.DATA_PROVIDER_ORDER}")
-          print(f"MIN_BARS: {config.MIN_BARS}")
+          print(f"Timeframe {config.TIMEFRAME} | Periodo {config.PERIOD} | MIN_BARS {config.MIN_BARS}")
+          print(f"Providers {config.DATA_PROVIDER_ORDER}")
           print()
+          print(f"{'ACTIVO':7} {'PROVIDER':10} {'VELAS':>6} {'DIAS':>5} {'X/DIA':>6}  HORAS ET")
           for t in config.ASSETS:
               try:
                   df, prov = get_data(t, config.TIMEFRAME, config.PERIOD)
                   idx = df.index.tz_convert("US/Eastern")
                   dias = idx.normalize().nunique()
                   horas = sorted(set(idx.hour))
-                  print(f"{t:6} | {prov:9} | {len(df):5} velas | {dias:4} dias "
-                        f"| {len(df)/dias:5.1f}/dia | horas ET {horas}")
-                  print(f"       | {idx[0]} -> {idx[-1]}")
+                  print(f"{t:7} {prov:10} {len(df):6} {dias:5} {len(df)/dias:6.1f}  {horas}")
+                  print(f"{'':7} {idx[0]}  ->  {idx[-1]}")
               except Exception as e:
-                  print(f"{t:6} | ERROR: {type(e).__name__}: {e}")
+                  print(f"{t:7} ERROR {type(e).__name__}: {e}")
           PY
+          {
+            echo '## Diagnostico del feed'
+            echo '```'
+            cat /tmp/feed.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
 
-      - name: Backtest walk-forward
+      - name: Backtest intradia
         env:
           TIMEFRAME: ${{ github.event.inputs.timeframe || '30m' }}
-          PERIOD: ${{ github.event.inputs.period }}
           ASSETS: ${{ github.event.inputs.assets }}
         run: |
-          mkdir -p salida
-          python validator/shark_v15_backtester.py 2>&1 | tee salida/backtest.txt
+          set -o pipefail
+          python validator/shark_v15_backtester.py 2>&1 | tee resultados/backtest_intradia.txt
+          {
+            echo '## Backtest intradia'
+            echo '```'
+            cat resultados/backtest_intradia.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
+      - name: Backtest diario 15 anos
+        if: ${{ github.event.inputs.historico_largo != 'false' }}
+        env:
+          TIMEFRAME: "1d"
+          PERIOD: "15y"
+          ASSETS: ${{ github.event.inputs.assets }}
+        run: |
+          set -o pipefail
+          python validator/shark_v15_backtester.py 2>&1 | tee resultados/backtest_diario.txt
+          {
+            echo '## Backtest diario (15 anos)'
+            echo
+            echo 'Misma logica, timeframe diario. Aqui yfinance si da'
+            echo 'anos de historico, asi que la muestra es grande y el'
+            echo 'resultado si es estadisticamente interpretable.'
+            echo
+            echo '```'
+            cat resultados/backtest_diario.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
+      - name: Guardar resultados en el repositorio
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add -f resultados/
+          if git diff --cached --quiet; then
+            echo "Sin cambios en resultados/"
+            exit 0
+          fi
+          git commit -m "Resultados de validacion $(date -u '+%Y-%m-%d %H:%M UTC') [skip ci]"
+          # main puede haber avanzado mientras corria el backtest.
+          for intento in 1 2 3; do
+            git pull --rebase --autostash origin main && git push origin HEAD:main && exit 0
+            echo "reintento $intento"
+            sleep 5
+          done
+          exit 1
 
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: resultados-backtest
-          path: salida/
+          name: resultados-validacion
+          path: resultados/
           retention-days: 30

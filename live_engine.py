@@ -63,6 +63,30 @@ except Exception:
     def evaluate_risk_controls(ticker=None, signal=None):
         return {"allow": True, "reason": "risk_control_engine no disponible"}
 
+# Archivo histórico de velas. Es opcional: si falla, el bot sigue
+# operando igual, solo deja de acumular histórico. Por eso va en
+# try/except, al contrario que paper_broker, que es esencial.
+try:
+    from historial_mercado import (
+        init_historial,
+        guardar as guardar_historial,
+        comprobar_persistencia,
+    )
+    HISTORIAL_DISPONIBLE = True
+except Exception as _e:
+    print(f"AVISO: historial_mercado no disponible ({_e}). "
+          f"El bot funciona, pero no acumulará histórico de velas.")
+    HISTORIAL_DISPONIBLE = False
+
+    def init_historial():
+        return
+
+    def guardar_historial(ticker, timeframe, df):
+        return 0
+
+    def comprobar_persistencia():
+        return True, "historial_mercado no disponible"
+
 from telegram_alerts import send_telegram_message
 
 
@@ -222,7 +246,22 @@ def run_live_cycle():
                     "low": float(ultima["Low"]),
                 }
                 market_data[ticker] = df
-                _log(f"FEED OK | {ticker} | {provider} | {len(df)} velas")
+
+                # Acumular en el archivo histórico. yfinance solo da
+                # 60 días en intradía; guardando cada descarga, esa
+                # ventana móvil se convierte en un histórico que
+                # crece con el tiempo.
+                guardadas = 0
+                if HISTORIAL_DISPONIBLE:
+                    try:
+                        guardadas = guardar_historial(ticker, TIMEFRAME, df)
+                    except Exception as e:
+                        _log(f"HISTORIAL warning | {ticker}: {e}")
+
+                _log(
+                    f"FEED OK | {ticker} | {provider} | {len(df)} velas"
+                    + (f" | {guardadas} archivadas" if guardadas else "")
+                )
             else:
                 velas = 0 if df is None else len(df)
                 _log(f"FEED SKIP | {ticker} | datos insuficientes ({velas} < {MIN_BARS})")
@@ -389,6 +428,7 @@ def run_live_cycle():
 
 def run_live_engine():
     init_db()
+    init_historial()
 
     print("=" * 50)
     print("SHARK V15 SNIPER - INICIO")
@@ -396,7 +436,24 @@ def run_live_engine():
     print(f"Hora inicio: {_ahora_utc()}")
     print("Entorno: production")
     print(f"Loop interval: {LOOP_INTERVAL} segundos")
+    print(f"Activos: {ASSETS}")
+    print(f"Timeframe: {TIMEFRAME} | Periodo: {PERIOD} | Min velas: {MIN_BARS}")
+
+    # Si la base de datos está en almacenamiento efímero, todo el
+    # histórico desaparece en el próximo reinicio. Hay que verlo al
+    # arrancar, no descubrirlo cuando el capital vuelva a 1000.
+    persistente, mensaje_persistencia = comprobar_persistencia()
+    print(mensaje_persistencia)
     print("=" * 50)
+
+    if not persistente:
+        _send_error_message(
+            "ALMACENAMIENTO EFÍMERO\n\n"
+            "La base de datos se borrará en el próximo reinicio: se "
+            "perderán los trades, el capital y el histórico de velas.\n\n"
+            "Hay que montar un disco en Render y poner "
+            "DATABASE_NAME=/var/data/shark_v8.db"
+        )
 
     _send_startup_message()
 

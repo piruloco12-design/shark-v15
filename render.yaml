@@ -5,8 +5,31 @@ services:
     plan: starter
     buildCommand: pip install -r requirements.txt
     startCommand: python main.py
+
+    # DISCO PERSISTENTE — esto faltaba.
+    #
+    # Un worker de Render sin bloque `disk:` tiene sistema de
+    # ficheros efímero: cada deploy, reinicio o caída lo deja en
+    # blanco. La base de datos estaba en una ruta relativa, dentro
+    # de ese sistema efímero, así que en cada reinicio se perdían:
+    #   - el histórico completo de trades
+    #   - el capital acumulado (volvía a 1000)
+    #   - los trades abiertos, y con ellos el control de duplicados
+    #   - el cooldown por activo
+    #   - lo que ai_filter y trade_intelligence aprenden del pasado
+    #
+    # Con la base de datos vacía, has_open_trade_for_ticker
+    # devuelve False para todo y el bot puede reabrir un trade que
+    # ya tenía puesto.
+    disk:
+      name: shark-datos
+      mountPath: /var/data
+      sizeGB: 1
+
     envVars:
+      # La base de datos vive en el disco montado, no en el
+      # directorio del proyecto.
       - key: DATABASE_NAME
-        value: shark_v8.db
+        value: /var/data/shark_v8.db
       - key: PRIMARY_PROVIDER
         value: yfinance
