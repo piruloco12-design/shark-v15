@@ -125,58 +125,95 @@ def bootstrap_expectativa(pnls, n=N_BOOTSTRAP, semilla=SEMILLA):
     }
 
 
+def _recorrer(secuencia, capital_inicial):
+    """
+    Recorre una secuencia de resultados y devuelve el capital final
+    y el peor drawdown del camino.
+    """
+    capital = capital_inicial
+    pico = capital_inicial
+    peor_dd = 0.0
+    toco_fondo = False
+
+    for pnl in secuencia:
+        capital += pnl
+        if capital > pico:
+            pico = capital
+        dd = (pico - capital) / pico * 100 if pico > 0 else 0.0
+        if dd > peor_dd:
+            peor_dd = dd
+        # "Ruina" práctica: perder la mitad del capital.
+        if capital <= capital_inicial * 0.5:
+            toco_fondo = True
+
+    return capital, peor_dd, toco_fondo
+
+
 def montecarlo_drawdown(pnls, capital_inicial=CAPITAL,
                         n=N_MONTECARLO, semilla=SEMILLA):
     """
-    Baraja el orden de las operaciones y mide el peor drawdown de
-    cada universo. Barajar no cambia el resultado final, solo el
-    camino: sirve para ver qué racha mala era posible.
+    Dos simulaciones distintas, porque responden a dos preguntas
+    distintas y confundirlas da resultados sin sentido.
+
+    A) BARAJAR el orden de las mismas operaciones.
+       Responde: ¿qué racha mala era posible con estas mismas
+       operaciones en otro orden?
+       Solo sirve para el DRAWDOWN. El capital final es invariante
+       al barajar — la suma de los mismos números no cambia — así
+       que de aquí NO se puede sacar ninguna distribución de
+       resultado final ni probabilidad de pérdida: saldrían los
+       tres percentiles idénticos y una probabilidad de 0% o 100%,
+       que es exactamente lo que hacía esta función antes.
+
+    B) REMUESTREAR con reemplazo.
+       Responde: si las próximas 496 operaciones salieran de esta
+       misma distribución, ¿qué rango de resultados cabe esperar?
+       Esta sí da una distribución de capital final con sentido.
     """
     if len(pnls) < 2:
         return None
 
     rng = random.Random(semilla)
-    drawdowns = []
-    finales = []
-    arruinados = 0
+    total = len(pnls)
 
+    # --- A) barajar: solo drawdown ---
+    drawdowns = []
     for _ in range(n):
         orden = pnls[:]
         rng.shuffle(orden)
-
-        capital = capital_inicial
-        pico = capital_inicial
-        peor_dd = 0.0
-        toco_fondo = False
-
-        for pnl in orden:
-            capital += pnl
-            if capital > pico:
-                pico = capital
-            dd = (pico - capital) / pico * 100 if pico > 0 else 0.0
-            if dd > peor_dd:
-                peor_dd = dd
-            # "Ruina" práctica: perder la mitad del capital.
-            if capital <= capital_inicial * 0.5:
-                toco_fondo = True
-
+        _, peor_dd, _ = _recorrer(orden, capital_inicial)
         drawdowns.append(peor_dd)
+
+    # --- B) remuestrear: resultado final y ruina ---
+    finales = []
+    dd_remuestreo = []
+    arruinados = 0
+    for _ in range(n):
+        muestra = [pnls[rng.randrange(total)] for _ in range(total)]
+        capital, peor_dd, toco_fondo = _recorrer(muestra, capital_inicial)
         finales.append(capital)
+        dd_remuestreo.append(peor_dd)
         if toco_fondo:
             arruinados += 1
 
     drawdowns.sort()
     finales.sort()
+    dd_remuestreo.sort()
 
     return {
+        # Del barajado: qué camino era posible con estas operaciones.
         "dd_mediano": _percentil(drawdowns, 50),
         "dd_p95": _percentil(drawdowns, 95),
         "dd_peor": drawdowns[-1],
+        # Del remuestreo: qué cabe esperar de aquí en adelante.
         "final_p05": _percentil(finales, 5),
         "final_p50": _percentil(finales, 50),
         "final_p95": _percentil(finales, 95),
+        "dd_remuestreo_p95": _percentil(dd_remuestreo, 95),
         "prob_perder_mitad": arruinados / n,
         "prob_terminar_en_perdida": sum(1 for f in finales if f < capital_inicial) / n,
+        "capital_final_real": capital_inicial + sum(pnls),
+        "n_operaciones": total,
     }
 
 
@@ -374,23 +411,31 @@ def informe_montecarlo(mc):
         print("Hacen falta al menos 2 operaciones.")
         return
 
-    print(f"Capital inicial:              {CAPITAL:.2f} €")
-    print(f"Drawdown mediano:             {mc['dd_mediano']:.2f}%")
-    print(f"Drawdown percentil 95:        {mc['dd_p95']:.2f}%")
-    print(f"Peor drawdown simulado:       {mc['dd_peor']:.2f}%")
+    print(f"Capital inicial:   {CAPITAL:.2f} €")
+    print(f"Operaciones:       {mc['n_operaciones']}")
     print()
-    print(f"Capital final, percentil 5:   {mc['final_p05']:.2f} €")
-    print(f"Capital final, mediana:       {mc['final_p50']:.2f} €")
-    print(f"Capital final, percentil 95:  {mc['final_p95']:.2f} €")
+    print("A) MISMAS OPERACIONES, OTRO ORDEN")
+    print("   (el capital final no cambia al barajar; solo el camino)")
+    print(f"   Drawdown mediano:        {mc['dd_mediano']:.2f}%")
+    print(f"   Drawdown percentil 95:   {mc['dd_p95']:.2f}%")
+    print(f"   Peor drawdown simulado:  {mc['dd_peor']:.2f}%")
+    print(f"   Capital final (fijo):    {mc['capital_final_real']:.2f} €")
     print()
-    print(f"Prob. terminar en pérdida:    {mc['prob_terminar_en_perdida'] * 100:.1f}%")
-    print(f"Prob. perder la mitad:        {mc['prob_perder_mitad'] * 100:.1f}%")
+    print("B) REMUESTREO: si las próximas operaciones salieran de")
+    print("   esta misma distribución")
+    print(f"   Capital final, percentil 5:   {mc['final_p05']:.2f} €")
+    print(f"   Capital final, mediana:       {mc['final_p50']:.2f} €")
+    print(f"   Capital final, percentil 95:  {mc['final_p95']:.2f} €")
+    print(f"   Drawdown percentil 95:        {mc['dd_remuestreo_p95']:.2f}%")
+    print(f"   Prob. terminar en pérdida:    {mc['prob_terminar_en_perdida'] * 100:.1f}%")
+    print(f"   Prob. perder la mitad:        {mc['prob_perder_mitad'] * 100:.1f}%")
     print()
-    print(f"LECTURA: con estas operaciones en otro orden, el drawdown que hay")
-    print(f"         que estar dispuesto a aguantar es del {mc['dd_p95']:.1f}%,")
-    print(f"         no el que salió en el histórico. El orden de las")
-    print(f"         operaciones es azar; la racha mala no tiene por qué")
-    print(f"         haber caído dentro del periodo de prueba.")
+    print(f"LECTURA: el drawdown que hay que estar dispuesto a aguantar es")
+    print(f"         del {mc['dd_p95']:.1f}%, no el que salió en el histórico: el orden")
+    print(f"         de las operaciones es azar y la racha mala no tiene por")
+    print(f"         qué haber caído dentro del periodo de prueba.")
+    print(f"         El remuestreo da {mc['prob_terminar_en_perdida'] * 100:.0f}% de probabilidad de acabar")
+    print(f"         en pérdida sobre otras {mc['n_operaciones']} operaciones.")
 
 
 def main():
