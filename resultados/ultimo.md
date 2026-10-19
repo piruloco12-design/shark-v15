@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-19 11:49 UTC
-Commit:  f7eb4335
+Fecha:   2026-10-19 12:39 UTC
+Commit:  1bc0d6d8
 Disparo: push
 
 ## Entorno
@@ -50,6 +50,16 @@ RESULTADO: 22 pruebas pasadas, 0 fallos
 
 ==============================================================
 RESULTADO: 49 pruebas pasadas, 0 fallos
+==============================================================
+  PASA   ida y vuelta = 2x el coste por pata
+
+==============================================================
+RESULTADO: 20 pruebas pasadas, 0 fallos
+==============================================================
+    con la fuga: 15 vs 15 decisiones antes del corte
+
+==============================================================
+RESULTADO: 14 pruebas pasadas, 0 fallos
 ==============================================================
   trades: 25 | señales: 270
   bloqueos por cooldown: 245
@@ -1181,13 +1191,13 @@ PRUEBA DE PROVEEDORES — cada uno por separado
 Cascada por defecto: ['yfinance', 'finnhub', 'alpha_vantage', 'twelve_data']
 
   OK    yfinance   SPY         3772 velas  2011-10-17 -> 2026-10-16
-  FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: Stooq
+  FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ["stooq: Stooq
   OK    yfinance   BTC-USD     4416 velas  2014-09-17 -> 2026-10-19
   OK    coinbase   BTC-USD     4110 velas  2015-07-20 -> 2026-10-19
-  FALLA stooq      GLD       ValueError: No se pudo descargar GLD con ningún provider. Detalles: ['stooq: Stooq
+  FALLA stooq      GLD       ValueError: No se pudo descargar GLD con ningún provider. Detalles: ["stooq: Stooq
 
 CRUCE yfinance vs stooq en SPY (ultimos cierres comunes)
-  no se pudo cruzar: ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: Stooq no sirvio spy.us: https://stooq.com/q/d/l/: sin datos (<!DOCTYPE html><html><head><meta charset="utf-8"><meta name=) | https://stooq.pl/q/d/l/: sin datos (<!DOCTYPE html><html><head><meta charset="utf-8"><meta name=)']
+  no se pudo cruzar: ValueError: No se pudo descargar SPY con ningún provider. Detalles: ["stooq: Stooq no sirvio spy.us: https://stooq.com/q/d/l/: ConnectTimeout: HTTPSConnectionPool(host='stooq.com', port=443): Max retries exceeded  | https://stooq.pl/q/d/l/: ConnectTimeout: HTTPSConnectionPool(host='stooq.pl', port=443): Max retries exceeded w"]
 ```
 
 ## Experimento por clase de activo
@@ -1214,7 +1224,7 @@ CLASE: CRIPTO
   4 activos | 4 huecos | 551 operaciones en 10.7 años
   Winrate 47.9% | PF 1.10 | Expectativa +0.3153
   Rentabilidad anual del bot:       +1.47%
-  Comprar y mantener (referencia):  +58.08%
+  Comprar y mantener (referencia):  +58.12%
   Peor drawdown: 14.7%
 
   Bootstrap (551 ops):
@@ -1345,7 +1355,7 @@ CLASE: DIVISAS
 RESUMEN
 ======================================================================
   CLASE                OPS    EXPECT   ANUAL%     B&H%   P(>0)  VEREDICTO
-  cripto               551   +0.3153    +1.47   +58.08   86.6%  no concluyente
+  cripto               551   +0.3153    +1.47   +58.12   86.6%  no concluyente
   materias_primas      892   -0.1684    -1.11    +1.26   17.3%  no concluyente
   renta_variable      1265   -0.3037    -3.35   +11.97    0.9%  en contra
   bonos                585   -0.9936    -5.93    -1.37    0.0%  en contra
