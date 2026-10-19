@@ -12,20 +12,20 @@
 =================================================================
 
 Descargando IWM...
-  OK | yfinance | 3772 velas
+  OK | yfinance | 3771 velas
 Descargando NVDA...
-  OK | yfinance | 3772 velas
+  OK | yfinance | 3771 velas
 Descargando AMZN...
-  OK | yfinance | 3772 velas
+  OK | yfinance | 3771 velas
 Descargando META...
-  OK | yfinance | 3624 velas
+  OK | yfinance | 3625 velas
 
 =================================================================
   FASE 1: BACKTEST COMPLETO (todo el período)
 =================================================================
 
 ============================================================
-IWM | FULL | Bars: 3572
+IWM | FULL | Bars: 3571
 ============================================================
 Capital:     1000.00 → 932.83  (-67.17)
 Señales:     180 generadas | 104 ALLOW | 76 BLOCK
@@ -47,7 +47,7 @@ Bloqueos principales:
      1x  ADX insuficiente para sniper: 21.29 < 22.0 | Score final insuficiente para sniper: 54.56 <
 
 ============================================================
-NVDA | FULL | Bars: 3572
+NVDA | FULL | Bars: 3571
 ============================================================
 Capital:     1000.00 → 1168.13  (+168.13)
 Señales:     214 generadas | 136 ALLOW | 78 BLOCK
@@ -69,7 +69,7 @@ Bloqueos principales:
      1x  ADX insuficiente para sniper: 20.79 < 22.0 | Score final insuficiente para sniper: 54.24 <
 
 ============================================================
-AMZN | FULL | Bars: 3572
+AMZN | FULL | Bars: 3571
 ============================================================
 Capital:     1000.00 → 1006.90  (+6.90)
 Señales:     218 generadas | 131 ALLOW | 87 BLOCK
@@ -91,7 +91,7 @@ Bloqueos principales:
      1x  ADX insuficiente para sniper: 20.87 < 22.0 | Score final insuficiente para sniper: 54.29 <
 
 ============================================================
-META | FULL | Bars: 3424
+META | FULL | Bars: 3425
 ============================================================
 Capital:     1000.00 → 1035.71  (+35.71)
 Señales:     182 generadas | 127 ALLOW | 55 BLOCK
@@ -140,7 +140,7 @@ Bloqueos principales:
 
 --- IWM TRAIN ---
   ============================================================
-  IWM | TRAIN | Bars: 2440
+  IWM | TRAIN | Bars: 2439
   ============================================================
   Capital:     1000.00 → 986.90  (-13.10)
   Señales:     130 generadas | 75 ALLOW | 55 BLOCK
@@ -186,7 +186,7 @@ Bloqueos principales:
 
 --- NVDA TRAIN ---
   ============================================================
-  NVDA | TRAIN | Bars: 2440
+  NVDA | TRAIN | Bars: 2439
   ============================================================
   Capital:     1000.00 → 1082.41  (+82.41)
   Señales:     154 generadas | 97 ALLOW | 57 BLOCK
@@ -232,20 +232,20 @@ Bloqueos principales:
 
 --- AMZN TRAIN ---
   ============================================================
-  AMZN | TRAIN | Bars: 2440
+  AMZN | TRAIN | Bars: 2439
   ============================================================
-  Capital:     1000.00 → 1017.29  (+17.29)
+  Capital:     1000.00 → 1012.15  (+12.15)
   Señales:     164 generadas | 95 ALLOW | 69 BLOCK
-  Trades:      94 cerrados | 45 wins | 49 losses
-  Winrate:     47.9%
-  Avg Trade:   0.18
-  Avg Win:     6.24  |  Avg Loss: 5.38
-  Expectancy:  0.18 por trade
-  PF:          1.07
-  Max DD:      56.27 (5.6%)
+  Trades:      95 cerrados | 45 wins | 50 losses
+  Winrate:     47.4%
+  Avg Trade:   0.13
+  Avg Win:     6.24  |  Avg Loss: 5.37
+  Expectancy:  0.13 por trade
+  PF:          1.05
+  Max DD:      56.73 (5.7%)
   Avg Bars:    12 velas
-  Regímenes:   {'BULL_TREND': 52, 'BEAR_TREND': 18, 'TREND': 24}
-  Señales:     {'BUY': 67, 'SELL': 27}
+  Regímenes:   {'BULL_TREND': 52, 'BEAR_TREND': 18, 'TREND': 25}
+  Señales:     {'BUY': 68, 'SELL': 27}
   Bloqueos principales:
       40x  Cooldown por activo (6h)
        8x  Volatilidad no válida: Volatilidad demasiado comprimida
@@ -278,7 +278,7 @@ Bloqueos principales:
 
 --- META TRAIN ---
   ============================================================
-  META | TRAIN | Bars: 2336
+  META | TRAIN | Bars: 2337
   ============================================================
   Capital:     1000.00 → 997.78  (-2.22)
   Señales:     119 generadas | 83 ALLOW | 36 BLOCK
@@ -325,17 +325,17 @@ Bloqueos principales:
   CONSOLIDADO TRAIN (IN-SAMPLE) — 4 activos
 #################################################################
   Señales:     567 generadas | 350 ALLOW | 217 BLOCK
-  Trades:      348 cerrados | 168 wins | 180 losses
-  Winrate:     48.3%
-  Avg Trade:   0.24
+  Trades:      349 cerrados | 168 wins | 181 losses
+  Winrate:     48.1%
+  Avg Trade:   0.23
   Avg Win:     6.17  |  Avg Loss: 5.29
-  Expectancy:  0.24 por trade
-  PF:          1.09
-  PnL total:   +84.38
-  Peor DD:     56.62
+  Expectancy:  0.23 por trade
+  PF:          1.08
+  PnL total:   +79.24
+  Peor DD:     56.73
   -------------------------------------------------------------
-  Suma PnL trades:  +84.47   (debe cuadrar con PnL total)
-  ✅ Cuadra (dif. 0.09, son costes de trades aún abiertos)
+  Suma PnL trades:  +79.27   (debe cuadrar con PnL total)
+  ✅ Cuadra (dif. 0.03, son costes de trades aún abiertos)
 #################################################################
 
   VEREDICTO:
@@ -378,7 +378,7 @@ Bloqueos principales:
     ✅  Consistente entre train y test
 
   AMZN:
-    TRAIN: 94 trades | WR 47.9% | PF 1.07 | Exp 0.18
+    TRAIN: 95 trades | WR 47.4% | PF 1.05 | Exp 0.13
     TEST:  36 trades | WR 44.4% | PF 0.95 | Exp -0.14
     ✅  Consistente entre train y test
 

@@ -1,0 +1,19 @@
+{
+  "fallo": true,
+  "periodo": "15y",
+  "traceback": [
+    "  File \"/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py\", line 165, in simular",
+    "    diario = _diario_alineado(series)",
+    "             ^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py\", line 149, in _diario_alineado",
+    "    s.index = s.index.normalize().tz_convert(\"UTC\")",
+    "              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/pandas/core/indexes/datetimes.py\", line 395, in tz_convert",
+    "    arr = self._data.tz_convert(tz)",
+    "          ^^^^^^^^^^^^^^^^^^^^^^^^^",
+    "  File \"/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/pandas/core/arrays/datetimes.py\", line 931, in tz_convert",
+    "    raise TypeError(",
+    "TypeError: Cannot convert tz-naive timestamps, use tz_localize to localize"
+  ],
+  "traceback_completo": "Traceback (most recent call last):\n  File \"/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py\", line 636, in <module>\n    main()\n  File \"/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py\", line 569, in main\n    bloque(\"multiactivo_sin_cripto\", series, efectivo, resultados[\"bloques\"])\n  File \"/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py\", line 415, in bloque\n    m = simular(series, efectivo=efectivo, **kwargs)\n        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py\", line 165, in simular\n    diario = _diario_alineado(series)\n             ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py\", line 149, in _diario_alineado\n    s.index = s.index.normalize().tz_convert(\"UTC\")\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/pandas/core/indexes/datetimes.py\", line 395, in tz_convert\n    arr = self._data.tz_convert(tz)\n          ^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/pandas/core/arrays/datetimes.py\", line 931, in tz_convert\n    raise TypeError(\nTypeError: Cannot convert tz-naive timestamps, use tz_localize to localize\n"
+}

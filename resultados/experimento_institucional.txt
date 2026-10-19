@@ -1,0 +1,61 @@
+======================================================================
+M02 / M03 COMO ESTRATEGIAS PROPIAS — SOLO LARGOS, MENSUAL
+======================================================================
+Periodo 15y | coste 8 pb por pata
+Lookback 252 | skip 21 | K 5
+Solo largos: la cuenta es al contado, sin CFD. No hay cortos.
+
+Cargados 31/31 activos ajustados
+
+======================================================================
+multiactivo_sin_cripto  (31 activos)
+======================================================================
+
+VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
+----------------------------------------------------------------------
+
+======================================================================
+EL EXPERIMENTO FALLO
+======================================================================
+Traceback (most recent call last):
+  File "/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py", line 636, in <module>
+    main()
+  File "/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py", line 569, in main
+    bloque("multiactivo_sin_cripto", series, efectivo, resultados["bloques"])
+  File "/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py", line 415, in bloque
+    m = simular(series, efectivo=efectivo, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py", line 165, in simular
+    diario = _diario_alineado(series)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py", line 149, in _diario_alineado
+    s.index = s.index.normalize().tz_convert("UTC")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/pandas/core/indexes/datetimes.py", line 395, in tz_convert
+    arr = self._data.tz_convert(tz)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/pandas/core/arrays/datetimes.py", line 931, in tz_convert
+    raise TypeError(
+TypeError: Cannot convert tz-naive timestamps, use tz_localize to localize
+
+El fallo queda guardado en resultados/institucional.json
+Traceback (most recent call last):
+  File "/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py", line 636, in <module>
+    main()
+  File "/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py", line 569, in main
+    bloque("multiactivo_sin_cripto", series, efectivo, resultados["bloques"])
+  File "/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py", line 415, in bloque
+    m = simular(series, efectivo=efectivo, **kwargs)
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py", line 165, in simular
+    diario = _diario_alineado(series)
+             ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/runner/work/shark-v15/shark-v15/validator/experimento_institucional.py", line 149, in _diario_alineado
+    s.index = s.index.normalize().tz_convert("UTC")
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/pandas/core/indexes/datetimes.py", line 395, in tz_convert
+    arr = self._data.tz_convert(tz)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/opt/hostedtoolcache/Python/3.11.17/x64/lib/python3.11/site-packages/pandas/core/arrays/datetimes.py", line 931, in tz_convert
+    raise TypeError(
+TypeError: Cannot convert tz-naive timestamps, use tz_localize to localize
