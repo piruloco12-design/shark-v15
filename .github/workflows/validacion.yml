@@ -88,6 +88,8 @@ jobs:
           python tests/test_costes.py    2>&1 | tail -12 | tee -a resultados/ultimo.md
           python tests/test_cartera.py   2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_noticias.py  2>&1 | tail -5  | tee -a resultados/ultimo.md
+          python tests/test_oraculos.py  2>&1 | tail -5  | tee -a resultados/ultimo.md
+          python tests/test_causalidad.py 2>&1 | tail -5 | tee -a resultados/ultimo.md
           python tests/test_cooldown.py  2>&1 | tail -14 | tee -a resultados/ultimo.md
           { echo '```'; echo; } >> resultados/ultimo.md
 
