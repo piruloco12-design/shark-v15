@@ -7,10 +7,10 @@ Config actual: SL 2.0 ATR / TP 2.5 ATR
 Bootstrap: 10000 | Monte Carlo: 5000
 
 Descargando 30m / 60d ...
-  IWM     yfinance      769 velas
-  NVDA    yfinance      769 velas
-  AMZN    yfinance      769 velas
-  META    yfinance      769 velas
+  IWM     yfinance      770 velas
+  NVDA    yfinance      770 velas
+  AMZN    yfinance      770 velas
+  META    yfinance      770 velas
 
 Operaciones totales con la config actual: 64
 
@@ -91,19 +91,19 @@ LECTURA: la configuración actual no tiene expectativa positiva
 4) ECONOMÍA REAL: ¿QUÉ SIGNIFICA ESTO EN DINERO?
 ==============================================================
 Periodo cubierto:       0.2 años
-Operaciones:            64  ->  272.6 al año
+Operaciones:            64  ->  272.3 al año
 Riesgo por operación:   5.00 € (0.5% de 1000 €)
 Expectativa en riesgo:  -0.104 R por operación
 
 RENTABILIDAD ANUAL SOBRE 1000 €
-  pesimista (p05)  :  -454.82 €/año  =  -45.48% anual
-  central          :  -141.75 €/año  =  -14.17% anual
-  optimista (p95)  :  +180.85 €/año  =  +18.09% anual
+  pesimista (p05)  :  -454.23 €/año  =  -45.42% anual
+  central          :  -141.56 €/año  =  -14.16% anual
+  optimista (p95)  :  +180.62 €/año  =  +18.06% anual
 
 CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
   pesimista (p05)  : imposible, la expectativa es negativa
   central          : imposible, la expectativa es negativa
-  optimista (p95)  :         66,353 €
+  optimista (p95)  :         66,439 €
 
 LECTURA: con expectativa central negativa no hay capital que
          arregle esto. El problema no es el tamaño de la cuenta.
