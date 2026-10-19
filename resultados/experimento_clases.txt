@@ -20,7 +20,7 @@ CLASE: CRIPTO
   4 activos | 4 huecos | 551 operaciones en 10.7 años
   Winrate 47.9% | PF 1.10 | Expectativa +0.3153
   Rentabilidad anual del bot:       +1.47%
-  Comprar y mantener (referencia):  +58.07%
+  Comprar y mantener (referencia):  +58.08%
   Peor drawdown: 14.7%
 
   Bootstrap (551 ops):
@@ -151,7 +151,7 @@ CLASE: DIVISAS
 RESUMEN
 ======================================================================
   CLASE                OPS    EXPECT   ANUAL%     B&H%   P(>0)  VEREDICTO
-  cripto               551   +0.3153    +1.47   +58.07   86.6%  no concluyente
+  cripto               551   +0.3153    +1.47   +58.08   86.6%  no concluyente
   materias_primas      892   -0.1684    -1.11    +1.26   17.3%  no concluyente
   renta_variable      1265   -0.3037    -3.35   +11.97    0.9%  en contra
   bonos                585   -0.9936    -5.93    -1.37    0.0%  en contra

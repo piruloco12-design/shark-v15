@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-19 11:12 UTC
-Commit:  b401c28a
+Fecha:   2026-10-19 11:49 UTC
+Commit:  f7eb4335
 Disparo: push
 
 ## Entorno
@@ -49,7 +49,7 @@ RESULTADO: 22 pruebas pasadas, 0 fallos
   PASA   guarda si bloqueo o no
 
 ==============================================================
-RESULTADO: 31 pruebas pasadas, 0 fallos
+RESULTADO: 49 pruebas pasadas, 0 fallos
 ==============================================================
   trades: 25 | señales: 270
   bloqueos por cooldown: 245
@@ -230,7 +230,7 @@ Bloqueos principales:
   Avg Win:     4.77  |  Avg Loss: 6.49
   Expectancy:  -2.74 por trade
   PF:          0.37
-  Max DD:      25.43 (2.5%)
+  Max DD:      25.44 (2.5%)
   Avg Bars:    8 velas
   Regímenes:   {'BULL_TREND': 2, 'BEAR_TREND': 6, 'TREND': 1}
   Señales:     {'BUY': 2, 'SELL': 7}
@@ -875,7 +875,7 @@ Operaciones totales con la config actual: 62
 ==============================================================
 Operaciones:            62
 Expectativa observada:  -0.0047 € por operación
-Intervalo 90%:          -1.1910  a  +1.1424
+Intervalo 90%:          -1.1911  a  +1.1424
 Prob. expectativa > 0:  49.5%
 
 LECTURA: INDECISO. El cero está dentro del intervalo, así que
@@ -922,18 +922,18 @@ LECTURA: el drawdown que hay que estar dispuesto a aguantar es
   1.5   2.5  1.67    70   41.4   -0.5514   0.84
   1.5   3.0  2.00    64   40.6   -0.0192   0.99
   1.5   3.5  2.33    62   38.7 +  0.3381   1.09
-  2.0   2.0  1.00    69   52.2   -0.5875   0.79
+  2.0   2.0  1.00    69   52.2   -0.5876   0.79
   2.0   2.5  1.25    62   51.6   -0.0047   1.00 <-- CONFIG ACTUAL
   2.0   3.0  1.50    58   50.0 +  0.4205   1.14
   2.0   3.5  1.75    58   43.1 +  0.0923   1.03
-  2.5   2.0  0.80    68   57.4   -0.4914   0.80
+  2.5   2.0  0.80    68   57.4   -0.4915   0.80
   2.5   2.5  1.00    62   56.5   -0.0131   0.99
   2.5   3.0  1.20    57   54.4 +  0.3172   1.12
   2.5   3.5  1.40    56   46.4   -0.0963   0.97
-  3.0   2.0  0.67    66   60.6   -0.4967   0.77
+  3.0   2.0  0.67    66   60.6   -0.4968   0.77
   3.0   2.5  0.83    60   60.0   -0.0520   0.98
   3.0   3.0  1.00    57   56.1 +  0.0606   1.02
-  3.0   3.5  1.17    54   50.0   -0.1320   0.95
+  3.0   3.5  1.17    54   50.0   -0.1321   0.95
 
 Combinaciones con expectativa positiva: 5 de 16
 Configuración actual (SL 2.0 / TP 2.5): expectativa -0.0047, PF 1.00
@@ -952,14 +952,14 @@ Riesgo por operación:   5.00 € (0.5% de 1000 €)
 Expectativa en riesgo:  -0.001 R por operación
 
 RENTABILIDAD ANUAL SOBRE 1000 €
-  pesimista (p05)  :  -310.15 €/año  =  -31.01% anual
+  pesimista (p05)  :  -310.15 €/año  =  -31.02% anual
   central          :    -1.23 €/año  =   -0.12% anual
-  optimista (p95)  :  +297.49 €/año  =  +29.75% anual
+  optimista (p95)  :  +297.48 €/año  =  +29.75% anual
 
 CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
   pesimista (p05)  : imposible, la expectativa es negativa
   central          : imposible, la expectativa es negativa
-  optimista (p95)  :         40,338 €
+  optimista (p95)  :         40,339 €
 
 LECTURA: con expectativa central negativa no hay capital que
          arregle esto. El problema no es el tamaño de la cuenta.
@@ -1214,7 +1214,7 @@ CLASE: CRIPTO
   4 activos | 4 huecos | 551 operaciones en 10.7 años
   Winrate 47.9% | PF 1.10 | Expectativa +0.3153
   Rentabilidad anual del bot:       +1.47%
-  Comprar y mantener (referencia):  +58.07%
+  Comprar y mantener (referencia):  +58.08%
   Peor drawdown: 14.7%
 
   Bootstrap (551 ops):
@@ -1345,7 +1345,7 @@ CLASE: DIVISAS
 RESUMEN
 ======================================================================
   CLASE                OPS    EXPECT   ANUAL%     B&H%   P(>0)  VEREDICTO
-  cripto               551   +0.3153    +1.47   +58.07   86.6%  no concluyente
+  cripto               551   +0.3153    +1.47   +58.08   86.6%  no concluyente
   materias_primas      892   -0.1684    -1.11    +1.26   17.3%  no concluyente
   renta_variable      1265   -0.3037    -3.35   +11.97    0.9%  en contra
   bonos                585   -0.9936    -5.93    -1.37    0.0%  en contra

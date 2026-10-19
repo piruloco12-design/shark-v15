@@ -138,7 +138,7 @@ Bloqueos principales:
   Avg Win:     4.77  |  Avg Loss: 6.49
   Expectancy:  -2.74 por trade
   PF:          0.37
-  Max DD:      25.43 (2.5%)
+  Max DD:      25.44 (2.5%)
   Avg Bars:    8 velas
   Regímenes:   {'BULL_TREND': 2, 'BEAR_TREND': 6, 'TREND': 1}
   Señales:     {'BUY': 2, 'SELL': 7}
