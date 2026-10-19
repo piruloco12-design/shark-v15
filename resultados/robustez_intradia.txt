@@ -7,10 +7,10 @@ Config actual: SL 2.0 ATR / TP 2.5 ATR
 Bootstrap: 10000 | Monte Carlo: 5000
 
 Descargando 30m / 60d ...
-  IWM     yfinance      770 velas
-  NVDA    yfinance      770 velas
-  AMZN    yfinance      770 velas
-  META    yfinance      770 velas
+  IWM     yfinance      773 velas
+  NVDA    yfinance      773 velas
+  AMZN    yfinance      773 velas
+  META    yfinance      773 velas
 
 Operaciones totales con la config actual: 64
 
@@ -42,7 +42,7 @@ A) MISMAS OPERACIONES, OTRO ORDEN
 
 B) REMUESTREO: si las próximas operaciones salieran de
    esta misma distribución
-   Capital final, percentil 5:   894.66 €
+   Capital final, percentil 5:   894.67 €
    Capital final, mediana:       967.05 €
    Capital final, percentil 95:  1041.31 €
    Drawdown percentil 95:        12.08%
@@ -70,12 +70,12 @@ LECTURA: el drawdown que hay que estar dispuesto a aguantar es
   2.0   2.5  1.25    64   46.9   -0.5199   0.83 <-- CONFIG ACTUAL
   2.0   3.0  1.50    60   45.0   -0.1830   0.94
   2.0   3.5  1.75    60   38.3   -0.5423   0.85
-  2.5   2.0  0.80    69   52.2   -0.9391   0.65
+  2.5   2.0  0.80    69   52.2   -0.9390   0.65
   2.5   2.5  1.00    64   51.6   -0.4841   0.82
   2.5   3.0  1.20    59   49.2   -0.2389   0.92
   2.5   3.5  1.40    58   41.4   -0.6815   0.79
-  3.0   2.0  0.67    65   56.9   -0.7911   0.66
-  3.0   2.5  0.83    60   56.7   -0.3442   0.85
+  3.0   2.0  0.67    66   56.1   -0.8585   0.64
+  3.0   2.5  0.83    61   55.7   -0.4248   0.82
   3.0   3.0  1.00    58   51.7   -0.3609   0.86
   3.0   3.5  1.17    55   45.5   -0.6030   0.80
 
@@ -91,19 +91,19 @@ LECTURA: la configuración actual no tiene expectativa positiva
 4) ECONOMÍA REAL: ¿QUÉ SIGNIFICA ESTO EN DINERO?
 ==============================================================
 Periodo cubierto:       0.2 años
-Operaciones:            64  ->  272.3 al año
+Operaciones:            64  ->  271.2 al año
 Riesgo por operación:   5.00 € (0.5% de 1000 €)
 Expectativa en riesgo:  -0.104 R por operación
 
 RENTABILIDAD ANUAL SOBRE 1000 €
-  pesimista (p05)  :  -454.23 €/año  =  -45.42% anual
-  central          :  -141.56 €/año  =  -14.16% anual
-  optimista (p95)  :  +180.62 €/año  =  +18.06% anual
+  pesimista (p05)  :  -452.46 €/año  =  -45.25% anual
+  central          :  -141.01 €/año  =  -14.10% anual
+  optimista (p95)  :  +179.91 €/año  =  +17.99% anual
 
 CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
   pesimista (p05)  : imposible, la expectativa es negativa
   central          : imposible, la expectativa es negativa
-  optimista (p95)  :         66,439 €
+  optimista (p95)  :         66,700 €
 
 LECTURA: con expectativa central negativa no hay capital que
          arregle esto. El problema no es el tamaño de la cuenta.
