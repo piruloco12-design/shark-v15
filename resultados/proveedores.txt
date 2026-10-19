@@ -2,10 +2,10 @@ PRUEBA DE PROVEEDORES — cada uno por separado
 Cascada por defecto: ['yfinance', 'finnhub', 'alpha_vantage', 'twelve_data']
 
   OK    yfinance   SPY         3771 velas  2011-10-19 -> 2026-10-19
-  FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: Stooq
+  FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ["stooq: Stooq
   OK    yfinance   BTC-USD     4416 velas  2014-09-17 -> 2026-10-19
   OK    coinbase   BTC-USD     4110 velas  2015-07-20 -> 2026-10-19
-  FALLA stooq      GLD       ValueError: No se pudo descargar GLD con ningún provider. Detalles: ['stooq: Stooq
+  FALLA stooq      GLD       ValueError: No se pudo descargar GLD con ningún provider. Detalles: ["stooq: Stooq
 
 CRUCE yfinance vs stooq en SPY (ultimos cierres comunes)
-  no se pudo cruzar: ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: Stooq no sirvio spy.us: https://stooq.com/q/d/l/: sin datos (<!DOCTYPE html><html><head><meta charset="utf-8"><meta name=) | https://stooq.pl/q/d/l/: sin datos (<!DOCTYPE html><html><head><meta charset="utf-8"><meta name=)']
+  no se pudo cruzar: ValueError: No se pudo descargar SPY con ningún provider. Detalles: ["stooq: Stooq no sirvio spy.us: https://stooq.com/q/d/l/: ConnectTimeout: HTTPSConnectionPool(host='stooq.com', port=443): Max retries exceeded  | https://stooq.pl/q/d/l/: ConnectTimeout: HTTPSConnectionPool(host='stooq.pl', port=443): Max retries exceeded w"]

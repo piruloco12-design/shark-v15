@@ -14,10 +14,10 @@ multiactivo_sin_cripto  (31 activos)
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
 comprar_y_mantener        6.30%    0.72   -16.6%   93.3%    0.07    2.482
-M02_tendencia             6.24%    0.66   -22.3%   93.3%    3.78    2.461
-M03_momentum_12_1         9.94%    0.62   -27.2%   93.3%    5.87    4.100
-M02_mas_M03               9.91%    0.62   -27.9%   93.3%    5.80    4.082
-M03_con_banda             9.17%    0.64   -24.5%   84.1%    5.29    3.694
+M02_tendencia             6.24%    0.66   -22.3%   93.3%    3.78    2.462
+M03_momentum_12_1         9.94%    0.62   -27.2%   93.3%    5.87    4.098
+M02_mas_M03               9.91%    0.62   -27.9%   93.3%    5.80    4.080
+M03_con_banda             9.17%    0.64   -24.5%   84.1%    5.29    3.692
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
 
@@ -33,13 +33,13 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   M03_momentum_12_1
     anual +9.94%  vs comprar y mantener +6.30%  -> bate
     train: +7.06% vs +3.84%  -> bate
-    test : +10.07% vs +6.42%  -> bate
+    test : +10.06% vs +6.42%  -> bate
     VEREDICTO: PASA
 
   M02_mas_M03
     anual +9.91%  vs comprar y mantener +6.30%  -> bate
     train: +6.86% vs +3.84%  -> bate
-    test : +10.30% vs +6.42%  -> bate
+    test : +10.29% vs +6.42%  -> bate
     VEREDICTO: PASA
 
 ======================================================================
@@ -49,10 +49,10 @@ clase_renta_variable  (14 activos)
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
 comprar_y_mantener       12.61%    0.92   -23.3%   93.3%    0.07    5.857
-M02_tendencia            12.39%    0.95   -19.1%   93.3%    3.67    5.690
-M03_momentum_12_1        13.32%    1.03   -16.0%   93.3%    4.84    6.432
-M02_mas_M03              13.44%    1.01   -16.0%   93.3%    4.96    6.534
-M03_con_banda            12.54%    1.04   -14.4%   86.4%    4.39    5.801
+M02_tendencia            12.39%    0.95   -19.1%   93.3%    3.67    5.691
+M03_momentum_12_1        13.31%    1.03   -16.0%   93.3%    4.84    6.424
+M02_mas_M03              13.43%    1.01   -16.0%   93.3%    4.96    6.526
+M03_con_banda            12.53%    1.04   -14.4%   86.4%    4.39    5.795
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
 
@@ -62,20 +62,20 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   M02_tendencia
     anual +12.39%  vs comprar y mantener +12.61%  -> NO bate
     train: +11.28% vs +11.31%  -> NO bate
-    test : +9.47% vs +9.00%  -> bate
+    test : +9.48% vs +9.00%  -> bate
     VEREDICTO: NO PASA: forma peor de estar invertido
     I29: mejor Sharpe (0.95 vs 0.92) pero MENOS dinero. No es una mejora del beneficio.
 
   M03_momentum_12_1
-    anual +13.32%  vs comprar y mantener +12.61%  -> bate
+    anual +13.31%  vs comprar y mantener +12.61%  -> bate
     train: +12.91% vs +11.31%  -> bate
-    test : +9.99% vs +9.00%  -> bate
+    test : +9.97% vs +9.00%  -> bate
     VEREDICTO: PASA
 
   M02_mas_M03
-    anual +13.44%  vs comprar y mantener +12.61%  -> bate
+    anual +13.43%  vs comprar y mantener +12.61%  -> bate
     train: +12.97% vs +11.31%  -> bate
-    test : +10.19% vs +9.00%  -> bate
+    test : +10.17% vs +9.00%  -> bate
     VEREDICTO: PASA
 
 ======================================================================
@@ -88,7 +88,7 @@ comprar_y_mantener        0.95%    0.06   -60.0%   93.3%    0.07    1.151
 M02_tendencia            -0.76%   -0.04   -68.5%   82.8%    5.41    0.893
 M03_momentum_12_1         0.55%    0.03   -56.9%   82.2%    4.73    1.085
 M02_mas_M03              -0.29%   -0.01   -65.9%   80.0%    4.81    0.958
-M03_con_banda             0.90%    0.05   -55.8%   80.2%    4.30    1.142
+M03_con_banda             0.90%    0.05   -55.8%   80.2%    4.30    1.143
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
 
@@ -98,7 +98,7 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   M02_tendencia
     anual -0.76%  vs comprar y mantener +0.95%  -> NO bate
     train: -9.61% vs -7.60%  -> NO bate
-    test : +9.92% vs +9.66%  -> bate
+    test : +9.93% vs +9.66%  -> bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M03_momentum_12_1
@@ -110,7 +110,7 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   M02_mas_M03
     anual -0.29%  vs comprar y mantener +0.95%  -> NO bate
     train: -7.93% vs -7.60%  -> NO bate
-    test : +9.28% vs +9.66%  -> NO bate
+    test : +9.29% vs +9.66%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
 ======================================================================
@@ -120,10 +120,10 @@ clase_bonos  (5 activos)
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
 comprar_y_mantener        1.69%    0.29   -20.5%   93.3%    0.07    1.283
-M02_tendencia             1.86%    0.42   -10.3%   81.7%    3.52    1.316
-M03_momentum_12_1         1.35%    0.26   -17.9%   85.6%    3.20    1.221
+M02_tendencia             1.86%    0.42   -10.3%   81.7%    3.52    1.317
+M03_momentum_12_1         1.35%    0.26   -17.9%   85.6%    3.20    1.222
 M02_mas_M03               1.74%    0.39   -10.4%   81.1%    4.18    1.292
-M03_con_banda             1.39%    0.28   -17.6%   83.4%    2.90    1.229
+M03_con_banda             1.40%    0.28   -17.6%   83.4%    2.90    1.229
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
 
@@ -133,19 +133,19 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   M02_tendencia
     anual +1.86%  vs comprar y mantener +1.69%  -> bate
     train: +2.93% vs +3.65%  -> NO bate
-    test : +0.56% vs -1.04%  -> bate
+    test : +0.57% vs -1.04%  -> bate
     VEREDICTO: INCONCLUSO: no se sostiene en las dos mitades
 
   M03_momentum_12_1
     anual +1.35%  vs comprar y mantener +1.69%  -> NO bate
     train: +2.98% vs +3.65%  -> NO bate
-    test : -0.65% vs -1.04%  -> bate
+    test : -0.64% vs -1.04%  -> bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M02_mas_M03
     anual +1.74%  vs comprar y mantener +1.69%  -> bate
     train: +2.68% vs +3.65%  -> NO bate
-    test : +0.56% vs -1.04%  -> bate
+    test : +0.57% vs -1.04%  -> bate
     VEREDICTO: INCONCLUSO: no se sostiene en las dos mitades
 
 ======================================================================
@@ -154,10 +154,10 @@ clase_divisas  (5 activos)
 
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
-comprar_y_mantener       -0.56%   -0.15   -19.7%   93.3%    0.07    0.920
+comprar_y_mantener       -0.55%   -0.14   -19.7%   93.3%    0.07    0.921
 M02_tendencia            -0.08%   -0.01   -15.0%   93.3%    5.16    0.988
-M03_momentum_12_1        -0.37%   -0.06   -15.6%   93.3%    4.16    0.947
-M02_mas_M03              -0.70%   -0.11   -20.7%   92.8%    4.94    0.900
+M03_momentum_12_1        -0.37%   -0.06   -15.6%   93.3%    4.16    0.946
+M02_mas_M03              -0.71%   -0.11   -20.7%   92.8%    4.94    0.900
 M03_con_banda            -0.37%   -0.07   -15.1%   91.3%    3.90    0.946
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
@@ -166,23 +166,23 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   corte train/test: 2020-10-15
 
   M02_tendencia
-    anual -0.08%  vs comprar y mantener -0.56%  -> bate
+    anual -0.08%  vs comprar y mantener -0.55%  -> bate
     train: +0.40% vs -1.14%  -> bate
-    test : -0.91% vs +0.51%  -> NO bate
+    test : -0.91% vs +0.52%  -> NO bate
     VEREDICTO: NO PASA: por debajo del efectivo
 
   M03_momentum_12_1
-    anual -0.37%  vs comprar y mantener -0.56%  -> bate
+    anual -0.37%  vs comprar y mantener -0.55%  -> bate
     train: -0.78% vs -1.14%  -> bate
-    test : +0.48% vs +0.51%  -> NO bate
+    test : +0.47% vs +0.52%  -> NO bate
     VEREDICTO: NO PASA: por debajo del efectivo
 
   M02_mas_M03
-    anual -0.70%  vs comprar y mantener -0.56%  -> NO bate
+    anual -0.71%  vs comprar y mantener -0.55%  -> NO bate
     train: -0.45% vs -1.14%  -> bate
-    test : -0.91% vs +0.51%  -> NO bate
+    test : -0.91% vs +0.52%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
-    I29: mejor Sharpe (-0.11 vs -0.15) pero MENOS dinero. No es una mejora del beneficio.
+    I29: mejor Sharpe (-0.11 vs -0.14) pero MENOS dinero. No es una mejora del beneficio.
 
 ======================================================================
 cripto_sesgo_extremo  (2 activos)
@@ -190,11 +190,11 @@ cripto_sesgo_extremo  (2 activos)
 
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
-comprar_y_mantener       62.54%    0.84   -81.3%   94.5%    0.17  334.746
-M02_tendencia            52.52%    0.83   -66.3%   70.3%    1.67  156.258
-M03_momentum_12_1        52.04%    0.81   -79.8%   69.7%    2.26  150.488
-M02_mas_M03              50.84%    0.84   -64.8%   63.4%    1.84  136.922
-M03_con_banda            51.01%    0.81   -78.7%   68.2%    2.17  138.780
+comprar_y_mantener       62.51%    0.84   -81.3%   94.5%    0.17  334.001
+M02_tendencia            52.52%    0.83   -66.3%   70.3%    1.67  156.274
+M03_momentum_12_1        52.04%    0.81   -79.8%   69.7%    2.26  150.503
+M02_mas_M03              50.85%    0.84   -64.8%   63.4%    1.84  136.936
+M03_con_banda            51.02%    0.81   -78.7%   68.2%    2.17  138.793
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
 
@@ -202,28 +202,28 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   corte train/test: 2021-12-18
 
   M02_tendencia
-    anual +52.52%  vs comprar y mantener +62.54%  -> NO bate
+    anual +52.52%  vs comprar y mantener +62.51%  -> NO bate
     train: +99.33% vs +122.27%  -> NO bate
-    test : +16.81% vs +23.43%  -> NO bate
+    test : +16.81% vs +23.38%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M03_momentum_12_1
-    anual +52.04%  vs comprar y mantener +62.54%  -> NO bate
+    anual +52.04%  vs comprar y mantener +62.51%  -> NO bate
     train: +104.17% vs +122.27%  -> NO bate
-    test : +14.20% vs +23.43%  -> NO bate
+    test : +14.21% vs +23.38%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M02_mas_M03
-    anual +50.84%  vs comprar y mantener +62.54%  -> NO bate
+    anual +50.85%  vs comprar y mantener +62.51%  -> NO bate
     train: +97.54% vs +122.27%  -> NO bate
-    test : +16.83% vs +23.43%  -> NO bate
+    test : +16.83% vs +23.38%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
 ======================================================================
 AJUSTADO vs SIN AJUSTAR — cuanto cambia por dividendos y splits
 ======================================================================
   comprar_y_mantener       ajustado  +6.30%  sin ajustar  +4.81%  diferencia +1.49 puntos/ano
-  M03_momentum_12_1        ajustado  +9.94%  sin ajustar  +7.84%  diferencia +2.11 puntos/ano
+  M03_momentum_12_1        ajustado  +9.94%  sin ajustar  +7.83%  diferencia +2.11 puntos/ano
 
   Shark corre SIN ajustar. Esa diferencia es el sesgo que
   arrastran todos los backtests diarios largos hechos hasta hoy.
