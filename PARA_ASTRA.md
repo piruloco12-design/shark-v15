@@ -12,6 +12,13 @@
 > **«pierde en las cinco clases» es falso** — pierde dinero en cuatro; en
 > cripto gana +1,47%, muy por debajo de su referencia, que no es lo mismo.
 >
+> **El motor ya está reconstruido.** Lo que sigue a esta cabecera describe
+> el estado ANTERIOR a la auditoría y se conserva como artefacto de lo que
+> yo creía entonces. Para el estado actual, lee
+> **`RESPUESTA_A_LA_AUDITORIA.md`**: los 43 contratos económicos pasan, la
+> medición corregida está en `resultados/v2/`, y la ventaja que este
+> documento reclamaba resultó ser +0,01 puntos.
+>
 > Ver `resultados/LEEME_RESULTADOS_INVALIDADOS.md` y
 > `tests/test_aceptacion.py`, que convierte los hallazgos en 22 contratos
 > económicos que el motor todavía no cumple.
