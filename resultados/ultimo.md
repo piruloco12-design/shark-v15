@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-19 09:32 UTC
-Commit:  8dfc04b4
+Fecha:   2026-10-19 11:12 UTC
+Commit:  b401c28a
 Disparo: push
 
 ## Entorno
@@ -24,10 +24,10 @@ RESULTADO: 24 pruebas pasadas, 0 fallos
 ==============================================================
 RESULTADO: 61 pruebas pasadas, 0 fallos
 ==============================================================
-  PASA   en Render con disco montado no avisa
+  PASA   el aviso NO depende de la variable RENDER
 
 ==============================================================
-RESULTADO: 28 pruebas pasadas, 0 fallos
+RESULTADO: 33 pruebas pasadas, 0 fallos
 ==============================================================
 === 4) el profit factor tambien cambia ===
   PF viejo: inf | PF nuevo: inf
@@ -49,7 +49,7 @@ RESULTADO: 22 pruebas pasadas, 0 fallos
   PASA   guarda si bloqueo o no
 
 ==============================================================
-RESULTADO: 25 pruebas pasadas, 0 fallos
+RESULTADO: 31 pruebas pasadas, 0 fallos
 ==============================================================
   trades: 25 | señales: 270
   bloqueos por cooldown: 245
@@ -1214,7 +1214,7 @@ CLASE: CRIPTO
   4 activos | 4 huecos | 551 operaciones en 10.7 años
   Winrate 47.9% | PF 1.10 | Expectativa +0.3153
   Rentabilidad anual del bot:       +1.47%
-  Comprar y mantener (referencia):  +58.21%
+  Comprar y mantener (referencia):  +58.07%
   Peor drawdown: 14.7%
 
   Bootstrap (551 ops):
@@ -1345,7 +1345,7 @@ CLASE: DIVISAS
 RESUMEN
 ======================================================================
   CLASE                OPS    EXPECT   ANUAL%     B&H%   P(>0)  VEREDICTO
-  cripto               551   +0.3153    +1.47   +58.21   86.6%  no concluyente
+  cripto               551   +0.3153    +1.47   +58.07   86.6%  no concluyente
   materias_primas      892   -0.1684    -1.11    +1.26   17.3%  no concluyente
   renta_variable      1265   -0.3037    -3.35   +11.97    0.9%  en contra
   bonos                585   -0.9936    -5.93    -1.37    0.0%  en contra
