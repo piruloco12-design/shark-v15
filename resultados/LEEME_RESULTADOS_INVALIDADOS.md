@@ -104,3 +104,82 @@ Así que sus cifras tampoco deben citarse como medición económica firme.
 **Nada de esta carpeta debe usarse para decidir sobre dinero.** Se conserva
 como artefacto de lo que produjo aquel código, que es exactamente para lo que
 sirve ahora.
+
+---
+
+# ACTUALIZACIÓN: la medición corregida, 2026-10-19
+
+Ya está. El motor corregido (`evaluador/`, sobre `libro.py`) ha medido lo
+mismo con datos reales: 31 activos, 2011-10 a 2026-10, 168 decisiones
+mensuales, artefactos completos en `resultados/v2/`.
+
+## Lo que decía con el motor roto, y lo que sale con el corregido
+
+| | Motor roto | Motor corregido |
+|---|---|---|
+| Renta variable: M03 vs comprar y mantener | **+0,72 pts/año** | **+0,01 pts/año** |
+| Multiactivo: M03 vs comprar y mantener | **+3,63 pts/año** | **+1,33 pts/año** |
+
+En renta variable la ventaja era **una centésima de punto porcentual**. Es
+decir: ninguna. Lo que yo presenté como el hallazgo del día era, casi en su
+totalidad, el benchmark mal calculado.
+
+Dije que el fallo afectaba a los dos lados de la comparación y que por eso
+no sabía en qué dirección se movería el diferencial. Se movió en contra, y
+mucho. Hice bien en no adivinar.
+
+## Las cifras completas
+
+| Estrategia | CAGR | Sharpe | Peor caída diaria | Rotación/año |
+|---|---|---|---|---|
+| **Renta variable** | | | | |
+| Comprar y mantener | 13,76% | 0,86 | −35,0% | 0,07 |
+| M03 momentum 12−1 | 13,77% | 0,85 | **−30,5%** | 14,47 |
+| M02 tendencia | 12,80% | 0,84 | −32,3% | 10,42 |
+| Rebalanceo equiponderado | 13,43% | 0,86 | −36,5% | 0,81 |
+| **Multiactivo (31 activos)** | | | | |
+| Comprar y mantener | 9,05% | 0,77 | −27,1% | 0,07 |
+| M03 momentum 12−1 | 10,39% | 0,65 | −32,2% | 12,53 |
+| M02 tendencia | 6,51% | 0,65 | −25,0% | 6,19 |
+| Rebalanceo equiponderado | 6,67% | 0,73 | −23,8% | 0,63 |
+
+Contrastes, con bootstrap estacionario y corrección de Holm sobre la familia
+de 4 hipótesis registrada de antemano:
+
+| Hipótesis | Diferencial mensual | IC 90% | p | Holm |
+|---|---|---|---|---|
+| multiactivo/M03 | +0,164% | [−0,306%, +0,670%] | 0,280 | no rechaza |
+| renta_variable/M03 | −0,008% | [−0,153%, +0,137%] | 0,533 | no rechaza |
+| multiactivo/M02 | −0,208% | [−0,467%, +0,041%] | 0,916 | no rechaza |
+| renta_variable/M02 | −0,079% | [−0,179%, +0,016%] | 0,920 | no rechaza |
+
+**Ninguna rechaza la nula.** Los cuatro intervalos del 90% contienen el cero.
+
+## Qué significa y qué no
+
+**No significa** que M03 no sirva. La potencia de este montaje está medida:
+detecta un diferencial de +0,72% anual el 12% de las veces, y de +3,66% el
+60%. Por debajo de un 3-4% anual no distingue una ventaja real de la suerte.
+Un «no rechaza» aquí es «indetectable con esta muestra».
+
+**Sí significa** que, medido bien, **M03 sobre renta variable no se separa
+de comprar y mantener**: +0,01 puntos con 14,47 de rotación anual y 162 de
+comisiones frente a 0,80. Paga mucho trabajo y mucha comisión para acabar en
+el mismo sitio.
+
+Lo único que M03 parece ofrecer es la caída: −30,5% frente a −35,0% en renta
+variable. Ojo, que esas son caídas DIARIAS: las cifras bonitas que di antes
+(−16,0% contra −23,3%) eran de puntos mensuales y subestimaban las dos.
+
+Y una observación que no estaba en ninguna tabla anterior: el **rebalanceo
+equiponderado** —la estrategia que el motor roto medía creyendo medir
+comprar y mantener— rinde **peor** que comprar y mantener en los dos
+universos. El motor viejo no solo comparaba contra la cosa equivocada: la
+comparaba contra una cosa que además es peor.
+
+## Estado
+
+`EXPLORATORIO`, universo `EXPLORATORY_SURVIVOR_UNIVERSE`. Los datos son los
+mismos que ya había mirado antes de la auditoría, así que un tramo ya
+observado no recupera su condición de prueba final por volver a correrlo con
+mejor código.
