@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-19 09:05 UTC
-Commit:  25200827
+Fecha:   2026-10-19 09:32 UTC
+Commit:  8dfc04b4
 Disparo: push
 
 ## Entorno
@@ -46,6 +46,11 @@ RESULTADO: 12 pruebas pasadas, 0 fallos
 ==============================================================
 RESULTADO: 22 pruebas pasadas, 0 fallos
 ==============================================================
+  PASA   guarda si bloqueo o no
+
+==============================================================
+RESULTADO: 25 pruebas pasadas, 0 fallos
+==============================================================
   trades: 25 | señales: 270
   bloqueos por cooldown: 245
 
@@ -64,13 +69,13 @@ RESULTADO: 4 pruebas pasadas, 0 fallos
 
 ## Imports
 ```
-18/18 modulos importan
+20/20 modulos importan
 ```
 
 ## Diagnostico del feed
 ```
 Timeframe 30m | Periodo 60d | MIN_BARS 220
-Providers ['yfinance', 'stooq', 'finnhub', 'alpha_vantage', 'twelve_data']
+Providers ['yfinance', 'finnhub', 'alpha_vantage', 'twelve_data']
 
 ACTIVO  PROVIDER    VELAS  DIAS  X/DIA  HORAS ET
 IWM     yfinance      780    60   13.0  [9, 10, 11, 12, 13, 14, 15]
@@ -1173,7 +1178,7 @@ VEREDICTO
 ## Proveedores de datos
 ```
 PRUEBA DE PROVEEDORES — cada uno por separado
-Cascada por defecto: ['yfinance', 'stooq', 'finnhub', 'alpha_vantage', 'twelve_data']
+Cascada por defecto: ['yfinance', 'finnhub', 'alpha_vantage', 'twelve_data']
 
   OK    yfinance   SPY         3772 velas  2011-10-17 -> 2026-10-16
   FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: Stooq
@@ -1209,7 +1214,7 @@ CLASE: CRIPTO
   4 activos | 4 huecos | 551 operaciones en 10.7 años
   Winrate 47.9% | PF 1.10 | Expectativa +0.3153
   Rentabilidad anual del bot:       +1.47%
-  Comprar y mantener (referencia):  +58.20%
+  Comprar y mantener (referencia):  +58.21%
   Peor drawdown: 14.7%
 
   Bootstrap (551 ops):
@@ -1340,7 +1345,7 @@ CLASE: DIVISAS
 RESUMEN
 ======================================================================
   CLASE                OPS    EXPECT   ANUAL%     B&H%   P(>0)  VEREDICTO
-  cripto               551   +0.3153    +1.47   +58.20   86.6%  no concluyente
+  cripto               551   +0.3153    +1.47   +58.21   86.6%  no concluyente
   materias_primas      892   -0.1684    -1.11    +1.26   17.3%  no concluyente
   renta_variable      1265   -0.3037    -3.35   +11.97    0.9%  en contra
   bonos                585   -0.9936    -5.93    -1.37    0.0%  en contra

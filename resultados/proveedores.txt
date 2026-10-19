@@ -1,5 +1,5 @@
 PRUEBA DE PROVEEDORES — cada uno por separado
-Cascada por defecto: ['yfinance', 'stooq', 'finnhub', 'alpha_vantage', 'twelve_data']
+Cascada por defecto: ['yfinance', 'finnhub', 'alpha_vantage', 'twelve_data']
 
   OK    yfinance   SPY         3772 velas  2011-10-17 -> 2026-10-16
   FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: Stooq
