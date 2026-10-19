@@ -116,10 +116,20 @@ GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "").strip()
 
 PRIMARY_PROVIDER = _env("PRIMARY_PROVIDER", "yfinance").lower()
 
-# stooq va detras de yfinance: gratis, sin clave, independiente
-# de Yahoo. Es el seguro contra que Yahoo vuelva a cambiar la
-# web y rompa yfinance, como paso en febrero de 2025.
-_ORDEN_PROVIDERS_DEFECTO = "yfinance,stooq,finnhub,alpha_vantage,twelve_data"
+# stooq NO va en la cascada por defecto.
+#
+# Probado el 2026-10-19 desde GitHub Actions: stooq.com y stooq.pl
+# devuelven HTML en vez de CSV, incluso con User-Agent de
+# navegador. Bloquean por IP de centro de datos, no por cabecera.
+#
+# Render tambien es un centro de datos, asi que ahi fallaria igual:
+# dejarlo en la cascada solo añadiria una peticion fallida por
+# activo y por ciclo, sin aportar respaldo real.
+#
+# El codigo sigue en data_feed.py y funciona desde una conexion
+# domestica. Para analisis en local:
+#     DATA_PROVIDER_ORDER=stooq,yfinance python validator/...
+_ORDEN_PROVIDERS_DEFECTO = "yfinance,finnhub,alpha_vantage,twelve_data"
 
 DATA_PROVIDER_ORDER = [
     p.strip().lower()

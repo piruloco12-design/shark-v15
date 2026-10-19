@@ -250,6 +250,40 @@ def _linea_noticias(veredicto):
             f"  {veredicto['motivo'][:90]}\n")
 
 
+def comprobar_proveedores():
+    """
+    Prueba cada proveedor de la cascada al arrancar y devuelve el
+    resultado en texto.
+
+    Existe porque las claves de API viven en Render, no en CI: yo
+    puedo verificar yfinance y coinbase desde fuera, pero finnhub,
+    alpha_vantage y twelve_data solo se pueden probar donde estan
+    sus claves. Si el principal se cae y los respaldos tampoco
+    funcionan, mas vale saberlo el dia que arranca el bot y no el
+    dia que Yahoo cambie la web.
+    """
+    import data_feed
+
+    cascada = list(data_feed.DATA_PROVIDER_ORDER)
+    ticker = ASSETS[0] if ASSETS else "SPY"
+    lineas = []
+    funcionan = 0
+
+    for proveedor in cascada:
+        original = data_feed.DATA_PROVIDER_ORDER
+        try:
+            data_feed.DATA_PROVIDER_ORDER = [proveedor]
+            df, _ = get_data(ticker, TIMEFRAME, PERIOD)
+            lineas.append(f"✅ {proveedor}: {len(df)} velas")
+            funcionan += 1
+        except Exception as e:
+            lineas.append(f"❌ {proveedor}: {type(e).__name__}")
+        finally:
+            data_feed.DATA_PROVIDER_ORDER = original
+
+    return funcionan, len(cascada), lineas
+
+
 def _log(msg):
     if VERBOSE_LOGS:
         print(msg)
@@ -542,6 +576,28 @@ def run_live_engine():
     # histórico desaparece en el próximo reinicio. Hay que verlo al
     # arrancar, no descubrirlo cuando el capital vuelva a 1000.
     print(estado_gemini())
+
+    # Autodiagnostico de proveedores: cuales responden de verdad
+    # desde donde corre el bot.
+    try:
+        ok, total, detalle = comprobar_proveedores()
+        print(f"Proveedores: {ok} de {total} responden")
+        for linea in detalle:
+            print(f"  {linea}")
+        if ok == 0:
+            _send_error_message(
+                "NINGUN PROVEEDOR DE DATOS RESPONDE\n\n"
+                + "\n".join(detalle)
+                + "\n\nEl bot no va a poder operar."
+            )
+        elif ok == 1:
+            _send_error_message(
+                "SIN RESPALDO DE DATOS\n\n"
+                + "\n".join(detalle)
+                + "\n\nSolo responde un proveedor: si se cae, el bot se para."
+            )
+    except Exception as e:
+        print(f"No se pudo comprobar proveedores: {e}")
 
     persistente, mensaje_persistencia = comprobar_persistencia()
     print(mensaje_persistencia)
