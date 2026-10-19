@@ -520,8 +520,12 @@ def main(descargar=None):
             dcagr = (m04["i25_g40"]["cagr"] - m04["sin_limites"]["cagr"]) * 100
             ddd = (m04["i25_g40"]["max_drawdown_diario"]
                    - m04["sin_limites"]["max_drawdown_diario"]) * 100
+            # ddd > 0 significa que la caida es MENOS profunda (de -32,2 a
+            # -21,4). La version anterior imprimia -ddd y salia "mejora la
+            # caida en -10,7", que se lee como que la empeora.
             print(f"\n  el tope por grupo cuesta {dcagr:+.2f} puntos de CAGR "
-                  f"y mejora la caida en {-ddd:+.1f} puntos")
+                  f"y {'reduce' if ddd > 0 else 'agrava'} la caida maxima en "
+                  f"{abs(ddd):.1f} puntos")
             print(f"  I29: mas control, menos dinero. Es una preferencia, no "
                   f"una mejora del beneficio.")
             print(f"  Y el diagnostico que importa: recortar "

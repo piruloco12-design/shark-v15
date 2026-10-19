@@ -407,7 +407,13 @@ jobs:
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           RAMA="${GITHUB_REF_NAME}"
-          git add -f resultados/ dashboard/index.html
+          # universo_congelado.json se MODIFICA en cada corrida: la
+          # comprobacion anota las bajas con su fecha. Si no se commitea,
+          # el autostash de abajo choca al rebasar y, peor, el estado de
+          # seguimiento se descartaria en cada corrida: las fechas de baja
+          # nunca se acumularian y el universo congelado no serviria para
+          # nada. Es el archivo cuya persistencia es su razon de ser.
+          git add -f resultados/ dashboard/index.html universo_congelado.json
           if git diff --cached --quiet; then
             echo "Sin cambios en resultados/"
             exit 0
