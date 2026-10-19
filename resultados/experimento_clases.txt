@@ -12,15 +12,15 @@ CLASE: CRIPTO
 ======================================================================
   24/7. BTC tiene el sesgo de supervivencia mas fuerte que existe.
   Descargando con providers: coinbase,yfinance
-    BTC-USD    coinbase     4109 velas  2015-07-20 -> 2026-10-18
-    ETH-USD    coinbase     3804 velas  2016-05-18 -> 2026-10-18
-    LTC-USD    coinbase     3714 velas  2016-08-17 -> 2026-10-18
-    BCH-USD    coinbase     3221 velas  2017-12-20 -> 2026-10-18
+    BTC-USD    coinbase     4110 velas  2015-07-20 -> 2026-10-19
+    ETH-USD    coinbase     3805 velas  2016-05-18 -> 2026-10-19
+    LTC-USD    coinbase     3715 velas  2016-08-17 -> 2026-10-19
+    BCH-USD    coinbase     3222 velas  2017-12-20 -> 2026-10-19
 
   4 activos | 4 huecos | 551 operaciones en 10.7 años
   Winrate 47.9% | PF 1.10 | Expectativa +0.3153
   Rentabilidad anual del bot:       +1.47%
-  Comprar y mantener (referencia):  +57.85%
+  Comprar y mantener (referencia):  +58.20%
   Peor drawdown: 14.7%
 
   Bootstrap (551 ops):
@@ -151,7 +151,7 @@ CLASE: DIVISAS
 RESUMEN
 ======================================================================
   CLASE                OPS    EXPECT   ANUAL%     B&H%   P(>0)  VEREDICTO
-  cripto               551   +0.3153    +1.47   +57.85   86.6%  no concluyente
+  cripto               551   +0.3153    +1.47   +58.20   86.6%  no concluyente
   materias_primas      892   -0.1684    -1.11    +1.26   17.3%  no concluyente
   renta_variable      1265   -0.3037    -3.35   +11.97    0.9%  en contra
   bonos                585   -0.9936    -5.93    -1.37    0.0%  en contra
