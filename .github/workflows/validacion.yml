@@ -91,6 +91,11 @@ jobs:
           python tests/test_oraculos.py  2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_causalidad.py 2>&1 | tail -5 | tee -a resultados/ultimo.md
           python tests/test_cooldown.py  2>&1 | tail -14 | tee -a resultados/ultimo.md
+          # La calibracion del contraste tarda: son cientos de bootstraps
+          # sobre series sinteticas. Vale la pena, porque un contraste
+          # descalibrado convierte cualquier resultado en basura y eso no
+          # se ve leyendo el codigo.
+          python tests/test_inferencia.py 2>&1 | tail -8  | tee -a resultados/ultimo.md
           python tests/test_institucional.py 2>&1 | tail -10 | tee -a resultados/ultimo.md
           python tests/test_observacion.py 2>&1 | tail -8  | tee -a resultados/ultimo.md
           { echo '```'; echo; } >> resultados/ultimo.md
