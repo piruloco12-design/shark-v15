@@ -1,8 +1,8 @@
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash 1b29ecf0ec5e86f6
-Commit: 26299697b5b3-sucio
+Registro escrito ANTES de calcular: hash 76cfafcc7f2347f4
+Commit: 55379ada8100-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -24,7 +24,7 @@ DATOS
 
   Universo congelado el 2026-10-19, 32 instrumentos
   Comprobado el 2026-10-19: 32 con datos (100.0%)
-  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash e32be177f00d1150
+  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash cba4b3fa019f233e
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)

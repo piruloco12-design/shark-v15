@@ -4,16 +4,16 @@
   "fin": "2026-10-19",
   "anos": 13.9904,
   "nav_inicial": 1000.0,
-  "nav_final": 6072.868104,
-  "retorno_total": 5.072868,
+  "nav_final": 6072.872918,
+  "retorno_total": 5.072873,
   "cagr": 0.137614,
-  "volatilidad_anual_diaria": 0.169305,
+  "volatilidad_anual_diaria": 0.169307,
   "max_drawdown_diario": -0.304812,
   "sharpe_diferencial": 0.8486,
   "sharpe_detalle": {
     "sharpe": 0.8486,
-    "media_diferencial_periodica": 0.00057015,
-    "desviacion_diferencial_periodica": 0.01066518,
+    "media_diferencial_periodica": 0.00057016,
+    "desviacion_diferencial_periodica": 0.01066532,
     "periodos": 3516,
     "periodos_por_ano": 252,
     "referencia": "tasa constante 0.00000000 por periodo"
@@ -26,7 +26,7 @@
       "observaciones": 47
     },
     "2013": {
-      "retorno": 0.330869,
+      "retorno": 0.330323,
       "completo": true,
       "observaciones": 252
     },
@@ -36,7 +36,7 @@
       "observaciones": 252
     },
     "2015": {
-      "retorno": 0.037373,
+      "retorno": 0.037374,
       "completo": true,
       "observaciones": 252
     },
@@ -81,7 +81,7 @@
       "observaciones": 250
     },
     "2024": {
-      "retorno": 0.176118,
+      "retorno": 0.176119,
       "completo": true,
       "observaciones": 252
     },
@@ -116,12 +116,12 @@
   },
   "decisiones": 168,
   "intenciones": 967,
-  "intenciones_ejecutadas": 959,
-  "intenciones_rechazadas": 8,
-  "comisiones_moneda": 162.027162,
-  "nominal_ejecutado": 202533.95,
+  "intenciones_ejecutadas": 957,
+  "intenciones_rechazadas": 10,
+  "comisiones_moneda": 162.027295,
+  "nominal_ejecutado": 202534.12,
   "coste_sobre_nominal_pb": 8.0,
-  "coste_por_intencion_moneda": 0.168954,
+  "coste_por_intencion_moneda": 0.169308,
   "rotacion_anual_nominal": 14.477,
   "concentracion_final": {
     "invertido": 0.999883,
@@ -141,16 +141,16 @@
     "efectivo": 0.709817,
     "efectivo_utilizable": 0.709817,
     "reservado": 0.0,
-    "valor_posiciones": 6072.158287,
+    "valor_posiciones": 6072.163101,
     "derechos": 0.0,
     "obligaciones": 0.0,
-    "nav": 6072.868104,
+    "nav": 6072.872918,
     "posiciones": {
-      "XLK": 6.15154899,
-      "IWM": 4.33324571,
-      "XLE": 19.57993031,
-      "QQQ": 1.62775685,
-      "XLV": 7.14977869
+      "XLK": 6.15155387,
+      "IWM": 4.33324914,
+      "XLE": 19.57994584,
+      "QQQ": 1.62775814,
+      "XLV": 7.14978436
     },
     "concentracion": {
       "invertido": 0.999883,

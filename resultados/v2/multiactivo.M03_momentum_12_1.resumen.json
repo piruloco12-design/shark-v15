@@ -4,16 +4,16 @@
   "fin": "2026-10-19",
   "anos": 13.9904,
   "nav_inicial": 1000.0,
-  "nav_final": 3981.511196,
-  "retorno_total": 2.981511,
+  "nav_final": 3981.511874,
+  "retorno_total": 2.981512,
   "cagr": 0.103799,
-  "volatilidad_anual_diaria": 0.175711,
+  "volatilidad_anual_diaria": 0.175745,
   "max_drawdown_diario": -0.321691,
-  "sharpe_diferencial": 0.6522,
+  "sharpe_diferencial": 0.6521,
   "sharpe_detalle": {
-    "sharpe": 0.6522,
-    "media_diferencial_periodica": 0.00045477,
-    "desviacion_diferencial_periodica": 0.01106874,
+    "sharpe": 0.6521,
+    "media_diferencial_periodica": 0.00045479,
+    "desviacion_diferencial_periodica": 0.01107087,
     "periodos": 3516,
     "periodos_por_ano": 252,
     "referencia": "tasa constante 0.00000000 por periodo"
@@ -26,7 +26,7 @@
       "observaciones": 47
     },
     "2013": {
-      "retorno": 0.273159,
+      "retorno": 0.273682,
       "completo": true,
       "observaciones": 252
     },
@@ -46,7 +46,7 @@
       "observaciones": 252
     },
     "2017": {
-      "retorno": 0.199573,
+      "retorno": 0.199574,
       "completo": true,
       "observaciones": 251
     },
@@ -56,7 +56,7 @@
       "observaciones": 251
     },
     "2019": {
-      "retorno": 0.207466,
+      "retorno": 0.207465,
       "completo": true,
       "observaciones": 252
     },
@@ -116,12 +116,12 @@
   },
   "decisiones": 168,
   "intenciones": 1050,
-  "intenciones_ejecutadas": 1035,
-  "intenciones_rechazadas": 15,
-  "comisiones_moneda": 140.340398,
-  "nominal_ejecutado": 175425.5,
+  "intenciones_ejecutadas": 1037,
+  "intenciones_rechazadas": 13,
+  "comisiones_moneda": 140.340447,
+  "nominal_ejecutado": 175425.56,
   "coste_sobre_nominal_pb": 8.0,
-  "coste_por_intencion_moneda": 0.135595,
+  "coste_por_intencion_moneda": 0.135333,
   "rotacion_anual_nominal": 12.539,
   "concentracion_final": {
     "invertido": 1.0,
@@ -138,19 +138,19 @@
   },
   "estado_libro_final": {
     "moneda_cuenta": "USD",
-    "efectivo": 1e-06,
-    "efectivo_utilizable": 1e-06,
+    "efectivo": 0.0,
+    "efectivo_utilizable": 0.0,
     "reservado": 0.0,
-    "valor_posiciones": 3981.511195,
+    "valor_posiciones": 3981.511874,
     "derechos": 0.0,
     "obligaciones": 0.0,
-    "nav": 3981.511196,
+    "nav": 3981.511874,
     "posiciones": {
-      "SLV": 14.20150873,
-      "USO": 5.314597,
-      "XLK": 3.95465756,
-      "DBC": 23.95186339,
-      "XLE": 12.57843865
+      "SLV": 14.20151115,
+      "USO": 5.3145979,
+      "XLK": 3.95465824,
+      "DBC": 23.95186747,
+      "XLE": 12.57844079
     },
     "concentracion": {
       "invertido": 1.0,

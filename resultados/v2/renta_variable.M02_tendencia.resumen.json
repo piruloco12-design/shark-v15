@@ -4,8 +4,8 @@
   "fin": "2026-10-19",
   "anos": 13.9904,
   "nav_inicial": 1000.0,
-  "nav_final": 5391.796943,
-  "retorno_total": 4.391797,
+  "nav_final": 5391.798231,
+  "retorno_total": 4.391798,
   "cagr": 0.127983,
   "volatilidad_anual_diaria": 0.158606,
   "max_drawdown_diario": -0.322965,
@@ -36,7 +36,7 @@
       "observaciones": 252
     },
     "2015": {
-      "retorno": 0.00589,
+      "retorno": 0.005889,
       "completo": true,
       "observaciones": 252
     },
@@ -51,7 +51,7 @@
       "observaciones": 251
     },
     "2018": {
-      "retorno": -0.070308,
+      "retorno": -0.070307,
       "completo": true,
       "observaciones": 251
     },
@@ -71,12 +71,12 @@
       "observaciones": 252
     },
     "2022": {
-      "retorno": -0.050718,
+      "retorno": -0.050719,
       "completo": true,
       "observaciones": 251
     },
     "2023": {
-      "retorno": 0.100919,
+      "retorno": 0.10092,
       "completo": true,
       "observaciones": 250
     },
@@ -86,7 +86,7 @@
       "observaciones": 252
     },
     "2025": {
-      "retorno": 0.145522,
+      "retorno": 0.145521,
       "completo": true,
       "observaciones": 250
     },
@@ -118,8 +118,8 @@
   "intenciones": 2000,
   "intenciones_ejecutadas": 1999,
   "intenciones_rechazadas": 1,
-  "comisiones_moneda": 116.737073,
-  "nominal_ejecutado": 145921.34,
+  "comisiones_moneda": 116.737085,
+  "nominal_ejecutado": 145921.36,
   "coste_sobre_nominal_pb": 8.0,
   "coste_por_intencion_moneda": 0.058398,
   "rotacion_anual_nominal": 10.43,
@@ -147,22 +147,22 @@
     "efectivo": 0.0,
     "efectivo_utilizable": 0.0,
     "reservado": 0.0,
-    "valor_posiciones": 5391.796943,
+    "valor_posiciones": 5391.798231,
     "derechos": 0.0,
     "obligaciones": 0.0,
-    "nav": 5391.796943,
+    "nav": 5391.798231,
     "posiciones": {
-      "XLI": 2.88367433,
-      "QQQ": 0.65089948,
-      "SPY": 0.63138864,
-      "DIA": 0.94704805,
-      "XLK": 2.45985148,
-      "IWM": 1.73275721,
-      "MDY": 0.73322457,
-      "XLB": 9.88739056,
-      "XLE": 7.82952728,
-      "XLP": 5.97414313,
-      "XLV": 2.85140706
+      "XLI": 2.88367502,
+      "QQQ": 0.65089964,
+      "SPY": 0.63138879,
+      "DIA": 0.94704827,
+      "XLK": 2.45985207,
+      "IWM": 1.73275762,
+      "MDY": 0.73322475,
+      "XLB": 9.88739292,
+      "XLE": 7.82952915,
+      "XLP": 5.97414456,
+      "XLV": 2.85140773
     },
     "concentracion": {
       "invertido": 1.0,
