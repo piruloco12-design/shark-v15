@@ -339,9 +339,27 @@ def _metricas(curva, registro, coste_total, n_operaciones):
     }
 
 
+class SinDatos(RuntimeError):
+    """No hay suficientes datos para medir nada. No es un resultado."""
+
+
 def partir(series, fraccion=0.6):
-    """Corta cada serie en el mismo instante temporal (train/test)."""
-    todas = sorted(set().union(*[set(df.index.normalize()) for df in series.values()]))
+    """Corta cada serie en el mismo instante temporal (train/test).
+
+    Si no hay series, lanza SinDatos en vez de reventar con un
+    IndexError opaco. Esto importa porque los logs de Actions no son
+    legibles desde aqui: un fallo tiene que explicarse solo.
+    """
+    if not series:
+        raise SinDatos("ninguna serie cargada: no se puede partir la muestra")
+    fechas_por_activo = [set(df.index.normalize()) for df in series.values()
+                         if df is not None and len(df)]
+    if not fechas_por_activo:
+        raise SinDatos("todas las series estan vacias")
+    todas = sorted(set().union(*fechas_por_activo))
+    if len(todas) < 40:
+        raise SinDatos(f"solo {len(todas)} sesiones en total; hacen falta "
+                       f"muchas mas para partir en train/test")
     corte = todas[int(len(todas) * fraccion)]
     train = {t: df.loc[df.index <= corte] for t, df in series.items()}
     test = {t: df.loc[df.index > corte] for t, df in series.items()}
@@ -352,10 +370,33 @@ def partir(series, fraccion=0.6):
 # Ejecucion
 # =====================================================================
 
+def _guardar(resultados):
+    os.makedirs(os.path.dirname(SALIDA_JSON) or ".", exist_ok=True)
+    with open(SALIDA_JSON, "w") as f:
+        json.dump(resultados, f, indent=2, default=str)
+
+
 def bloque(nombre, series, efectivo, resultados):
     print(f"\n{'=' * 70}")
     print(f"{nombre}  ({len(series)} activos)")
     print("=" * 70)
+
+    # Un bloque sin datos se declara sin datos. No se mide, no se
+    # inventa un veredicto, y sobre todo no tumba el resto del
+    # experimento: los otros bloques si pueden tener datos.
+    utiles = {t: df for t, df in (series or {}).items()
+              if df is not None and len(df) >= LOOKBACK + 2}
+    if len(utiles) < 2:
+        print(f"  SIN DATOS: solo {len(utiles)} activos con historico "
+              f"suficiente (hacen falta al menos 2)")
+        resultados[nombre] = {
+            "sin_datos": True,
+            "activos_recibidos": sorted((series or {}).keys()),
+            "activos_utiles": sorted(utiles.keys()),
+            "veredicto": "SIN DATOS: no medido",
+        }
+        return
+    series = utiles
 
     variantes = {
         "comprar_y_mantener": dict(modo="comprar"),
@@ -395,7 +436,13 @@ def bloque(nombre, series, efectivo, resultados):
     # --- los criterios registrados ---
     print(f"\n  CRITERIOS REGISTRADOS")
     bh = salida.get("comprar_y_mantener")
-    train, test, corte = partir(series)
+    try:
+        train, test, corte = partir(series)
+    except SinDatos as e:
+        print(f"  SIN DATOS para partir la muestra: {e}")
+        resultados[nombre] = {"variantes": salida, "dictamenes": {},
+                              "veredicto": f"SIN DATOS: {e}"}
+        return
     print(f"  corte train/test: {corte.date()}")
 
     dictamenes = {}
@@ -500,6 +547,9 @@ def main():
               "documento prohibe usar cero para tapar un dato que falta,")
         print("asi que M02 queda sin medir en esta corrida.")
 
+    resultados["efectivo_cargado"] = efectivo is not None
+    resultados["fallos_carga_efectivo"] = fallos_cash
+
     todos = [t for ts in UNIVERSO.values() for t in ts]
     series, fallos = cargar(todos, ajustado=True)
     print(f"\nCargados {len(series)}/{len(todos)} activos ajustados")
@@ -507,6 +557,14 @@ def main():
         for t, m in fallos.items():
             print(f"  sin datos: {t}: {m}")
     resultados["fallos_carga"] = fallos
+    resultados["activos_cargados"] = {
+        t: {"sesiones": len(df), "desde": str(df.index[0].date()),
+            "hasta": str(df.index[-1].date())}
+        for t, df in series.items()
+    }
+    # Guardar YA, antes de medir nada. Si algo revienta despues, al
+    # menos queda constancia de que llego y que no.
+    _guardar(resultados)
 
     bloque("multiactivo_sin_cripto", series, efectivo, resultados["bloques"])
 
@@ -543,9 +601,7 @@ def main():
     print("\n  Shark corre SIN ajustar. Esa diferencia es el sesgo que")
     print("  arrastran todos los backtests diarios largos hechos hasta hoy.")
 
-    os.makedirs(os.path.dirname(SALIDA_JSON) or ".", exist_ok=True)
-    with open(SALIDA_JSON, "w") as f:
-        json.dump(resultados, f, indent=2)
+    _guardar(resultados)
     print(f"\nGuardado en {SALIDA_JSON}")
 
     # Resumen final honesto
@@ -571,4 +627,27 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # Si esto revienta, el JSON tiene que quedar escrito CON el fallo
+    # dentro. Los logs de Actions no son siempre accesibles, y un
+    # experimento que muere sin dejar rastro no se puede diagnosticar:
+    # obliga a adivinar, que es la peor manera de arreglar nada.
+    import traceback
+    try:
+        main()
+    except Exception:
+        rastro = traceback.format_exc()
+        print("\n" + "=" * 70)
+        print("EL EXPERIMENTO FALLO")
+        print("=" * 70)
+        print(rastro)
+        try:
+            _guardar({
+                "fallo": True,
+                "periodo": PERIODO,
+                "traceback": rastro.splitlines()[-12:],
+                "traceback_completo": rastro,
+            })
+            print(f"El fallo queda guardado en {SALIDA_JSON}")
+        except Exception as e:
+            print(f"Ni el fallo se pudo guardar: {e}")
+        raise
