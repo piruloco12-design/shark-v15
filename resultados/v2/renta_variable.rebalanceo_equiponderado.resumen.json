@@ -4,7 +4,7 @@
   "fin": "2026-10-19",
   "anos": 13.9904,
   "nav_inicial": 1000.0,
-  "nav_final": 5825.47172,
+  "nav_final": 5825.471868,
   "retorno_total": 4.825472,
   "cagr": 0.134237,
   "volatilidad_anual_diaria": 0.162889,
@@ -41,12 +41,12 @@
       "observaciones": 252
     },
     "2016": {
-      "retorno": 0.166518,
+      "retorno": 0.166519,
       "completo": true,
       "observaciones": 252
     },
     "2017": {
-      "retorno": 0.195499,
+      "retorno": 0.1955,
       "completo": true,
       "observaciones": 251
     },
@@ -61,7 +61,7 @@
       "observaciones": 252
     },
     "2020": {
-      "retorno": 0.135548,
+      "retorno": 0.135549,
       "completo": true,
       "observaciones": 253
     },
@@ -98,6 +98,7 @@
   },
   "max_drawdown_mensual": -0.232844,
   "estrategia_id": "rebalanceo_equiponderado",
+  "estrategia_base_id": "rebalanceo_equiponderado",
   "universo_etiqueta": "EXPLORATORY_SURVIVOR_UNIVERSE",
   "politicas": {
     "capital_inicial": 1000.0,
@@ -110,14 +111,15 @@
     "politica_caja": "SIN_REMUNERAR",
     "antiguedad_maxima_dias": 7,
     "politica_terminal": "MARCAR",
-    "calentamiento_sesiones": 253
+    "calentamiento_sesiones": 253,
+    "limites": null
   },
   "decisiones": 168,
   "intenciones": 2352,
   "intenciones_ejecutadas": 2352,
   "intenciones_rechazadas": 0,
-  "comisiones_moneda": 9.020466,
-  "nominal_ejecutado": 11275.58,
+  "comisiones_moneda": 9.02047,
+  "nominal_ejecutado": 11275.59,
   "coste_sobre_nominal_pb": 8.0,
   "coste_por_intencion_moneda": 0.003835,
   "rotacion_anual_nominal": 0.806,
@@ -145,28 +147,28 @@
   },
   "estado_libro_final": {
     "moneda_cuenta": "USD",
-    "efectivo": 0.307063,
-    "efectivo_utilizable": 0.307063,
+    "efectivo": 0.30706,
+    "efectivo_utilizable": 0.30706,
     "reservado": 0.0,
-    "valor_posiciones": 5825.164657,
+    "valor_posiciones": 5825.164809,
     "derechos": 0.0,
     "obligaciones": 0.0,
-    "nav": 5825.47172,
+    "nav": 5825.471868,
     "posiciones": {
-      "DIA": 0.79941272,
-      "IWM": 1.46263768,
-      "MDY": 0.61892219,
-      "QQQ": 0.54943077,
-      "SPY": 0.53296148,
-      "XLB": 8.34604522,
-      "XLE": 6.60898225,
-      "XLF": 7.61146811,
-      "XLI": 2.43413833,
-      "XLK": 2.07638524,
-      "XLP": 5.04283395,
-      "XLU": 10.30558882,
-      "XLV": 2.41332629,
-      "XLY": 3.734403
+      "DIA": 0.79941274,
+      "IWM": 1.46263772,
+      "MDY": 0.61892221,
+      "QQQ": 0.54943079,
+      "SPY": 0.53296149,
+      "XLB": 8.34604544,
+      "XLE": 6.60898242,
+      "XLF": 7.6114683,
+      "XLI": 2.43413839,
+      "XLK": 2.07638529,
+      "XLP": 5.04283408,
+      "XLU": 10.30558908,
+      "XLV": 2.41332635,
+      "XLY": 3.73440309
     },
     "concentracion": {
       "invertido": 0.999947,

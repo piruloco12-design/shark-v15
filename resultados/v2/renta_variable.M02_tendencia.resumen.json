@@ -4,8 +4,8 @@
   "fin": "2026-10-19",
   "anos": 13.9904,
   "nav_inicial": 1000.0,
-  "nav_final": 5391.799142,
-  "retorno_total": 4.391799,
+  "nav_final": 5391.796042,
+  "retorno_total": 4.391796,
   "cagr": 0.127983,
   "volatilidad_anual_diaria": 0.158612,
   "max_drawdown_diario": -0.322965,
@@ -13,7 +13,7 @@
   "sharpe_detalle": {
     "sharpe": 0.841,
     "media_diferencial_periodica": 0.00052936,
-    "desviacion_diferencial_periodica": 0.00999165,
+    "desviacion_diferencial_periodica": 0.00999164,
     "periodos": 3516,
     "periodos_por_ano": 252,
     "referencia": "tasa constante 0.00000000 por periodo"
@@ -51,7 +51,7 @@
       "observaciones": 251
     },
     "2018": {
-      "retorno": -0.070308,
+      "retorno": -0.070307,
       "completo": true,
       "observaciones": 251
     },
@@ -86,7 +86,7 @@
       "observaciones": 252
     },
     "2025": {
-      "retorno": 0.145521,
+      "retorno": 0.145522,
       "completo": true,
       "observaciones": 250
     },
@@ -98,6 +98,7 @@
   },
   "max_drawdown_mensual": -0.190372,
   "estrategia_id": "M02_tendencia_252_63",
+  "estrategia_base_id": "M02_tendencia_252_63",
   "universo_etiqueta": "EXPLORATORY_SURVIVOR_UNIVERSE",
   "politicas": {
     "capital_inicial": 1000.0,
@@ -110,14 +111,15 @@
     "politica_caja": "SIN_REMUNERAR",
     "antiguedad_maxima_dias": 7,
     "politica_terminal": "MARCAR",
-    "calentamiento_sesiones": 253
+    "calentamiento_sesiones": 253,
+    "limites": null
   },
   "decisiones": 168,
   "intenciones": 2000,
   "intenciones_ejecutadas": 2000,
   "intenciones_rechazadas": 0,
-  "comisiones_moneda": 116.737122,
-  "nominal_ejecutado": 145921.4,
+  "comisiones_moneda": 116.737075,
+  "nominal_ejecutado": 145921.34,
   "coste_sobre_nominal_pb": 8.0,
   "coste_por_intencion_moneda": 0.058369,
   "rotacion_anual_nominal": 10.43,
@@ -145,22 +147,22 @@
     "efectivo": 1e-06,
     "efectivo_utilizable": 1e-06,
     "reservado": 0.0,
-    "valor_posiciones": 5391.799141,
+    "valor_posiciones": 5391.796041,
     "derechos": 0.0,
     "obligaciones": 0.0,
-    "nav": 5391.799142,
+    "nav": 5391.796042,
     "posiciones": {
-      "XLI": 2.88367551,
-      "QQQ": 0.65089975,
-      "SPY": 0.6313889,
-      "DIA": 0.94704843,
-      "XLK": 2.45985248,
-      "IWM": 1.73275792,
-      "MDY": 0.73322487,
-      "XLB": 9.88739459,
-      "XLE": 7.82953047,
-      "XLP": 5.97414557,
-      "XLV": 2.8514082
+      "XLI": 2.88367385,
+      "QQQ": 0.65089938,
+      "SPY": 0.63138854,
+      "DIA": 0.94704789,
+      "XLK": 2.45985107,
+      "IWM": 1.73275692,
+      "MDY": 0.73322445,
+      "XLB": 9.88738891,
+      "XLE": 7.82952597,
+      "XLP": 5.97414214,
+      "XLV": 2.85140651
     },
     "concentracion": {
       "invertido": 1.0,

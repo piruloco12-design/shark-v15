@@ -1,7 +1,7 @@
 {
   "nombre": "M02/M03 solo largos con el motor corregido",
-  "creado_en": "2026-10-19T20:44:23Z",
-  "commit": "680f4bd62006-sucio",
+  "creado_en": "2026-10-19T20:57:43Z",
+  "commit": "bc69da705c14-sucio",
   "estado": "EXPLORATORIO",
   "universo_etiqueta": "EXPLORATORY_SURVIVOR_UNIVERSE",
   "familia": [
@@ -60,7 +60,8 @@
     "politica_caja": "SIN_REMUNERAR",
     "antiguedad_maxima_dias": 7,
     "politica_terminal": "MARCAR",
-    "calentamiento_sesiones": 253
+    "calentamiento_sesiones": 253,
+    "limites": null
   },
   "variantes_ya_vistas": [
     "18 dictamenes del experimento del 2026-10-19 con el motor defectuoso (6 bloques x 3 variantes, mas una variante con banda por bloque)",
@@ -70,10 +71,10 @@
   ],
   "hash_codigo": {
     "libro.py": "8e8c884c251e5b8f",
-    "mensual.py": "aa6e11e270efae00",
+    "mensual.py": "737bff8cf16ec413",
     "metricas.py": "e1285d65c273d244",
     "inferencia.py": "719f9017173a13a7",
-    "experimento.py": "2ba24f8b4bfc838a"
+    "experimento.py": "dc78ad276e323461"
   },
   "dependencias": {
     "python": "3.11.17",
@@ -81,5 +82,5 @@
     "numpy": "2.4.6"
   },
   "_aviso": "Este registro se escribe ANTES de calcular los resultados. Si la familia, la m\u00e9trica o el umbral cambian despu\u00e9s, cambia el hash y queda a la vista.",
-  "hash_registro": "c05c7e0cbd2e755d"
+  "hash_registro": "d826b296dc88f803"
 }

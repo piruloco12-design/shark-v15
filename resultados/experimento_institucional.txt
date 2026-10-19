@@ -190,10 +190,10 @@ cripto_sesgo_extremo  (2 activos)
 
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
-comprar_y_mantener       62.54%    0.84   -81.3%   94.5%    0.17  334.625
+comprar_y_mantener       62.54%    0.84   -81.3%   94.5%    0.17  334.611
 M02_tendencia            52.52%    0.83   -66.3%   70.3%    1.67  156.258
 M03_momentum_12_1        52.04%    0.81   -79.8%   69.7%    2.26  150.488
-M02_mas_M03              50.84%    0.84   -64.8%   63.4%    1.84  136.922
+M02_mas_M03              50.84%    0.84   -64.8%   63.4%    1.84  136.923
 M03_con_banda            51.01%    0.81   -78.7%   68.2%    2.17  138.780
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
