@@ -95,6 +95,28 @@ jobs:
           python tests/test_observacion.py 2>&1 | tail -8  | tee -a resultados/ultimo.md
           { echo '```'; echo; } >> resultados/ultimo.md
 
+      - name: Pruebas de aceptacion economica (hoy FALLAN a proposito)
+        # No bloquea: hoy fallan las 22 porque el motor economico esta sin
+        # corregir tras la auditoria del 2026-10-19. Corre igual para que
+        # el hueco sea visible en cada corrida en vez de quedar escondido.
+        # Cuando pasen todas, quitar continue-on-error y pasarla al paso de
+        # regresion.
+        continue-on-error: true
+        run: |
+          python tests/test_aceptacion.py 2>&1 | tee /tmp/aceptacion.txt || true
+          {
+            echo '## Aceptacion economica (pendiente)'
+            echo
+            echo 'Contratos economicos que el motor todavia NO cumple.'
+            echo 'Mientras fallen, ninguna cifra de resultados/ es una'
+            echo 'medicion. Ver resultados/LEEME_RESULTADOS_INVALIDADOS.md'
+            echo
+            echo '```'
+            tail -40 /tmp/aceptacion.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
       - name: Comprobar que todo importa
         env:
           TELEGRAM_TOKEN: ""

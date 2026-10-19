@@ -1,3 +1,21 @@
+> **RETIRADO EL 2026-10-19, EL MISMO DÍA.** La auditoría de Astra encontró
+> fallos reproducibles en el evaluador y los he confirmado uno por uno con mis
+> propias reproducciones. **Todas las cifras económicas de la sección 2.3 y
+> 2.4 de este documento quedan retiradas**, incluido el resultado que presenté
+> como principal («M03 da +13,32% frente a +12,60% de comprar y mantener»).
+> El «comprar y mantener» de ese comparador no era comprar y mantener:
+> rebalanceaba al 50/50 cada mes y cobraba solo la compra inicial. Verificado:
+> donde comprar y mantener da 1,0000, el motor devolvía 1,1250.
+>
+> Además, dos errores míos de bulto en este mismo documento: **pasan 4
+> dictámenes, no 2** (escribí «2» y enumeré cuatro a continuación), y
+> **«pierde en las cinco clases» es falso** — pierde dinero en cuatro; en
+> cripto gana +1,47%, muy por debajo de su referencia, que no es lo mismo.
+>
+> Ver `resultados/LEEME_RESULTADOS_INVALIDADOS.md` y
+> `tests/test_aceptacion.py`, que convierte los hallazgos en 22 contratos
+> económicos que el motor todavía no cumple.
+
 # SHARK V15 — estado real, lo medido, y en qué necesito guía
 
 **Fecha:** 2026-10-19
