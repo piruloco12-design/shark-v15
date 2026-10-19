@@ -165,7 +165,45 @@ check("apagado devuelve NEUTRAL sin llamar a la API",
       r["veredicto"] == "NEUTRAL" and r["fuente"] == "interno")
 
 
-print("\n=== 3) los veredictos se guardan siempre ===")
+print("\n=== 3) prueba de conexion al arrancar ===")
+
+gemini_filter.HABILITADO = True
+gemini_filter.GEMINI_API_KEY = "clave-falsa"
+
+# Caso bueno: ante una noticia mala en una compra, veta.
+gemini_filter.requests = types.SimpleNamespace(
+    post=lambda *a, **k: responder(
+        {"veredicto": "VETAR", "confianza": 80, "motivo": "resultados malos"}))
+ok, msg = gemini_filter.probar_conexion()
+check("clave valida y respuesta coherente -> OK", ok is True, f"-> {msg}")
+
+# Caso malo: aprueba una compra con una noticia claramente mala.
+gemini_filter.requests = types.SimpleNamespace(
+    post=lambda *a, **k: responder(
+        {"veredicto": "APROBAR", "confianza": 90, "motivo": "todo bien"}))
+ok, msg = gemini_filter.probar_conexion()
+check("si aprueba una compra con noticia mala -> AVISA", ok is False, f"-> {msg}")
+
+# Clave invalida / API caida: tiene que detectarse, no pasar
+# desapercibido. Es el escenario que motiva toda esta prueba.
+gemini_filter.requests = types.SimpleNamespace(
+    post=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("401 invalid key")))
+ok, msg = gemini_filter.probar_conexion()
+check("clave invalida se DETECTA al arrancar", ok is False, f"-> {msg}")
+check("y el mensaje dice que no respondio", "no respondio" in msg.lower())
+
+gemini_filter.GEMINI_API_KEY = ""
+ok, msg = gemini_filter.probar_conexion()
+check("encendido sin clave -> avisa", ok is False and "GEMINI_API_KEY" in msg)
+
+gemini_filter.HABILITADO = False
+ok, msg = gemini_filter.probar_conexion()
+check("apagado no comprueba nada y no molesta", ok is True)
+
+gemini_filter.GEMINI_API_KEY = "clave-falsa"
+
+
+print("\n=== 4) los veredictos se guardan siempre ===")
 
 import storage
 storage.init_db()

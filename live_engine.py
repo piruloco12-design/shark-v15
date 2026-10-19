@@ -69,7 +69,11 @@ except Exception:
 # alguien ha verificado algo.
 try:
     from noticias import obtener_noticias, formatear_para_prompt
-    from gemini_filter import verificar_operacion, estado as estado_gemini
+    from gemini_filter import (
+        verificar_operacion,
+        estado as estado_gemini,
+        probar_conexion as probar_gemini,
+    )
     NOTICIAS_DISPONIBLES = True
 except Exception as _e:
     print(f"AVISO: filtro de noticias no disponible ({_e})")
@@ -88,6 +92,9 @@ except Exception as _e:
 
     def estado_gemini():
         return "Filtro de noticias: NO DISPONIBLE"
+
+    def probar_gemini():
+        return True, "Filtro de noticias no disponible"
 
 # Archivo histórico de velas. Es opcional: si falla, el bot sigue
 # operando igual, solo deja de acumular histórico. Por eso va en
@@ -576,6 +583,19 @@ def run_live_engine():
     # histórico desaparece en el próximo reinicio. Hay que verlo al
     # arrancar, no descubrirlo cuando el capital vuelva a 1000.
     print(estado_gemini())
+
+    # Prueba real de la clave de Gemini. El filtro nunca falla
+    # ruidosamente por diseño, asi que sin esto una clave mala
+    # pasaria desapercibida: parece encendido y no verifica nada.
+    try:
+        gemini_ok, mensaje_gemini = probar_gemini()
+        print(f"  {mensaje_gemini}")
+        if not gemini_ok:
+            _send_error_message(f"FILTRO DE NOTICIAS\n\n{mensaje_gemini}")
+        elif "responde correctamente" in mensaje_gemini:
+            send_telegram_message(f"🧠 {mensaje_gemini}")
+    except Exception as e:
+        print(f"  No se pudo probar Gemini: {e}")
 
     # Autodiagnostico de proveedores: cuales responden de verdad
     # desde donde corre el bot.

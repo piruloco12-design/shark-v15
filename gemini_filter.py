@@ -94,13 +94,23 @@ Criterios:
   activo: solo los titulares de arriba."""
 
 
-def _neutral(motivo, fuente="interno"):
+def _neutral(motivo, fuente="interno", respondio=False):
+    """
+    Resultado neutro. `respondio` dice si Gemini contesto de
+    verdad o si estamos cayendo a neutro por un fallo.
+
+    La distincion importa: sin ella, una clave invalida produce un
+    NEUTRAL con fuente "gemini" indistinguible de un NEUTRAL
+    legitimo, y la comprobacion de arranque daria por buena una
+    clave muerta. Paso exactamente eso al escribirla.
+    """
     return {
         "veredicto": "NEUTRAL",
         "confianza": 0,
         "motivo": motivo,
         "fuente": fuente,
         "bloquea": False,
+        "respondio": respondio,
     }
 
 
@@ -170,7 +180,8 @@ def verificar_operacion(ticker, direccion, precio, regimen, noticias_texto):
 
         analisis = _extraer_json(texto)
         if not analisis:
-            return _neutral(f"respuesta ilegible: {texto[:60]}", "gemini")
+            return _neutral(f"respuesta ilegible: {texto[:60]}", "gemini",
+                            respondio=True)
 
         veredicto = str(analisis.get("veredicto", "NEUTRAL")).upper()
         if veredicto not in ("APROBAR", "VETAR", "NEUTRAL"):
@@ -190,10 +201,60 @@ def verificar_operacion(ticker, direccion, precio, regimen, noticias_texto):
             "motivo": str(analisis.get("motivo", ""))[:200],
             "fuente": "gemini",
             "bloquea": bloquea,
+            "respondio": True,
         }
 
     except Exception as e:
         return _neutral(f"{type(e).__name__}: {str(e)[:80]}", "gemini")
+
+
+def probar_conexion():
+    """
+    Hace UNA llamada real a Gemini al arrancar para comprobar que
+    la clave funciona.
+
+    Existe porque el filtro, por diseño, nunca falla ruidosamente:
+    ante cualquier error devuelve NEUTRAL y deja pasar la
+    operacion. Eso esta bien en produccion (una API caida no puede
+    parar la cuenta) pero significa que una clave invalida seria
+    invisible: el filtro parece encendido, no bloquea nunca, y
+    nadie se entera de que no esta haciendo nada.
+
+    Esta prueba convierte ese silencio en un aviso.
+
+    Devuelve (funciona, mensaje).
+    """
+    if not HABILITADO:
+        return True, "Filtro de noticias apagado, no se comprueba"
+
+    if not GEMINI_API_KEY:
+        return False, ("Filtro de noticias ENCENDIDO pero falta GEMINI_API_KEY. "
+                       "No va a verificar nada.")
+
+    prueba = verificar_operacion(
+        ticker="TEST",
+        direccion="BUY",
+        precio=100.0,
+        regimen="TREND",
+        noticias_texto="- [hace 1h, Prueba] Resultados trimestrales por debajo "
+                       "de lo esperado, la accion cae un 8%",
+    )
+
+    if not prueba.get("respondio"):
+        return False, f"Gemini no respondio: {prueba['motivo']}"
+
+    # Con esa noticia, un modelo que entienda la tarea deberia
+    # vetar una COMPRA o, como minimo, no aprobarla.
+    coherente = prueba["veredicto"] in ("VETAR", "NEUTRAL")
+
+    if not coherente:
+        return False, (f"Gemini responde pero aprueba una compra con una "
+                       f"noticia claramente mala: {prueba['veredicto']}. "
+                       f"Revisar el modelo ({MODELO}).")
+
+    return True, (f"Gemini responde correctamente ({MODELO}): "
+                  f"ante una noticia mala en una compra dijo "
+                  f"{prueba['veredicto']}. Modo: {MODO.upper()}.")
 
 
 def estado():
