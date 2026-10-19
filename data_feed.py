@@ -287,17 +287,57 @@ def _stooq_download(symbol: str, timeframe: str, period: str):
     if intervalo is None:
         raise ValueError(f"Timeframe no soportado en Stooq: {timeframe}")
 
-    url = "https://stooq.com/q/d/l/"
-    params = {"s": _sufijo_stooq(symbol), "i": intervalo}
+    simbolo = _sufijo_stooq(symbol)
+    params = {"s": simbolo, "i": intervalo}
 
-    respuesta = requests.get(url, params=params, timeout=REQUEST_TIMEOUT)
-    respuesta.raise_for_status()
+    # Stooq rechaza las peticiones sin User-Agent de navegador y
+    # responde 404 en vez de un error descriptivo. Sin esta
+    # cabecera el proveedor fallaba entero desde CI.
+    cabeceras = {
+        "User-Agent": (
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+            "AppleWebKit/537.36 (KHTML, like Gecko) "
+            "Chrome/127.0.0.0 Safari/537.36"
+        ),
+        "Accept": "text/csv,text/plain,*/*",
+    }
 
-    texto = respuesta.text.strip()
+    # stooq.pl es el mismo servicio: sirve de alternativa si el
+    # dominio .com bloquea la IP de origen.
+    dominios = ["https://stooq.com/q/d/l/", "https://stooq.pl/q/d/l/"]
 
-    # Stooq devuelve 200 con cuerpo de texto cuando no hay datos.
-    if not texto or texto.lower().startswith("no data") or "<" in texto[:1]:
-        raise ValueError(f"Stooq sin datos para {symbol}: {texto[:120]}")
+    texto = None
+    errores = []
+    for url in dominios:
+        try:
+            respuesta = requests.get(url, params=params,
+                                     headers=cabeceras,
+                                     timeout=REQUEST_TIMEOUT)
+            respuesta.raise_for_status()
+            candidato = respuesta.text.strip()
+        except Exception as e:
+            errores.append(f"{url}: {type(e).__name__}: {str(e)[:70]}")
+            continue
+
+        bajo = candidato.lower()
+
+        # Stooq responde 200 con un mensaje de texto cuando no hay
+        # datos o cuando se agota el limite diario de peticiones.
+        if "exceeded the daily hits limit" in bajo:
+            errores.append(f"{url}: limite diario agotado")
+            continue
+        if not candidato or bajo.startswith("no data") or candidato[:1] == "<":
+            errores.append(f"{url}: sin datos ({candidato[:60]})")
+            continue
+        if "date" not in bajo.split("\n")[0]:
+            errores.append(f"{url}: cabecera inesperada ({candidato[:60]})")
+            continue
+
+        texto = candidato
+        break
+
+    if texto is None:
+        raise ValueError(f"Stooq no sirvio {simbolo}: {' | '.join(errores)}")
 
     from io import StringIO
     df = pd.read_csv(StringIO(texto))
