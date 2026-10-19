@@ -358,6 +358,11 @@ def run_live_cycle():
                 # esto, el cierre de trades solo ve el Close y se
                 # pierde los toques de stop/target intravela.
                 rangos_barra[ticker] = {
+                    # La apertura entra aqui porque es lo que permite
+                    # distinguir un hueco de un toque intravela. Sin
+                    # ella el broker ejecutaba los huecos al nivel del
+                    # stop, un precio que no se negocio.
+                    "open": float(ultima["Open"]),
                     "high": float(ultima["High"]),
                     "low": float(ultima["Low"]),
                 }

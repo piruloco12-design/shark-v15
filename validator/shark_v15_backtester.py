@@ -58,6 +58,7 @@ from session_volatility_intelligence import (
 )
 
 from final_decision_engine import evaluate_final_decision
+from paper_broker import DESLIZAMIENTO_EN_HUECO, _decidir_cierre
 
 
 # =========================================================
@@ -156,44 +157,31 @@ def run_v16_backtest_single_asset(
 
             bar_high = float(last["High"])
             bar_low = float(last["Low"])
+            bar_open = float(last["Open"])
 
-            should_close = False
-            exit_price = None
+            # HUECOS. Antes esto salia al nivel exacto del stop aunque
+            # la vela entera estuviera al otro lado: un largo con stop
+            # 99 cuya vela abre en 95 con maximo 95 declaraba la salida
+            # a 99, un precio que nadie negocio, y la perdida salia
+            # cinco veces menor que la real.
+            #
+            # Se delega en el broker de papel para que backtest y papel
+            # usen EXACTAMENTE la misma semantica de cierre. Si cada uno
+            # tiene la suya, comparar sus informes no mide nada.
+            should_close, exit_price, motivo_cierre = _decidir_cierre(
+                signal=signal,
+                stop_loss=sl,
+                take_profit=tp,
+                price=float(last["Close"]),
+                high=bar_high,
+                low=bar_low,
+                open_=bar_open,
+                deslizamiento=DESLIZAMIENTO_EN_HUECO,
+            )
             pnl = 0.0
-
-            if signal == "BUY":
-                hit_sl = bar_low <= sl
-                hit_tp = bar_high >= tp
-
-                if hit_sl and hit_tp:
-                    exit_price = sl
-                    pnl = (sl - entry) * size
-                    should_close = True
-                elif hit_sl:
-                    exit_price = sl
-                    pnl = (sl - entry) * size
-                    should_close = True
-                elif hit_tp:
-                    exit_price = tp
-                    pnl = (tp - entry) * size
-                    should_close = True
-
-            elif signal == "SELL":
-                hit_sl = bar_high >= sl
-                hit_tp = bar_low <= tp
-
-                if hit_sl and hit_tp:
-                    exit_price = sl
-                    pnl = (entry - sl) * size
-                    should_close = True
-                elif hit_sl:
-                    exit_price = sl
-                    pnl = (entry - sl) * size
-                    should_close = True
-                elif hit_tp:
-                    exit_price = tp
-                    pnl = (entry - tp) * size
-                    should_close = True
+            if should_close:
+                pnl = ((exit_price - entry) if signal == "BUY"
+                       else (entry - exit_price)) * size
 
             if should_close:
                 # CONTABILIDAD DE COSTES

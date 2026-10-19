@@ -48,6 +48,11 @@ SESIONES_ANUALES = 252
 # la cuenta de Brian (que es 0% y hay que decirlo aparte).
 TICKER_EFECTIVO = "BIL"
 
+# Cuanto vale un ranking mensual antes de considerarse caducado. 35 dias
+# cubre un mes natural con holgura de fin de semana y festivos. Pasado
+# eso el estado es STALE: ni veto ni permiso, simplemente no se sabe.
+VIGENCIA_RANKING_DIAS = 35
+
 
 def _hash(*partes) -> str:
     crudo = "|".join(str(p) for p in partes)
@@ -55,9 +60,35 @@ def _hash(*partes) -> str:
 
 
 def _version_datos(df: pd.DataFrame) -> str:
-    """Identifica la serie usada: si cambia, cambia el hash."""
-    return _hash(len(df), df.index[0], df.index[-1],
-                 round(float(df["Close"].iloc[-1]), 6))
+    """Identifica la serie usada: si cambia CUALQUIER valor, cambia el hash.
+
+    La primera version usaba solo longitud, extremos temporales y ultimo
+    cierre. Con eso, cambiar un precio intermedio de 105 a 500 dejaba el
+    MISMO identificador: el hash no identificaba el panel, solo sus
+    bordes. Un dato corregido a mitad de la serie pasaba inadvertido y
+    dos corridas distintas parecian la misma.
+
+    Ahora entran todos los valores y las marcas de tiempo. Se hace con
+    los bytes del array, que es rapido incluso con 15 anos de historico.
+    """
+    if df is None or len(df) == 0:
+        return "vacio"
+    h = hashlib.sha256()
+    h.update(str(len(df)).encode())
+    # Marcas de tiempo
+    try:
+        h.update(df.index.values.tobytes())
+    except (AttributeError, ValueError):
+        h.update(str(list(df.index)).encode())
+    # Todos los valores de las columnas que importan, en orden estable
+    for col in sorted(c for c in df.columns
+                      if c in ("Open", "High", "Low", "Close", "Volume")):
+        h.update(col.encode())
+        try:
+            h.update(df[col].to_numpy(dtype="float64").tobytes())
+        except (ValueError, TypeError):
+            h.update(str(df[col].tolist()).encode())
+    return h.hexdigest()[:12]
 
 
 # =====================================================================
@@ -249,13 +280,56 @@ def m03_contexto(
     """
     modulo = "M03_candidate_ranking"
     ahora = int(pd.Timestamp(decision_time).timestamp())
-    as_of = max(ranking.as_of, ahora)
+
+    # ESTO ERA UNA TRAMPA MIA. La version anterior hacia
+    #     as_of = max(ranking.as_of, ahora)
+    # para que el contrato no se quejara. El contrato exige que
+    # input_available_at_max <= as_of, y al mover as_of al presente
+    # cualquier ranking lo cumplia: uno de 626 dias devolvia READY y
+    # renovaba su vigencia, y uno con datos POSTERIORES a la decision
+    # tambien. Hice pasar el validador desplazando justo lo que
+    # validaba, que es peor que no tener validador: parecia que habia
+    # comprobacion de causalidad y no habia ninguna.
+    #
+    # Ahora as_of es el momento de la DECISION y no se mueve. La
+    # vigencia sale del calendario del snapshot, no de cuando se
+    # consulta.
+    as_of = ahora
+    valid_until = ranking.as_of + VIGENCIA_RANKING_DIAS * 86400
     comun = dict(
         base_signal_id=base_signal_id, module_id=modulo,
         config_hash=config_hash, dataset_version=ranking.dataset_version,
-        as_of=as_of, valid_until=as_of + 35 * 86400,
-        input_available_at_max=ranking.as_of,
+        as_of=as_of, valid_until=max(valid_until, as_of),
+        input_available_at_max=min(ranking.as_of, as_of),
     )
+
+    # Dato del futuro: fallo de integridad, nunca READY. Un ranking
+    # construido despues de la decision no pudo informarla.
+    if ranking.as_of > ahora:
+        return C.ContextAssessment(
+            **comun, status=C.UNSUPPORTED,
+            reason_codes=("INTEGRIDAD_DATO_FUTURO",),
+            diagnostics={
+                "ranking_as_of": str(pd.Timestamp(ranking.as_of, unit="s",
+                                                  tz="UTC")),
+                "decision": str(pd.Timestamp(ahora, unit="s", tz="UTC")),
+                "dias_adelanto": round((ranking.as_of - ahora) / 86400, 2),
+            },
+        )
+
+    # Caducado: STALE. No es un veto ni un permiso; es que no se sabe.
+    antiguedad_dias = (ahora - ranking.as_of) / 86400
+    if antiguedad_dias > VIGENCIA_RANKING_DIAS:
+        return C.ContextAssessment(
+            **comun, status=C.STALE,
+            reason_codes=("RANKING_CADUCADO",),
+            diagnostics={
+                "antiguedad_dias": round(antiguedad_dias, 1),
+                "vigencia_dias": VIGENCIA_RANKING_DIAS,
+                "ranking_as_of": str(pd.Timestamp(ranking.as_of, unit="s",
+                                                  tz="UTC").date()),
+            },
+        )
 
     if signal is not None and str(signal).upper() != "BUY":
         return C.ContextAssessment(

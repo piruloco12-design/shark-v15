@@ -3,6 +3,16 @@ from datetime import datetime
 
 from config import MENSAJE_BROKER_AL_ABRIR
 
+# Deslizamiento adverso que se aplica SOLO cuando un hueco atraviesa el
+# stop. Es un ESCENARIO declarado, no una medición: no hay fills reales
+# todavía, ni bid/ask, solo OHLC. Cero significa "ejecuta justo en la
+# apertura del hueco", que ya es mucho mejor que el nivel del stop pero
+# sigue siendo optimista: una orden stop de mercado en un hueco suele
+# ejecutarse algo peor. Al declararlo aquí, cambiar el escenario es
+# visible y cuesta un commit.
+DESLIZAMIENTO_EN_HUECO = 0.0
+
+
 from storage import (
     get_paper_capital,
     update_paper_capital,
@@ -142,7 +152,8 @@ def open_trade(ticker, signal, regime, trade_setup):
     return capital
 
 
-def _decidir_cierre(signal, stop_loss, take_profit, price, high, low):
+def _decidir_cierre(signal, stop_loss, take_profit, price, high, low,
+                    open_=None, deslizamiento=0.0):
     """
     Decide si el trade debe cerrarse y a qué precio exacto.
 
@@ -150,6 +161,20 @@ def _decidir_cierre(signal, stop_loss, take_profit, price, high, low):
     importa: el bot gira cada 5 minutos sobre velas de 30m, así
     que mirando solo el Close se pierden los toques de stop o
     target que ocurrieron DENTRO de la vela y volvieron atrás.
+
+    HUECOS. Antes esta función devolvía siempre el nivel exacto del
+    stop, también cuando la vela entera estaba al otro lado. Un largo
+    con stop en 99 cuya vela siguiente abría en 95 con máximo 95
+    salía a 99: un precio que nadie negoció. Con 5 unidades eso son
+    -5,00 declarados contra -25,00 reales, un factor de cinco en la
+    pérdida. Ahora, si la apertura ya está más allá del stop, el fill
+    parte de esa apertura, que es lo que haría una orden stop de
+    mercado, y se le resta el deslizamiento adverso.
+
+    Sin la apertura no se puede distinguir "la vela bajó y tocó el
+    stop" de "la vela abrió ya por debajo". En ese caso se usa el
+    extremo de la vela, que es el peor precio comprobado y nunca
+    mejor que el stop: más pesimista que inventar el nivel.
 
     Cuando la vela toca stop y target a la vez, se asume stop
     primero. Es el supuesto pesimista y es el mismo que usa el
@@ -163,18 +188,41 @@ def _decidir_cierre(signal, stop_loss, take_profit, price, high, low):
         high = price
         low = price
 
+    desl = abs(_safe_float(deslizamiento, 0.0))
+    apertura = _safe_float(open_, float("nan")) if open_ is not None else float("nan")
+    hay_apertura = _es_finito(apertura)
+
     if signal == "BUY":
         if low <= stop_loss:
-            return True, stop_loss, "STOP_LOSS"
+            # Peor precio realmente observado en la vela, nunca mejor
+            # que el stop.
+            if hay_apertura and apertura < stop_loss:
+                salida = apertura - desl        # hueco por debajo
+            else:
+                salida = min(stop_loss, high)   # sin apertura: el peor visto
+            return True, max(salida, low - desl), "STOP_LOSS"
         if high >= take_profit:
-            return True, take_profit, "TAKE_PROFIT"
+            # Un hueco a favor tampoco se ejecuta mejor que la apertura.
+            if hay_apertura and apertura > take_profit:
+                salida = apertura
+            else:
+                salida = take_profit
+            return True, min(salida, high), "TAKE_PROFIT"
         return False, None, None
 
     if signal == "SELL":
         if high >= stop_loss:
-            return True, stop_loss, "STOP_LOSS"
+            if hay_apertura and apertura > stop_loss:
+                salida = apertura + desl        # hueco por encima
+            else:
+                salida = max(stop_loss, low)
+            return True, min(salida, high + desl), "STOP_LOSS"
         if low <= take_profit:
-            return True, take_profit, "TAKE_PROFIT"
+            if hay_apertura and apertura < take_profit:
+                salida = apertura
+            else:
+                salida = take_profit
+            return True, max(salida, low), "TAKE_PROFIT"
         return False, None, None
 
     return False, None, None
@@ -185,7 +233,7 @@ def check_and_close_trades(latest_prices, rangos_barra=None):
     Revisa los trades abiertos y cierra los que tocaron SL o TP.
 
     latest_prices: {ticker: precio_cierre_actual}
-    rangos_barra:  {ticker: {"high": h, "low": l}}  (opcional)
+    rangos_barra:  {ticker: {"open": o, "high": h, "low": l}}  (opcional)
 
     rangos_barra es opcional a propósito, para no romper a quien
     llame con un solo argumento. Pero sin él la detección es peor:
@@ -229,6 +277,11 @@ def check_and_close_trades(latest_prices, rangos_barra=None):
             rango = rangos_barra.get(ticker) or {}
             high = _safe_float(rango.get("high"), default=float("nan"))
             low = _safe_float(rango.get("low"), default=float("nan"))
+            # La apertura es lo que distingue "la vela bajó y tocó el
+            # stop" de "la vela abrió ya por debajo del stop". Sin
+            # ella, un hueco se ejecutaba al nivel del stop, que es un
+            # precio que nadie negoció.
+            apertura = _safe_float(rango.get("open"), default=float("nan"))
 
             should_close, exit_price, close_reason = _decidir_cierre(
                 signal=signal,
@@ -237,6 +290,8 @@ def check_and_close_trades(latest_prices, rangos_barra=None):
                 price=price,
                 high=high,
                 low=low,
+                open_=apertura if _es_finito(apertura) else None,
+                deslizamiento=DESLIZAMIENTO_EN_HUECO,
             )
 
             if not should_close:

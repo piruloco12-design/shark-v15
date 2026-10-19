@@ -85,6 +85,10 @@ from session_volatility_intelligence import (
     evaluate_volatility_filter,
 )
 from final_decision_engine import evaluate_final_decision
+# El cierre se delega en el broker de papel a proposito: si backtest y
+# papel usan logicas distintas de stop, sus informes no son comparables
+# y cualquier diferencia entre ellos es ruido de implementacion.
+from paper_broker import DESLIZAMIENTO_EN_HUECO, _decidir_cierre
 
 MIN_WARMUP_BARS = 200
 VENTANA = 250           # > 200 de warmup + margen; ver docstring
@@ -186,20 +190,31 @@ def backtest_cartera(
 
             alto = float(vela["High"])
             bajo = float(vela["Low"])
+            apertura = float(vela["Open"])
 
             salida = None
             motivo = None
 
-            if pos["signal"] == "BUY":
-                if bajo <= pos["stop_loss"]:
-                    salida, motivo = pos["stop_loss"], "STOP_LOSS"
-                elif alto >= pos["take_profit"]:
-                    salida, motivo = pos["take_profit"], "TAKE_PROFIT"
-            else:
-                if alto >= pos["stop_loss"]:
-                    salida, motivo = pos["stop_loss"], "STOP_LOSS"
-                elif bajo <= pos["take_profit"]:
-                    salida, motivo = pos["take_profit"], "TAKE_PROFIT"
+            # HUECOS. Antes esto devolvia el nivel exacto del stop
+            # incluso cuando la vela entera estaba al otro lado: un
+            # largo con stop 99 cuya vela abre en 95 con maximo 95
+            # salia a 99, un precio que nadie negocio. La apertura es
+            # lo que distingue "bajo durante la sesion y toco el stop"
+            # de "abrio ya por debajo". Se delega en el broker para que
+            # backtest y papel usen EXACTAMENTE la misma semantica: si
+            # divergen, sus informes no son comparables.
+            cerrar, salida, motivo = _decidir_cierre(
+                signal=pos["signal"],
+                stop_loss=pos["stop_loss"],
+                take_profit=pos["take_profit"],
+                price=float(vela["Close"]),
+                high=alto,
+                low=bajo,
+                open_=apertura,
+                deslizamiento=DESLIZAMIENTO_EN_HUECO,
+            )
+            if not cerrar:
+                salida = None
 
             if salida is None:
                 continue
