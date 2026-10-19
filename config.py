@@ -145,6 +145,35 @@ ALPHA_VANTAGE_API_KEY = os.getenv("ALPHA_VANTAGE_API_KEY", "").strip()
 FINNHUB_API_KEY = os.getenv("FINNHUB_API_KEY", "").strip()
 
 # ==========================================
+# FILTRO DE NOTICIAS (Gemini)
+#
+# Arranca APAGADO y, cuando se enciende, en modo sombra: opina en
+# cada operacion y lo registra, pero no bloquea.
+#
+# No se puede backtestear: Gemini sabe lo que paso despues de
+# cualquier fecha historica, asi que preguntarle por 2019 filtra
+# el futuro. La unica validacion honesta es hacia delante, con
+# validator/medir_filtro_noticias.py, comparando como acabaron
+# las operaciones que aprobo frente a las que habria vetado.
+#
+# No pasar a modo bloqueo sin ese numero.
+# ==========================================
+
+GEMINI_FILTER_ENABLED = _env("GEMINI_FILTER_ENABLED", "false").lower() == "true"
+GEMINI_FILTER_MODO = _env("GEMINI_FILTER_MODO", "sombra").lower()
+GEMINI_MODELO = _env("GEMINI_MODELO", "gemini-2.0-flash")
+
+# ==========================================
+# TELEGRAM: evitar el aviso duplicado
+#
+# Al abrir una operacion se mandaban DOS mensajes: la ficha movil
+# completa (con RSI, ADX, regimen y motivo) y el aviso corto del
+# broker. El corto no aporta nada que no este en la ficha.
+# ==========================================
+
+MENSAJE_BROKER_AL_ABRIR = _env("MENSAJE_BROKER_AL_ABRIR", "false").lower() == "true"
+
+# ==========================================
 # SETUP WATCH
 # ==========================================
 
@@ -236,6 +265,11 @@ if _desconocidos:
 
 if not DATA_PROVIDER_ORDER:
     raise ValueError("DATA_PROVIDER_ORDER no puede estar vacío")
+
+if GEMINI_FILTER_MODO not in ("sombra", "bloqueo"):
+    raise ValueError(
+        f"GEMINI_FILTER_MODO debe ser 'sombra' o 'bloqueo', no {GEMINI_FILTER_MODO!r}"
+    )
 
 if not ASSETS:
     raise ValueError(

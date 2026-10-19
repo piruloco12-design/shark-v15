@@ -83,6 +83,7 @@ jobs:
           python tests/test_historial.py 2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_costes.py    2>&1 | tail -12 | tee -a resultados/ultimo.md
           python tests/test_cartera.py   2>&1 | tail -5  | tee -a resultados/ultimo.md
+          python tests/test_noticias.py  2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_cooldown.py  2>&1 | tail -14 | tee -a resultados/ultimo.md
           { echo '```'; echo; } >> resultados/ultimo.md
 
@@ -99,6 +100,7 @@ jobs:
               "session_volatility_intelligence", "risk_control_engine",
               "trade_intelligence", "ai_filter", "final_decision_engine",
               "paper_broker", "telegram_alerts", "historial_mercado",
+              "noticias", "gemini_filter",
               "live_engine", "main",
           ]
           fallos = []
