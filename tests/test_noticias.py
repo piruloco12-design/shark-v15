@@ -187,8 +187,17 @@ CATALOGO = {"models": [
 ]}
 
 gemini_filter.GEMINI_API_KEY = "clave-falsa"
-gemini_filter.requests = types.SimpleNamespace(
-    get=lambda *a, **k: RespuestaFalsa(CATALOGO))
+
+def catalogo_con(prueba_post):
+    """Mock que lista CATALOGO y responde a las pruebas de modelo."""
+    return types.SimpleNamespace(
+        get=lambda *a, **k: RespuestaFalsa(CATALOGO),
+        post=prueba_post)
+
+# Por defecto, todos los modelos responden bien.
+TODOS_OK = lambda *a, **k: RespuestaFalsa(
+    {"candidates": [{"content": {"parts": [{"text": "ok"}]}}]})
+gemini_filter.requests = catalogo_con(TODOS_OK)
 
 disponibles = gemini_filter.listar_modelos()
 check("lista solo los que generan contenido",
@@ -205,7 +214,7 @@ check("si el configurado no existe, elige uno disponible",
       modelo in disponibles, f"-> {modelo} ({nota})")
 check("prefiere flash sobre pro", "flash" in modelo, f"-> {modelo}")
 check("evita las versiones preview", "preview" not in modelo, f"-> {modelo}")
-check("la nota explica el cambio", "no existe" in nota, f"-> {nota}")
+check("la nota explica el cambio", "no sirve" in nota, f"-> {nota}")
 
 # Modelo configurado que si existe -> se respeta
 gemini_filter.MODELO = "gemini-1.5-pro"
@@ -221,16 +230,59 @@ modelo, _ = gemini_filter.resolver_modelo(forzar=True)
 check("un prefijo encuentra la version concreta",
       modelo and modelo.startswith("gemini-2.5"), f"-> {modelo}")
 
+# EL CASO REAL DEL 2026-10-19: el modelo sale en la lista pero
+# devuelve 404 al generar. Hay que probar, no solo elegir.
+def solo_pro_funciona(*a, **k):
+    url = a[0] if a else k.get("url", "")
+    if "gemini-1.5-pro" in url:
+        return RespuestaFalsa({"candidates": [{"content": {"parts": [{"text": "ok"}]}}]})
+    return RespuestaFalsa("Not Found", codigo=404)
+
+gemini_filter.MODELO = "gemini-2.0-flash"
+gemini_filter._MODELO_RESUELTO = None
+gemini_filter.requests = catalogo_con(solo_pro_funciona)
+modelo, nota = gemini_filter.resolver_modelo(forzar=True)
+check("si un modelo listado da 404, prueba el siguiente",
+      modelo == "gemini-1.5-pro", f"-> {modelo} ({nota})")
+check("la nota dice cuales descarto", "descartados" in nota, f"-> {nota}")
+
+# Ninguno funciona
+gemini_filter._MODELO_RESUELTO = None
+gemini_filter.requests = catalogo_con(
+    lambda *a, **k: RespuestaFalsa("Not Found", codigo=404))
+modelo, nota = gemini_filter.resolver_modelo(forzar=True)
+check("si ninguno responde, lo dice claro", modelo is None, f"-> {nota}")
+check("y lista los que probo", "Probados" in nota)
+
+# CENSURA DE CLAVES
+fuga = ("404 for url: https://generativelanguage.googleapis.com/v1beta/"
+        "models/x:generateContent?key=AIzaSyBqIhaniFt0hs9obu5EiPosWhCFo7zkIn4")
+censurado = gemini_filter._censurar(fuga)
+check("la clave se censura en los errores", "AIza" not in censurado, f"-> {censurado}")
+check("y se nota que habia una", "CENSURADO" in censurado)
+check("un texto sin claves no se toca",
+      gemini_filter._censurar("error normal") == "error normal")
+
+gemini_filter._MODELO_RESUELTO = None
+gemini_filter.requests = catalogo_con(
+    lambda *a, **k: (_ for _ in ()).throw(RuntimeError(
+        "boom key=AIzaSyFUGA1234567890123456789")))
+r = gemini_filter.resolver_modelo(forzar=True)
+check("una excepcion con clave tampoco la filtra",
+      "AIza" not in str(r), f"-> {r}")
+
 # Catalogo vacio
 gemini_filter.requests = types.SimpleNamespace(
-    get=lambda *a, **k: RespuestaFalsa({"models": []}))
+    get=lambda *a, **k: RespuestaFalsa({"models": []}),
+    post=TODOS_OK)
 gemini_filter._MODELO_RESUELTO = None
 modelo, nota = gemini_filter.resolver_modelo(forzar=True)
 check("catalogo vacio -> ningun modelo y lo dice", modelo is None, f"-> {nota}")
 
 # API caida al listar
 gemini_filter.requests = types.SimpleNamespace(
-    get=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("403 forbidden")))
+    get=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("403 forbidden")),
+    post=TODOS_OK)
 gemini_filter._MODELO_RESUELTO = None
 modelo, nota = gemini_filter.resolver_modelo(forzar=True)
 check("si no se puede listar, lo dice sin explotar",
@@ -250,6 +302,7 @@ def falsas(post):
     return types.SimpleNamespace(post=post,
                                  get=lambda *a, **k: RespuestaFalsa(CATALOGO))
 
+
 gemini_filter.requests = falsas(lambda *a, **k: responder(
     {"veredicto": "VETAR", "confianza": 80, "motivo": "resultados malos"}))
 ok, msg = gemini_filter.probar_conexion()
@@ -267,7 +320,9 @@ gemini_filter.requests = falsas(
     lambda *a, **k: (_ for _ in ()).throw(RuntimeError("401 invalid key")))
 ok, msg = gemini_filter.probar_conexion()
 check("clave invalida se DETECTA al arrancar", ok is False, f"-> {msg}")
-check("y el mensaje dice que no respondio", "no respondio" in msg.lower())
+check("y el mensaje explica que ningun modelo sirvio",
+      "no respondio" in msg.lower() or "ninguno" in msg.lower(),
+      f"-> {msg}")
 
 gemini_filter.GEMINI_API_KEY = ""
 ok, msg = gemini_filter.probar_conexion()
