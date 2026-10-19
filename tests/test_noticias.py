@@ -255,8 +255,19 @@ check("si ninguno responde, lo dice claro", modelo is None, f"-> {nota}")
 check("y lista los que probo", "Probados" in nota)
 
 # CENSURA DE CLAVES
+#
+# OJO con el valor de prueba: la primera version de este test usaba una
+# cadena con la forma EXACTA de una clave real de Google (39 caracteres,
+# aspecto aleatorio), escrita justo despues de que se filtrara una de
+# verdad. No se puede descartar que fuera esa misma. Una clave revocada
+# dentro del repositorio sigue siendo un artefacto que no deberia estar,
+# y menos en un zip que sale de aqui.
+#
+# El valor de abajo es inequivocamente falso y aun asi cumple el patron
+# que busca _censurar() (AIza + 10 o mas caracteres), que es lo unico
+# que el test necesita comprobar.
 fuga = ("404 for url: https://generativelanguage.googleapis.com/v1beta/"
-        "models/x:generateContent?key=AIzaSyBqIhaniFt0hs9obu5EiPosWhCFo7zkIn4")
+        "models/x:generateContent?key=AIzaSyCLAVE_FALSA_DE_PRUEBA_000000000000")
 censurado = gemini_filter._censurar(fuga)
 check("la clave se censura en los errores", "AIza" not in censurado, f"-> {censurado}")
 check("y se nota que habia una", "CENSURADO" in censurado)
