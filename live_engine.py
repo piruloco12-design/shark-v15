@@ -25,6 +25,30 @@ from storage import init_db, save_signal
 
 from ai_filter import evaluate_signal_quality
 
+# --- Ampliacion institucional (seccion 15). En try/except a proposito:
+# si la ampliacion no importa, el bot sigue funcionando exactamente como
+# antes. Es un anexo, no una dependencia.
+try:
+    from institucional.configuracion import desde_entorno as _inst_config
+    from institucional.observacion import (
+        evaluar as evaluar_observacion,
+        fallos_de_registro as fallos_registro_inst,
+        init_observacion,
+    )
+    _INST_EXTENSION = _inst_config()
+    INSTITUCIONAL_DISPONIBLE = True
+except Exception as _e_inst:      # pragma: no cover
+    _INST_EXTENSION = None
+    INSTITUCIONAL_DISPONIBLE = False
+    _INST_ERROR = str(_e_inst)
+
+# Series diarias para M02/M03. El ciclo intradia no las descarga: son
+# mensuales y pedirlas cada 15 minutos seria gastar cuota para nada.
+# Las rellena quien corra el ciclo (o una tarea mensual aparte).
+_INST_SERIES_TR = None
+_INST_EFECTIVO = None
+_INST_RANKING = None
+
 # Imports directos — NO en try/except para que fallen ruidosamente si hay error
 from paper_broker import (
     open_trade,
@@ -537,6 +561,48 @@ def run_live_cycle():
                     # el filtro no es esencial.
                     _log(f"NOTICIAS error | {ticker}: {e}")
 
+            # --- OBSERVACION INSTITUCIONAL (seccion 15 de la spec) ---
+            # Va aqui, sobre operaciones que YA pasaron todo lo demas,
+            # porque la pregunta que interesa medir es "de las que el
+            # bot iba a abrir, cuantas habria vetado cada modulo".
+            #
+            # En modo OBSERVE (el defecto) esto NO puede bloquear nada:
+            # la funcion devuelve False antes de leer ninguna opinion.
+            # tests/test_observacion.py lo comprueba corriendo el ciclo
+            # completo con la extension apagada y encendida y exigiendo
+            # que las decisiones sean identicas.
+            if INSTITUCIONAL_DISPONIBLE and _INST_EXTENSION is not None:
+                try:
+                    bloquear_inst, evaluaciones_inst = evaluar_observacion(
+                        ticker=ticker,
+                        df=df,
+                        signal=signal,
+                        regime=regime,
+                        base_signal_id=f"{ticker}-{df.index[-1].isoformat()}",
+                        extension=_INST_EXTENSION,
+                        series_tr=globals().get("_INST_SERIES_TR"),
+                        serie_efectivo=globals().get("_INST_EFECTIVO"),
+                        ranking=globals().get("_INST_RANKING"),
+                        nominal=_safe_float(trade_setup.get("position_size"))
+                        * _safe_float(last.get("Close")),
+                    )
+                    for _ev in evaluaciones_inst:
+                        _log(
+                            f"INST | {ticker} | {_ev.module_id} | {_ev.status}"
+                            f" | {'/'.join(_ev.reason_codes)}"
+                            f" | habria_bloqueado="
+                            f"{_ev.veta_entrada(exigido=True)}"
+                        )
+                    for _f in fallos_registro_inst():
+                        _log(f"INST | evidencia NO guardada | {_f}")
+                    if bloquear_inst:
+                        # Solo alcanzable en ENFORCE, nunca en OBSERVE.
+                        _log(f"--> VETADO POR EXTENSION | {ticker}")
+                        continue
+                except Exception as e:
+                    # La ampliacion no puede tumbar un ciclo en vivo.
+                    _log(f"INST error | {ticker}: {e}")
+
             # --- ABRIR TRADE ---
             # El orden importa y antes estaba al revés: se mandaba
             # la alerta a Telegram y DESPUÉS se intentaba abrir el
@@ -579,6 +645,19 @@ def run_live_cycle():
 
 def run_live_engine():
     init_db()
+
+    # Tabla propia de la ampliacion. Separada de las del nucleo: si
+    # falla, el bot sigue; si se borra, no se pierde ninguna operacion.
+    if INSTITUCIONAL_DISPONIBLE:
+        try:
+            init_observacion()
+            _log(f"INST | extension en modo {_INST_EXTENSION.mode} | "
+                 f"config {_INST_EXTENSION.config_hash()}")
+        except Exception as e:
+            _log(f"INST | no se pudo inicializar la observacion: {e}")
+    else:
+        _log(f"INST | ampliacion no disponible: "
+             f"{globals().get('_INST_ERROR', 'motivo desconocido')}")
     init_historial()
 
     print("=" * 50)

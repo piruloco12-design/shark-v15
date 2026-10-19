@@ -91,6 +91,8 @@ jobs:
           python tests/test_oraculos.py  2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_causalidad.py 2>&1 | tail -5 | tee -a resultados/ultimo.md
           python tests/test_cooldown.py  2>&1 | tail -14 | tee -a resultados/ultimo.md
+          python tests/test_institucional.py 2>&1 | tail -10 | tee -a resultados/ultimo.md
+          python tests/test_observacion.py 2>&1 | tail -8  | tee -a resultados/ultimo.md
           { echo '```'; echo; } >> resultados/ultimo.md
 
       - name: Comprobar que todo importa
@@ -106,7 +108,11 @@ jobs:
               "session_volatility_intelligence", "risk_control_engine",
               "trade_intelligence", "ai_filter", "final_decision_engine",
               "paper_broker", "telegram_alerts", "historial_mercado",
-              "noticias", "gemini_filter",
+              "noticias", "gemini_filter", "zona_mercado",
+              "institucional", "institucional.referencia",
+              "institucional.contratos", "institucional.configuracion",
+              "institucional.vista", "institucional.modulos",
+              "institucional.observacion",
               "live_engine", "main",
           ]
           fallos = []
@@ -295,6 +301,26 @@ jobs:
             echo '## Proveedores de datos'
             echo '```'
             cat resultados/proveedores.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
+      - name: Experimento institucional (M02/M03 solo largos)
+        if: always()
+        run: |
+          set -o pipefail
+          python validator/experimento_institucional.py 2>&1 \
+            | tee resultados/experimento_institucional.txt
+          {
+            echo '## Experimento institucional (M02/M03 como estrategias propias)'
+            echo
+            echo 'Solo largos: la cuenta es al contado, sin CFD.'
+            echo 'Criterios fijados ANTES de ver el resultado: batir a'
+            echo 'comprar y mantener del mismo universo, batir al efectivo,'
+            echo 'y sostenerse en train y test por separado.'
+            echo
+            echo '```'
+            cat resultados/experimento_institucional.txt
             echo '```'
             echo
           } >> resultados/ultimo.md

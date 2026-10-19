@@ -24,7 +24,17 @@ from config import (
 # en el origen para que todos los providers den lo mismo.
 RTH_INICIO = "09:30"
 RTH_FIN = "16:00"
-ZONA_MERCADO = "US/Eastern"
+# "US/Eastern" es un alias de compatibilidad; el canonico es
+# "America/New_York". Son la MISMA zona (mismos husos, mismas reglas de
+# horario de verano), asi que esto no cambia ninguna decision. Lo que
+# cambia es que el canonico existe tambien en bases de zonas recortadas,
+# donde el alias no, y ahi el filtro de sesion bloqueaba el 100% de las
+# operaciones sin decir por que. Ver zona_mercado.py.
+try:
+    from zona_mercado import zona as _zona_mercado
+    ZONA_MERCADO = _zona_mercado()
+except Exception:
+    ZONA_MERCADO = "US/Eastern"
 
 YF_INTERVAL_MAP = {
     "1m": "1m",
@@ -645,3 +655,59 @@ def get_data(symbol: str, timeframe: str = "1h", period: str = "6mo"):
             errors.append(f"{provider}: {e}")
 
     raise ValueError(f"No se pudo descargar {symbol} con ningún provider. Detalles: {errors}")
+
+# ---------------------------------------------------------------------
+# Serie de nivel total-return, SOLO para los modulos institucionales.
+#
+# Shark corre con auto_adjust=False, es decir precios SIN ajustar. Para
+# una estrategia intradia de 60 dias eso casi no importa. Para una senal
+# de 12 meses importa mucho: en una serie sin ajustar, cada dividendo es
+# una caida de precio que el tenedor no sufrio (recibio el dividendo), y
+# un split es una caida enorme que nunca ocurrio.
+#
+# El documento lo exige explicito (seccion 15.5): "Una serie de nivel
+# total-return permite calcular senales sin interpretar splits o
+# dividendos como caidas; los fills se calculan con precios negociables
+# y acciones corporativas del libro, no con ese indice."
+#
+# Por eso esta funcion es APARTE y no toca get_data: cambiar el ajuste
+# por defecto cambiaria todas las decisiones de B1, y el documento
+# prohibe eso sin una variante explicita y su propia medicion.
+# ---------------------------------------------------------------------
+
+def get_serie_total_return(symbol: str, period: str = "15y", timeframe: str = "1d"):
+    """Nivel total-return diario para senales. Devuelve (df, provider).
+
+    Las columnas son las mismas que get_data, pero ajustadas por
+    dividendos y splits. NO usar estos precios para simular fills: el
+    nivel ajustado no es un precio al que se pudiera comprar.
+    """
+    errores = []
+
+    for provider in DATA_PROVIDER_ORDER:
+        try:
+            if provider == "yfinance":
+                df = yf.download(
+                    symbol,
+                    period=period,
+                    interval=YF_INTERVAL_MAP.get(timeframe, "1d"),
+                    auto_adjust=True,   # <-- la unica diferencia que importa
+                    progress=False,
+                    threads=False,
+                    prepost=False,
+                )
+                return _normalize_df(df), "yfinance_tr"
+
+            if provider == "coinbase":
+                # Cripto no reparte dividendos ni hace splits: la serie
+                # cruda ya es total-return. No se "ajusta" nada.
+                df, _ = _coinbase_download(symbol, timeframe, period)
+                return df, "coinbase_tr"
+
+        except Exception as e:
+            errores.append(f"{provider}: {e}")
+
+    raise ValueError(
+        f"No hay serie total-return para {symbol}. Solo yfinance y coinbase "
+        f"la dan en esta version. Detalles: {errores}"
+    )

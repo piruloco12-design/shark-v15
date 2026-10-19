@@ -1,12 +1,12 @@
 {
   "_nota": "Estado REAL verificado el 2026-10-19, no una plantilla. null = no aplica porque no hay broker conectado.",
   "broker": null,
-  "account_type": null,
+  "account_type": "contado_sin_cfd",
   "execution_mode": "alerts_plus_paper",
   "base_currency": "EUR",
   "instrument_type": "equity_etf_spot_via_yfinance",
   "supports_short": false,
-  "_supports_short_nota": "El bot genera señales SELL y las simula en paper, pero no hay adaptador que pueda abrir un corto real.",
+  "_supports_short_nota": "El bot genera senales SELL y las simula en paper, pero en una cuenta al contado no son ejecutables: entre el 32% y el 59% de las senales actuales, segun la clase de activo. No hay prestamo de valores ni margen. M05 (pares) queda BLOQUEADO por esto, y la configuracion institucional lo rechaza por codigo, no solo por documento.",
   "supports_fractional": true,
   "_supports_fractional_nota": "En paper el tamaño es float sin lote minimo.",
   "supports_native_stop": false,
@@ -19,7 +19,14 @@
   "fee_model_verified": false,
   "_fee_model_nota": "0,08% por pata (0,16% ida y vuelta) es un SUPUESTO del backtester, no una tarifa verificada de ninguna cuenta.",
   "timezone_verified": true,
-  "_timezone_nota": "US/Eastern con tzdata explicito en requirements.txt.",
+  "_timezone_nota": "Se resuelve en zona_mercado.py probando America/New_York (canonico) antes de US/Eastern (alias). Misma zona, mismas reglas: no cambia ninguna decision. El canonico existe tambien en bases de zonas recortadas, donde el alias no y el filtro de sesion bloqueaba el 100% de las operaciones sin decir por que.",
   "unknown_capabilities_block_new_automated_execution": true,
-  "_bloqueo_nota": "No existe ruta de ejecucion automatica real, asi que no hay nada que bloquear: el riesgo de orden real accidental es cero por construccion."
+  "_bloqueo_nota": "No existe ruta de ejecucion automatica real, asi que no hay nada que bloquear: el riesgo de orden real accidental es cero por construccion.",
+  "_account_type_nota": "Decision del usuario el 2026-10-19: 'vamos normal sin cfd'. Es una restriccion PREVIA de la cuenta, no un filtro elegido despues de ver resultados.",
+  "supports_point_in_time_fundamentals": false,
+  "_point_in_time_nota": "yfinance da ratios ACTUALES, no la version publicada en cada fecha. El documento es explicito: 'Si solo hay ratios actuales, M06 no tiene un backtest valido'. M06 queda BLOQUEADO.",
+  "prices_adjusted_for_dividends": false,
+  "_prices_adjusted_nota": "data_feed.get_data usa auto_adjust=False: precios SIN ajustar. En intradia de 60 dias apenas importa; en un backtest diario de 15 anos cada dividendo aparece como una caida que el tenedor no sufrio. get_serie_total_return() si ajusta y la usan solo los modulos institucionales, para no cambiar ninguna decision de B1. La magnitud del sesgo se mide en resultados/institucional.json.",
+  "institutional_extension_mode": "OBSERVE",
+  "_institutional_nota": "Modulos M01/M02/M03 calculan y registran en tabla propia; no cambian ninguna decision. tests/test_observacion.py corre el ciclo completo con la extension apagada y encendida y exige igualdad de senales, operaciones, estado y log. M04 pendiente. M05 y M06 bloqueados por capacidades. Ninguna estrategia independiente tiene presupuesto."
 }

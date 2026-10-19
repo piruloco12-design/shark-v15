@@ -5,7 +5,17 @@ import pandas as pd
 # Zona del mercado USA. Necesita la base de datos de zonas
 # horarias (paquete tzdata) instalada. Sin ella, pandas no sabe
 # convertir a "US/Eastern" y este módulo no puede clasificar nada.
-ZONA_MERCADO = "US/Eastern"
+# "US/Eastern" es un alias de compatibilidad; el canonico es
+# "America/New_York". Son la MISMA zona (mismos husos, mismas reglas de
+# horario de verano), asi que esto no cambia ninguna decision. Lo que
+# cambia es que el canonico existe tambien en bases de zonas recortadas,
+# donde el alias no, y ahi el filtro de sesion bloqueaba el 100% de las
+# operaciones sin decir por que. Ver zona_mercado.py.
+try:
+    from zona_mercado import zona as _zona_mercado
+    ZONA_MERCADO = _zona_mercado()
+except Exception:
+    ZONA_MERCADO = "US/Eastern"
 
 
 def _a_float(valor, defecto=0.0):
