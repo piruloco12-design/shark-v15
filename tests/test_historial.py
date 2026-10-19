@@ -158,20 +158,46 @@ check("resumen cuenta bien", fila and fila[0]["velas"] == len(hm.cargar("TEST", 
 
 print("\n=== 7) aviso de almacenamiento efimero ===")
 
-persistente, mensaje = hm.comprobar_persistencia()
-check("fuera de Render no avisa", persistente is True, f"-> {mensaje}")
+# El aviso NO depende de detectar Render. Antes solo saltaba si
+# existian las variables RENDER o RENDER_SERVICE_ID, asi que un
+# entorno que no las definiera se quedaba sin aviso teniendo la
+# base de datos en almacenamiento efimero.
 
-# Simula el escenario real: Render, ruta relativa.
-hm.DATABASE_NAME = "shark_v8.db"
-os.environ["RENDER"] = "true"
+# Caso real del 2026-10-19: el disco estaba montado en /var/data
+# pero DATABASE_NAME iba sin barra inicial, asi que el bot
+# escribia en la carpeta del proyecto. El disco marcaba 0 GB
+# durante tres dias.
+hm.DATABASE_NAME = "var/data/shark_v8.db"
 persistente, mensaje = hm.comprobar_persistencia()
-check("en Render con ruta relativa AVISA", persistente is False, f"-> {mensaje}")
-check("el aviso dice que hay que montar disco", "/var/data" in mensaje)
+check("ruta relativa AVISA aunque parezca correcta",
+      persistente is False, f"-> {mensaje}")
+check("el aviso explica que es relativa", "RELATIVA" in mensaje)
+check("y da el valor correcto", "/var/data/shark_v8.db" in mensaje)
+
+hm.DATABASE_NAME = "shark_v8.db"
+persistente, mensaje = hm.comprobar_persistencia()
+check("nombre suelto tambien AVISA", persistente is False)
+
+hm.DATABASE_NAME = "/tmp/suelta.db"
+persistente, mensaje = hm.comprobar_persistencia()
+check("ruta absoluta fuera de un montaje AVISA", persistente is False, f"-> {mensaje}")
+check("el aviso dice bajo que montajes se espera", "/var/data" in mensaje)
 
 hm.DATABASE_NAME = "/var/data/shark_v8.db"
 persistente, mensaje = hm.comprobar_persistencia()
-check("en Render con disco montado no avisa", persistente is True, f"-> {mensaje}")
+check("disco montado: no avisa", persistente is True, f"-> {mensaje}")
+check("y confirma la ruta", "/var/data/shark_v8.db" in mensaje)
+
+# Sin depender de variables de entorno en ningun caso
+os.environ.pop("RENDER", None)
+hm.DATABASE_NAME = "shark_v8.db"
+sin_render, _ = hm.comprobar_persistencia()
+os.environ["RENDER"] = "true"
+con_render, _ = hm.comprobar_persistencia()
 del os.environ["RENDER"]
+check("el aviso NO depende de la variable RENDER",
+      sin_render == con_render is False,
+      f"-> sin RENDER: {sin_render}, con RENDER: {con_render}")
 
 
 print("\n" + "=" * 62)
