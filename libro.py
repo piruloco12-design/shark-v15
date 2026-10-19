@@ -356,7 +356,18 @@ class LibroContado:
         solicitada = _no_negativo(cantidad, "cantidad")
         disponible = self.cantidad(iid)
 
-        ejecutada = min(inst.redondear_a_lote(solicitada), disponible)
+        # Salida COMPLETA exacta. Redondear a lote la cantidad de una venta
+        # total deja polvo: una posicion de 1,5981321917 floored a 8
+        # decimales deja 1,7e-9 dentro. Con eso, M03 con K=5 acabo con 17
+        # posiciones (efectivas 4,99) y generaba una orden de venta
+        # imposible cada mes, que inflaba las intenciones y los rechazos.
+        #
+        # Vender todo lo que se tiene siempre es ejecutable: el lote limita
+        # lo que se puede comprar o vender PARCIALMENTE, no cerrar del todo.
+        if solicitada >= disponible - 1e-6 * max(1.0, disponible):
+            ejecutada = disponible
+        else:
+            ejecutada = min(inst.redondear_a_lote(solicitada), disponible)
         if ejecutada <= 0:
             mov = Movimiento(
                 momento=momento, tipo="VENTA", instrumento=iid,

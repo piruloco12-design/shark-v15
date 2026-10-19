@@ -332,6 +332,28 @@ jobs:
             echo
           } >> resultados/ultimo.md
 
+      - name: Medicion v2 con el motor corregido
+        if: always()
+        run: |
+          set -o pipefail
+          python evaluador/experimento.py 2>&1 | tee resultados/medicion_v2.txt
+          {
+            echo '## Medicion v2 (motor corregido)'
+            echo
+            echo 'El registro de la familia se escribe ANTES de calcular.'
+            echo 'Familia de 4 hipotesis con correccion de Holm. Universo'
+            echo 'de supervivientes, estado EXPLORATORIO.'
+            echo
+            echo 'Potencia medida: un diferencial de +0,72%/ano se detecta'
+            echo 'el 12% de las veces. Por debajo de ~3-4% anual, un "no'
+            echo 'rechaza" significa indetectable, no inexistente.'
+            echo
+            echo '```'
+            cat resultados/medicion_v2.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
       - name: Experimento institucional (M02/M03 solo largos)
         if: always()
         run: |

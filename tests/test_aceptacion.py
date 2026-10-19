@@ -418,6 +418,21 @@ except OperacionNoEjecutable:
 check("G2", "el libro ejecutable al contado no admite abrir cortos",
       corto_rechazado, "-> permitio un corto")
 
+# Salida completa exacta: vender todo lo que se tiene no deja polvo.
+# Redondear a lote una venta TOTAL dejaba residuos de 1e-9 dentro, y con
+# eso M03 con K=5 acababa con 17 posiciones y generaba una orden de venta
+# imposible cada mes, que inflaba las intenciones y los rechazos (775 de
+# 1801). El CAGR apenas se movia, pero los diagnosticos que la auditoria
+# pide quedaban falseados.
+L_polvo = LibroContado(10000.0, permitir_fraccionado=True)
+L_polvo.comprar("AAA", 1.59813219176543, 100.0)
+L_polvo.comprar("AAA", 2.40186780823457, 100.0)
+_q = L_polvo.cantidad("AAA")
+L_polvo.vender("AAA", _q, 100.0)
+check("B5", "vender toda la posicion la cierra del todo, sin polvo",
+      "AAA" not in L_polvo.posiciones and L_polvo.cantidad("AAA") == 0.0,
+      f"-> queda {L_polvo.cantidad('AAA'):.12f} tras vender {_q:.12f}")
+
 L.comprar("AAA", 5.0, 100.0)
 v = L.vender("AAA", 3.0, 100.0)
 check("G3", "una venta que reduce un largo existente SI es ejecutable",
