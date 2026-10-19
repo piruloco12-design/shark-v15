@@ -287,18 +287,31 @@ def comprobar_persistencia():
     if en_disco_montado:
         return True, f"Base de datos en disco persistente: {ruta}"
 
-    en_render = bool(os.getenv("RENDER") or os.getenv("RENDER_SERVICE_ID"))
-
-    if en_render:
+    # Antes esto dependia de detectar Render por variable de
+    # entorno: si Render no definia RENDER ni RENDER_SERVICE_ID,
+    # la funcion decia "fuera de Render" y callaba, aunque la base
+    # de datos estuviera en almacenamiento efimero.
+    #
+    # Un diagnostico no deberia depender de adivinar donde corre.
+    # Ahora se avisa SIEMPRE que la ruta no este bajo un punto de
+    # montaje conocido, y el mensaje lleva la ruta real para que
+    # se pueda comprobar a simple vista.
+    if not os.path.isabs(DATABASE_NAME):
         return False, (
-            f"AVISO GRAVE: la base de datos está en {ruta}, que en Render "
-            f"es efímero. Se borra en cada reinicio o deploy: se pierden el "
-            f"histórico de trades, el capital acumulado y el archivo de "
-            f"velas. Hay que montar un disco y poner "
+            f"AVISO: DATABASE_NAME es una ruta RELATIVA "
+            f"({DATABASE_NAME!r}), que se resuelve a {ruta}. "
+            f"En Render eso es almacenamiento efímero y se borra en "
+            f"cada reinicio. Falta la barra inicial: "
             f"DATABASE_NAME=/var/data/shark_v8.db"
         )
 
-    return True, f"Base de datos local (fuera de Render): {ruta}"
+    return False, (
+        f"AVISO: la base de datos está en {ruta}, que no está bajo "
+        f"ningún disco montado ({', '.join(montajes_persistentes)}). "
+        f"Si esto corre en Render se borra en cada reinicio: se pierden "
+        f"el histórico de trades, el capital acumulado y el archivo de "
+        f"velas."
+    )
 
 
 if __name__ == "__main__":

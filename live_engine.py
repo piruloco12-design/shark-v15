@@ -150,8 +150,19 @@ def _send_startup_message():
         f"🤖 SHARK V15 SNIPER INICIADO EN RENDER\n\n"
         f"Timeframe: {TIMEFRAME}\n"
         f"Loop: {LOOP_INTERVAL}s\n"
-        f"Activos: {len(ASSETS)}"
+        f"Activos: {len(ASSETS)}\n"
+        f"Base de datos: {_ruta_db()}"
     )
+
+
+def _ruta_db():
+    """Ruta REAL de la base de datos, resuelta a absoluta."""
+    try:
+        import os
+        from config import DATABASE_NAME
+        return os.path.abspath(DATABASE_NAME)
+    except Exception:
+        return "desconocida"
 
 
 def _send_cycle_ok():
