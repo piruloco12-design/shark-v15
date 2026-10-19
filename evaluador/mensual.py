@@ -80,9 +80,27 @@ class Politicas:
     # contrario. Fijado antes de ver resultados.
     politica_terminal: str = "MARCAR"
     calentamiento_sesiones: int = 253
+    # M04 basico. None = sin limites, que es como se midio la base. Con
+    # limites, la estrategia lleva otro identificador: es otra variante,
+    # no un parametro afinado.
+    limites: object = None
 
     def a_dict(self):
-        return {k: getattr(self, k) for k in self.__dataclass_fields__}
+        d = {}
+        for k in self.__dataclass_fields__:
+            v = getattr(self, k)
+            if k == "limites":
+                d[k] = None if v is None else {
+                    "max_por_instrumento": v.max_por_instrumento,
+                    "max_por_grupo": v.max_por_grupo,
+                    "max_exposicion_total": v.max_exposicion_total,
+                    "max_posiciones": v.max_posiciones,
+                    "reserva_costes": v.reserva_costes,
+                    "grupos_declarados": len(v.grupos),
+                }
+            else:
+                d[k] = v
+        return d
 
 
 @dataclass
@@ -393,8 +411,20 @@ class EvaluadorMensual:
         elegibles = self._elegibles(fecha)
         pesos, scores, excluidos = estrategia(vista, elegibles, libro)
 
+        # M04 basico: topes por instrumento, grupo, numero de posiciones y
+        # exposicion total. El sobrante se queda en EFECTIVO; redistribuirlo
+        # violaria el tope que acaba de aplicarse.
+        nota_limites = ""
+        if self.pol.limites is not None:
+            from limites_cartera import aplicar as _aplicar_limites
+            pesos, diag_lim = _aplicar_limites(pesos, self.pol.limites)
+            if diag_lim.get("recortes"):
+                nota_limites = "M04: " + ", ".join(
+                    r["tipo"] for r in diag_lim["recortes"])
+
         d = Decision(fecha_decision=fecha, pesos_deseados=dict(pesos),
-                     scores=dict(scores), excluidos=dict(excluidos))
+                     scores=dict(scores), excluidos=dict(excluidos),
+                     nota=nota_limites)
 
         nav = libro.nav()
         ordenes = []
@@ -429,6 +459,16 @@ class EvaluadorMensual:
         d.fecha_ejecucion = min((o[0] for o in ordenes), default=None)
         return d
 
+    def _id_estrategia(self, estrategia) -> str:
+        """Con limites activos es OTRA variante, y se nota en el nombre."""
+        base = estrategia.id
+        if self.pol.limites is None:
+            return base
+        lim = self.pol.limites
+        return (f"{base}+M04_i{lim.max_por_instrumento:.2f}"
+                f"_g{lim.max_por_grupo:.2f}_e{lim.max_exposicion_total:.2f}"
+                f"_n{lim.max_posiciones}")
+
     def _resultado(self, estrategia, libro, decisiones, nav_diario) -> dict:
         nav_diario = nav_diario.dropna()
         if len(nav_diario) < 30:
@@ -436,7 +476,8 @@ class EvaluadorMensual:
                 f"solo {len(nav_diario)} observaciones de NAV")
 
         mensual = nav_diario.resample("ME").last().dropna()
-        res = M.resumen(nav_diario, nav_mensual=mensual, etiqueta=estrategia.id)
+        id_est = self._id_estrategia(estrategia)
+        res = M.resumen(nav_diario, nav_mensual=mensual, etiqueta=id_est)
 
         intenciones = [m for m in libro.movimientos
                        if m.tipo in ("COMPRA", "VENTA")]
@@ -448,7 +489,8 @@ class EvaluadorMensual:
         pesos_fin = libro.pesos()
 
         res.update({
-            "estrategia_id": estrategia.id,
+            "estrategia_id": id_est,
+            "estrategia_base_id": estrategia.id,
             "universo_etiqueta": ETIQUETA_UNIVERSO,
             "politicas": self.pol.a_dict(),
             "decisiones": len(decisiones),

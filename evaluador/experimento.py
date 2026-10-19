@@ -107,6 +107,21 @@ VARIANTES_YA_VISTAS = [
 ]
 
 
+def _politicas_con_limites(limites) -> Politicas:
+    """Las mismas politicas base, mas los limites de M04."""
+    base = _politicas()
+    return Politicas(
+        capital_inicial=base.capital_inicial, moneda_cuenta=base.moneda_cuenta,
+        coste_rel=base.coste_rel, coste_fijo=base.coste_fijo,
+        dias_liquidacion=base.dias_liquidacion,
+        permitir_fraccionado=base.permitir_fraccionado, lote=base.lote,
+        politica_caja=base.politica_caja,
+        antiguedad_maxima_dias=base.antiguedad_maxima_dias,
+        politica_terminal=base.politica_terminal,
+        calentamiento_sesiones=base.calentamiento_sesiones,
+        limites=limites)
+
+
 def _politicas() -> Politicas:
     return Politicas(
         capital_inicial=1000.0,
@@ -439,6 +454,68 @@ def main(descargar=None):
         print(f"    {clave:24} p={v['p']}  umbral={v['umbral_holm']:.5f}  "
               f"-> {marca}")
 
+    # ---------- M04 basico: el coste de controlar la cartera ----------
+    #
+    # Va APARTE de la familia registrada: es otra variante, con su propio
+    # identificador, y su efecto sobre el beneficio se MIDE, no se
+    # presupone. La auditoria avisa (caso I29): mas control de riesgo puede
+    # dar menos dinero, y eso se informa como las dos cosas que es.
+    print(f"\n{'=' * 72}\nM04 BASICO: que cuesta limitar la cartera"
+          f"\n{'=' * 72}")
+    m04 = {}
+    try:
+        from limites_cartera import GRUPOS_UNIVERSO, LimitesCartera
+
+        variantes_m04 = {
+            "sin_limites": None,
+            "i25_g40": LimitesCartera(max_por_instrumento=0.25,
+                                      max_por_grupo=0.40,
+                                      grupos=GRUPOS_UNIVERSO),
+            "i25_g40_e90": LimitesCartera(max_por_instrumento=0.25,
+                                          max_por_grupo=0.40,
+                                          max_exposicion_total=0.90,
+                                          reserva_costes=0.05,
+                                          grupos=GRUPOS_UNIVERSO),
+        }
+        print(f"\n  {'VARIANTE':16} {'CAGR':>8} {'SHARPE':>7} {'MAXDD-D':>8} "
+              f"{'INVERT':>7} {'RECORTES':>9}")
+        print("  " + "-" * 62)
+        for etq, lim in variantes_m04.items():
+            pol_m04 = _politicas_con_limites(lim)
+            try:
+                ev_m04 = EvaluadorMensual(universos["multiactivo"], pol_m04)
+                r_m04 = ev_m04.correr(M03Momentum(K, LOOKBACK, SKIP))
+            except Exception as e:
+                print(f"  {etq:16} FALLO: {type(e).__name__}: {str(e)[:35]}")
+                continue
+            recortes = sum(1 for d in r_m04["_decisiones"]
+                           if d.nota.startswith("M04"))
+            c = r_m04["concentracion_final"]
+            m04[etq] = {k: v for k, v in r_m04.items()
+                        if not k.startswith("_")}
+            m04[etq]["decisiones_con_recorte"] = recortes
+            print(f"  {etq:16} {r_m04['cagr']*100:7.2f}% "
+                  f"{(r_m04['sharpe_diferencial'] or 0):7.2f} "
+                  f"{r_m04['max_drawdown_diario']*100:7.1f}% "
+                  f"{c['invertido']:7.3f} "
+                  f"{recortes:4}/{r_m04['decisiones']:<4}")
+        if "sin_limites" in m04 and "i25_g40" in m04:
+            dcagr = (m04["i25_g40"]["cagr"] - m04["sin_limites"]["cagr"]) * 100
+            ddd = (m04["i25_g40"]["max_drawdown_diario"]
+                   - m04["sin_limites"]["max_drawdown_diario"]) * 100
+            print(f"\n  el tope por grupo cuesta {dcagr:+.2f} puntos de CAGR "
+                  f"y mejora la caida en {-ddd:+.1f} puntos")
+            print(f"  I29: mas control, menos dinero. Es una preferencia, no "
+                  f"una mejora del beneficio.")
+            print(f"  Y el diagnostico que importa: recortar "
+                  f"{m04['i25_g40']['decisiones_con_recorte']} de "
+                  f"{m04['i25_g40']['decisiones']} decisiones significa que")
+            print(f"  M03 estaba casi siempre con sus 5 posiciones en el "
+                  f"mismo grupo.")
+    except Exception as e:
+        print(f"  no se pudo medir: {type(e).__name__}: {e}")
+        m04 = {"error": f"{type(e).__name__}: {e}"}
+
     # ---------- supervivencia por escenarios ----------
     print(f"\n{'=' * 72}\nSESGO DE SUPERVIVENCIA, POR ESCENARIOS DECLARADOS"
           f"\n{'=' * 72}")
@@ -484,6 +561,7 @@ def main(descargar=None):
         "registro": reg,
         "panel": panel,
         "supervivencia": supervivencia,
+        "m04": m04,
         "incidencias_carga": incidencias,
         "resumenes": {k: {kk: vv for kk, vv in v.items()
                           if not kk.startswith("_")}

@@ -139,7 +139,10 @@ jobs:
               "institucional.contratos", "institucional.configuracion",
               "institucional.vista", "institucional.modulos",
               "institucional.observacion", "institucional.snapshot",
-              "libro", "evaluador.metricas", "evaluador.mensual",
+              "libro", "limites_cartera",
+              "evaluador.metricas", "evaluador.mensual",
+              "evaluador.inferencia", "evaluador.registro",
+              "evaluador.supervivencia", "evaluador.experimento",
               "live_engine", "main",
           ]
           fallos = []

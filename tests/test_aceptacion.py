@@ -441,6 +441,88 @@ finally:
 
 
 # =====================================================================
+print("\n=== H) M04 basico: limites de cartera ===")
+# =====================================================================
+
+from limites_cartera import (GRUPOS_UNIVERSO, LimiteInvalido, LimitesCartera,
+                             aplicar, concentracion, verificar)
+
+# LA TRAMPA que la auditoria senala: aplicar un tope y reescalar el resto
+# al 100% vuelve a violar el tope que acabas de poner.
+_lim = LimitesCartera(max_por_instrumento=0.20, grupos=GRUPOS_UNIVERSO)
+_ef, _d = aplicar({"QQQ": 0.50, "GLD": 0.20, "TLT": 0.20, "SPY": 0.10}, _lim)
+check("H1", "el sobrante tras un tope se queda en EFECTIVO, no se "
+      "redistribuye",
+      abs(_ef["QQQ"] - 0.20) < 1e-9 and abs(sum(_ef.values()) - 0.70) < 1e-9,
+      f"-> {_ef}, suma {sum(_ef.values()):.4f}. Reescalar al 100% habria "
+      f"vuelto a subir QQQ por encima de su tope.")
+
+# Cinco sectores no son cinco fuentes de retorno.
+_lim2 = LimitesCartera(max_por_instrumento=0.25, max_por_grupo=0.40,
+                       grupos=GRUPOS_UNIVERSO)
+_ef2, _ = aplicar({t: 0.20 for t in ("XLK", "XLF", "XLE", "XLV", "XLI")},
+                  _lim2)
+check("H2", "el tope por grupo limita cinco sectores correlacionados",
+      abs(sum(_ef2.values()) - 0.40) < 1e-9,
+      f"-> suma {sum(_ef2.values()):.4f}: cinco sectores al 20% serian el "
+      f"100% en renta variable")
+
+_c = concentracion(_ef2, _lim2)
+check("H3", "la concentracion se informa por grupo, no solo por activo",
+      "por_grupo" in _c and _c["por_grupo"].get("renta_variable") is not None
+      and _c["posiciones_efectivas"] > 0,
+      f"-> {_c}")
+
+# La red de seguridad: lo que sale tiene que cumplir, o es un fallo.
+try:
+    verificar({"SPY": 0.5}, LimitesCartera(max_por_instrumento=0.2))
+    check("H4", "verificar() detecta pesos que violan un tope", False,
+          "-> no lanzo")
+except LimiteInvalido:
+    check("H4", "verificar() detecta pesos que violan un tope", True)
+
+# Configuraciones imposibles se rechazan al construir, no al usar.
+_rechazadas = 0
+for _kw in (dict(max_exposicion_total=0.10, reserva_costes=0.10),
+            dict(max_por_instrumento=-0.1),
+            dict(max_posiciones=0),
+            dict(max_por_grupo=1.5)):
+    try:
+        LimitesCartera(**_kw)
+    except LimiteInvalido:
+        _rechazadas += 1
+check("H5", "una configuracion de limites imposible se rechaza al construir",
+      _rechazadas == 4, f"-> {_rechazadas}/4 rechazadas")
+
+_lim3 = LimitesCartera(max_por_grupo=0.30, grupos={"AAA": "tech"})
+_ef3, _ = aplicar({"AAA": 0.3, "ZZZ": 0.3, "YYY": 0.3}, _lim3)
+check("H6", "un activo sin grupo cuenta como su propio grupo, no en 'otros'",
+      len(_ef3) == 3 and all(abs(w - 0.3) < 1e-9 for w in _ef3.values()),
+      f"-> {_ef3}. Meterlos todos en un grupo 'otros' por descarte "
+      f"esconderia concentracion.")
+
+# Con limites, la estrategia lleva OTRO identificador: es otra variante.
+from evaluador.mensual import M03Momentum as _M03v
+
+_pol_lim = Politicas(capital_inicial=1000.0, coste_rel=0.0,
+                     calentamiento_sesiones=253,
+                     limites=LimitesCartera(max_por_instrumento=0.25,
+                                            grupos=GRUPOS_UNIVERSO))
+_ev_lim = EvaluadorMensual({"A": serie_b(A_SUBE_VUELVE),
+                            "B": serie_b(B_PLANO)}, _pol_lim)
+_r_lim = _ev_lim.correr(_M03v(5, 0, 0))
+check("H7", "con limites activos el identificador de la variante CAMBIA",
+      "+M04" in _r_lim["estrategia_id"]
+      and _r_lim["estrategia_base_id"] != _r_lim["estrategia_id"],
+      f"-> {_r_lim['estrategia_id']}")
+
+check("H8", "las politicas registran los limites para el manifiesto",
+      _pol_lim.a_dict()["limites"] is not None
+      and "max_por_grupo" in _pol_lim.a_dict()["limites"],
+      f"-> {_pol_lim.a_dict().get('limites')}")
+
+
+# =====================================================================
 print("\n=== G) La caja y los cortos ===")
 # =====================================================================
 
