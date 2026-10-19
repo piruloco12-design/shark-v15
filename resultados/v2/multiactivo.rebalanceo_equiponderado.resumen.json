@@ -1,0 +1,215 @@
+{
+  "etiqueta": "rebalanceo_equiponderado",
+  "inicio": "2012-10-19",
+  "fin": "2026-10-19",
+  "anos": 13.9986,
+  "nav_inicial": 1000.0,
+  "nav_final": 2468.516622,
+  "retorno_total": 1.468517,
+  "cagr": 0.066679,
+  "volatilidad_anual_diaria": 0.095527,
+  "max_drawdown_diario": -0.238307,
+  "sharpe_diferencial": 0.7258,
+  "sharpe_detalle": {
+    "sharpe": 0.7258,
+    "media_diferencial_periodica": 0.00027512,
+    "desviacion_diferencial_periodica": 0.00601763,
+    "periodos": 3517,
+    "periodos_por_ano": 252,
+    "referencia": "tasa constante 0.00000000 por periodo"
+  },
+  "observaciones_diarias": 3518,
+  "retorno_por_ano": {
+    "2012": {
+      "retorno": -0.00297,
+      "completo": false,
+      "observaciones": 48
+    },
+    "2013": {
+      "retorno": 0.083445,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2014": {
+      "retorno": 0.013956,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2015": {
+      "retorno": -0.068624,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2016": {
+      "retorno": 0.097451,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2017": {
+      "retorno": 0.095275,
+      "completo": true,
+      "observaciones": 251
+    },
+    "2018": {
+      "retorno": -0.046982,
+      "completo": true,
+      "observaciones": 251
+    },
+    "2019": {
+      "retorno": 0.177843,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2020": {
+      "retorno": 0.07131,
+      "completo": true,
+      "observaciones": 253
+    },
+    "2021": {
+      "retorno": 0.147046,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2022": {
+      "retorno": -0.039422,
+      "completo": true,
+      "observaciones": 251
+    },
+    "2023": {
+      "retorno": 0.07062,
+      "completo": true,
+      "observaciones": 250
+    },
+    "2024": {
+      "retorno": 0.101313,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2025": {
+      "retorno": 0.154296,
+      "completo": true,
+      "observaciones": 250
+    },
+    "2026": {
+      "retorno": 0.090895,
+      "completo": false,
+      "observaciones": 200
+    }
+  },
+  "max_drawdown_mensual": -0.166197,
+  "estrategia_id": "rebalanceo_equiponderado",
+  "universo_etiqueta": "EXPLORATORY_SURVIVOR_UNIVERSE",
+  "politicas": {
+    "capital_inicial": 1000.0,
+    "moneda_cuenta": "USD",
+    "coste_rel": 0.0008,
+    "coste_fijo": 0.0,
+    "dias_liquidacion": 0,
+    "permitir_fraccionado": true,
+    "lote": 0.0,
+    "politica_caja": "SIN_REMUNERAR",
+    "antiguedad_maxima_dias": 7,
+    "politica_terminal": "MARCAR",
+    "calentamiento_sesiones": 253
+  },
+  "decisiones": 168,
+  "intenciones": 5208,
+  "intenciones_ejecutadas": 5200,
+  "intenciones_rechazadas": 8,
+  "comisiones_moneda": 7.016884,
+  "nominal_ejecutado": 8771.11,
+  "coste_sobre_nominal_pb": 8.0,
+  "coste_por_intencion_moneda": 0.001349,
+  "rotacion_anual_nominal": 0.627,
+  "concentracion_final": {
+    "invertido": 1.0,
+    "peso_maximo": 0.035123,
+    "posiciones_efectivas": 30.958,
+    "posiciones": 31
+  },
+  "pesos_finales": {
+    "DBA": 0.03182,
+    "DBC": 0.0331,
+    "DIA": 0.03246,
+    "FXB": 0.03192,
+    "FXE": 0.03147,
+    "FXF": 0.0321,
+    "FXY": 0.03153,
+    "GLD": 0.03167,
+    "HYG": 0.03176,
+    "IEF": 0.03214,
+    "IWM": 0.03106,
+    "LQD": 0.0321,
+    "MDY": 0.032,
+    "PPLT": 0.03063,
+    "QQQ": 0.03095,
+    "SHY": 0.03191,
+    "SLV": 0.03009,
+    "SPY": 0.032,
+    "TLT": 0.03255,
+    "UNG": 0.03211,
+    "USO": 0.03512,
+    "UUP": 0.03201,
+    "XLB": 0.03325,
+    "XLE": 0.0351,
+    "XLF": 0.03277,
+    "XLI": 0.03181,
+    "XLK": 0.03028,
+    "XLP": 0.03439,
+    "XLU": 0.03329,
+    "XLV": 0.03317,
+    "XLY": 0.03344
+  },
+  "estado_libro_final": {
+    "moneda_cuenta": "USD",
+    "efectivo": 0.0,
+    "efectivo_utilizable": 0.0,
+    "reservado": 0.0,
+    "valor_posiciones": 2468.516622,
+    "derechos": 0.0,
+    "obligaciones": 0.0,
+    "nav": 2468.516622,
+    "posiciones": {
+      "DBA": 2.78698702,
+      "DBC": 2.42654128,
+      "DIA": 0.1542483,
+      "FXB": 0.61551476,
+      "FXE": 0.75075204,
+      "FXF": 0.74414853,
+      "FXY": 1.34659703,
+      "GLD": 0.20592851,
+      "HYG": 1.02026603,
+      "IEF": 0.88115922,
+      "IWM": 0.28221889,
+      "LQD": 0.77083786,
+      "MDY": 0.11942228,
+      "PPLT": 5.08928059,
+      "QQQ": 0.10601378,
+      "SHY": 0.96871026,
+      "SLV": 1.4387418,
+      "SPY": 0.102836,
+      "TLT": 1.01236405,
+      "UNG": 7.56275932,
+      "USO": 0.53841694,
+      "UUP": 2.72595802,
+      "XLB": 1.61038628,
+      "XLE": 1.27521647,
+      "XLF": 1.46864814,
+      "XLI": 0.4696719,
+      "XLK": 0.40064273,
+      "XLP": 0.97302499,
+      "XLU": 1.98848417,
+      "XLV": 0.46565619,
+      "XLY": 0.72046642
+    },
+    "concentracion": {
+      "invertido": 1.0,
+      "peso_maximo": 0.035123,
+      "posiciones_efectivas": 30.958,
+      "posiciones": 31
+    },
+    "movimientos": 5208,
+    "pendiente_liquidar": 0
+  },
+  "meses_evaluados": 169
+}

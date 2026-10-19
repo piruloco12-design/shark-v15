@@ -1,0 +1,175 @@
+{
+  "etiqueta": "M02_tendencia_252_63",
+  "inicio": "2012-10-19",
+  "fin": "2026-10-19",
+  "anos": 13.9986,
+  "nav_inicial": 1000.0,
+  "nav_final": 5401.380851,
+  "retorno_total": 4.401381,
+  "cagr": 0.128046,
+  "volatilidad_anual_diaria": 0.158584,
+  "max_drawdown_diario": -0.322965,
+  "sharpe_diferencial": 0.8417,
+  "sharpe_detalle": {
+    "sharpe": 0.8417,
+    "media_diferencial_periodica": 0.00052971,
+    "desviacion_diferencial_periodica": 0.00998988,
+    "periodos": 3517,
+    "periodos_por_ano": 252,
+    "referencia": "tasa constante 0.00000000 por periodo"
+  },
+  "observaciones_diarias": 3518,
+  "retorno_por_ano": {
+    "2012": {
+      "retorno": 0.014306,
+      "completo": false,
+      "observaciones": 48
+    },
+    "2013": {
+      "retorno": 0.292963,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2014": {
+      "retorno": 0.13045,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2015": {
+      "retorno": 0.00589,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2016": {
+      "retorno": 0.128379,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2017": {
+      "retorno": 0.185118,
+      "completo": true,
+      "observaciones": 251
+    },
+    "2018": {
+      "retorno": -0.070307,
+      "completo": true,
+      "observaciones": 251
+    },
+    "2019": {
+      "retorno": 0.23977,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2020": {
+      "retorno": 0.182289,
+      "completo": true,
+      "observaciones": 253
+    },
+    "2021": {
+      "retorno": 0.240463,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2022": {
+      "retorno": -0.050719,
+      "completo": true,
+      "observaciones": 251
+    },
+    "2023": {
+      "retorno": 0.100919,
+      "completo": true,
+      "observaciones": 250
+    },
+    "2024": {
+      "retorno": 0.163444,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2025": {
+      "retorno": 0.145521,
+      "completo": true,
+      "observaciones": 250
+    },
+    "2026": {
+      "retorno": 0.136572,
+      "completo": false,
+      "observaciones": 200
+    }
+  },
+  "max_drawdown_mensual": -0.190372,
+  "estrategia_id": "M02_tendencia_252_63",
+  "universo_etiqueta": "EXPLORATORY_SURVIVOR_UNIVERSE",
+  "politicas": {
+    "capital_inicial": 1000.0,
+    "moneda_cuenta": "USD",
+    "coste_rel": 0.0008,
+    "coste_fijo": 0.0,
+    "dias_liquidacion": 0,
+    "permitir_fraccionado": true,
+    "lote": 0.0,
+    "politica_caja": "SIN_REMUNERAR",
+    "antiguedad_maxima_dias": 7,
+    "politica_terminal": "MARCAR",
+    "calentamiento_sesiones": 253
+  },
+  "decisiones": 168,
+  "intenciones": 2000,
+  "intenciones_ejecutadas": 1999,
+  "intenciones_rechazadas": 1,
+  "comisiones_moneda": 116.737111,
+  "nominal_ejecutado": 145921.39,
+  "coste_sobre_nominal_pb": 8.0,
+  "coste_por_intencion_moneda": 0.058398,
+  "rotacion_anual_nominal": 10.424,
+  "concentracion_final": {
+    "invertido": 1.0,
+    "peso_maximo": 0.098482,
+    "posiciones_efectivas": 10.98,
+    "posiciones": 11
+  },
+  "pesos_finales": {
+    "XLI": 0.08925,
+    "QQQ": 0.08684,
+    "SPY": 0.08979,
+    "DIA": 0.09109,
+    "XLK": 0.08498,
+    "IWM": 0.08715,
+    "MDY": 0.0898,
+    "XLB": 0.0933,
+    "XLE": 0.09848,
+    "XLP": 0.0965,
+    "XLV": 0.09283
+  },
+  "estado_libro_final": {
+    "moneda_cuenta": "USD",
+    "efectivo": 1e-06,
+    "efectivo_utilizable": 1e-06,
+    "reservado": 0.0,
+    "valor_posiciones": 5401.380849,
+    "derechos": 0.0,
+    "obligaciones": 0.0,
+    "nav": 5401.380851,
+    "posiciones": {
+      "XLI": 2.88367498,
+      "QQQ": 0.65089963,
+      "SPY": 0.63138879,
+      "DIA": 0.94704826,
+      "XLK": 2.45985203,
+      "IWM": 1.7327576,
+      "MDY": 0.73322474,
+      "XLB": 9.88739278,
+      "XLE": 7.82952904,
+      "XLP": 5.97414448,
+      "XLV": 2.85140764
+    },
+    "concentracion": {
+      "invertido": 1.0,
+      "peso_maximo": 0.098482,
+      "posiciones_efectivas": 10.98,
+      "posiciones": 11
+    },
+    "movimientos": 2000,
+    "pendiente_liquidar": 0
+  },
+  "meses_evaluados": 169
+}

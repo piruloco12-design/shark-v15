@@ -1,0 +1,189 @@
+{
+  "etiqueta": "M02_tendencia_252_63",
+  "inicio": "2012-10-19",
+  "fin": "2026-10-19",
+  "anos": 13.9986,
+  "nav_inicial": 1000.0,
+  "nav_final": 2419.273418,
+  "retorno_total": 1.419273,
+  "cagr": 0.065145,
+  "volatilidad_anual_diaria": 0.106248,
+  "max_drawdown_diario": -0.250418,
+  "sharpe_diferencial": 0.6491,
+  "sharpe_detalle": {
+    "sharpe": 0.6491,
+    "media_diferencial_periodica": 0.00027369,
+    "desviacion_diferencial_periodica": 0.00669302,
+    "periodos": 3517,
+    "periodos_por_ano": 252,
+    "referencia": "tasa constante 0.00000000 por periodo"
+  },
+  "observaciones_diarias": 3518,
+  "retorno_por_ano": {
+    "2012": {
+      "retorno": 0.001774,
+      "completo": false,
+      "observaciones": 48
+    },
+    "2013": {
+      "retorno": 0.181111,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2014": {
+      "retorno": 0.059163,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2015": {
+      "retorno": -0.000797,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2016": {
+      "retorno": 0.025507,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2017": {
+      "retorno": 0.115069,
+      "completo": true,
+      "observaciones": 251
+    },
+    "2018": {
+      "retorno": -0.08567,
+      "completo": true,
+      "observaciones": 251
+    },
+    "2019": {
+      "retorno": 0.15091,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2020": {
+      "retorno": 0.067465,
+      "completo": true,
+      "observaciones": 253
+    },
+    "2021": {
+      "retorno": 0.137156,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2022": {
+      "retorno": -0.048289,
+      "completo": true,
+      "observaciones": 251
+    },
+    "2023": {
+      "retorno": -0.04854,
+      "completo": true,
+      "observaciones": 250
+    },
+    "2024": {
+      "retorno": 0.119004,
+      "completo": true,
+      "observaciones": 252
+    },
+    "2025": {
+      "retorno": 0.166126,
+      "completo": true,
+      "observaciones": 250
+    },
+    "2026": {
+      "retorno": 0.106347,
+      "completo": false,
+      "observaciones": 200
+    }
+  },
+  "max_drawdown_mensual": -0.22266,
+  "estrategia_id": "M02_tendencia_252_63",
+  "universo_etiqueta": "EXPLORATORY_SURVIVOR_UNIVERSE",
+  "politicas": {
+    "capital_inicial": 1000.0,
+    "moneda_cuenta": "USD",
+    "coste_rel": 0.0008,
+    "coste_fijo": 0.0,
+    "dias_liquidacion": 0,
+    "permitir_fraccionado": true,
+    "lote": 0.0,
+    "politica_caja": "SIN_REMUNERAR",
+    "antiguedad_maxima_dias": 7,
+    "politica_terminal": "MARCAR",
+    "calentamiento_sesiones": 253
+  },
+  "decisiones": 168,
+  "intenciones": 3515,
+  "intenciones_ejecutadas": 3512,
+  "intenciones_rechazadas": 3,
+  "comisiones_moneda": 69.298392,
+  "nominal_ejecutado": 86622.99,
+  "coste_sobre_nominal_pb": 8.0,
+  "coste_por_intencion_moneda": 0.019732,
+  "rotacion_anual_nominal": 6.188,
+  "concentracion_final": {
+    "invertido": 1.0,
+    "peso_maximo": 0.060489,
+    "posiciones_efectivas": 17.963,
+    "posiciones": 18
+  },
+  "pesos_finales": {
+    "GLD": 0.05454,
+    "XLI": 0.05478,
+    "QQQ": 0.0533,
+    "SPY": 0.05511,
+    "DIA": 0.05591,
+    "XLK": 0.05216,
+    "PPLT": 0.05274,
+    "SLV": 0.05183,
+    "DBC": 0.057,
+    "IWM": 0.05349,
+    "MDY": 0.05511,
+    "XLB": 0.05727,
+    "XLE": 0.06044,
+    "XLP": 0.05923,
+    "USO": 0.06049,
+    "DBA": 0.0548,
+    "XLV": 0.05668,
+    "UUP": 0.05512
+  },
+  "estado_libro_final": {
+    "moneda_cuenta": "USD",
+    "efectivo": 0.0,
+    "efectivo_utilizable": 0.0,
+    "reservado": 0.0,
+    "valor_posiciones": 2419.273417,
+    "derechos": 0.0,
+    "obligaciones": 0.0,
+    "nav": 2419.273418,
+    "posiciones": {
+      "GLD": 0.34757798,
+      "XLI": 0.79273927,
+      "QQQ": 0.17893615,
+      "SPY": 0.1735725,
+      "DIA": 0.26034915,
+      "XLK": 0.67622784,
+      "PPLT": 8.58998063,
+      "SLV": 2.4283912,
+      "DBC": 4.09565598,
+      "IWM": 0.47634529,
+      "MDY": 0.2015678,
+      "XLB": 2.71810263,
+      "XLE": 2.15238374,
+      "XLP": 1.64232757,
+      "USO": 0.90877109,
+      "DBA": 4.70403707,
+      "XLV": 0.77973202,
+      "UUP": 4.60102878
+    },
+    "concentracion": {
+      "invertido": 1.0,
+      "peso_maximo": 0.060489,
+      "posiciones_efectivas": 17.963,
+      "posiciones": 18
+    },
+    "movimientos": 3515,
+    "pendiente_liquidar": 0
+  },
+  "meses_evaluados": 169
+}
