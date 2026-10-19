@@ -190,11 +190,11 @@ cripto_sesgo_extremo  (2 activos)
 
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
-comprar_y_mantener       62.54%    0.84   -81.3%   94.5%    0.17  334.611
+comprar_y_mantener       62.55%    0.84   -81.3%   94.5%    0.17  335.007
 M02_tendencia            52.52%    0.83   -66.3%   70.3%    1.67  156.258
-M03_momentum_12_1        52.04%    0.81   -79.8%   69.7%    2.26  150.488
-M02_mas_M03              50.84%    0.84   -64.8%   63.4%    1.84  136.923
-M03_con_banda            51.01%    0.81   -78.7%   68.2%    2.17  138.780
+M03_momentum_12_1        52.04%    0.81   -79.8%   69.7%    2.26  150.487
+M02_mas_M03              50.84%    0.84   -64.8%   63.4%    1.84  136.922
+M03_con_banda            51.01%    0.81   -78.7%   68.2%    2.17  138.779
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
 
@@ -202,21 +202,21 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   corte train/test: 2021-12-18
 
   M02_tendencia
-    anual +52.52%  vs comprar y mantener +62.54%  -> NO bate
+    anual +52.52%  vs comprar y mantener +62.55%  -> NO bate
     train: +99.33% vs +122.27%  -> NO bate
-    test : +16.81% vs +23.42%  -> NO bate
+    test : +16.81% vs +23.45%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M03_momentum_12_1
-    anual +52.04%  vs comprar y mantener +62.54%  -> NO bate
+    anual +52.04%  vs comprar y mantener +62.55%  -> NO bate
     train: +104.17% vs +122.27%  -> NO bate
-    test : +14.20% vs +23.42%  -> NO bate
+    test : +14.20% vs +23.45%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M02_mas_M03
-    anual +50.84%  vs comprar y mantener +62.54%  -> NO bate
+    anual +50.84%  vs comprar y mantener +62.55%  -> NO bate
     train: +97.54% vs +122.27%  -> NO bate
-    test : +16.83% vs +23.42%  -> NO bate
+    test : +16.83% vs +23.45%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
 ======================================================================

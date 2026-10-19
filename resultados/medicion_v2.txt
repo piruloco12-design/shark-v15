@@ -1,8 +1,8 @@
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash d826b296dc88f803
-Commit: bc69da705c14-sucio
+Registro escrito ANTES de calcular: hash 1b29ecf0ec5e86f6
+Commit: 26299697b5b3-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -21,7 +21,10 @@ DATOS
 ========================================================================
   cargados 31/31 activos
   referencia de efectivo (BIL): OK
-  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash 6d62ccbb7d90b5d4
+
+  Universo congelado el 2026-10-19, 32 instrumentos
+  Comprobado el 2026-10-19: 32 con datos (100.0%)
+  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash e32be177f00d1150
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)
@@ -71,7 +74,7 @@ M04 BASICO: que cuesta limitar la cartera
   i25_g40             6.72%    0.60   -21.4%   0.804  155/168 
   i25_g40_e90         6.62%    0.60   -21.4%   0.804  168/168 
 
-  el tope por grupo cuesta -3.66 puntos de CAGR y mejora la caida en -10.7 puntos
+  el tope por grupo cuesta -3.66 puntos de CAGR y reduce la caida maxima en 10.7 puntos
   I29: mas control, menos dinero. Es una preferencia, no una mejora del beneficio.
   Y el diagnostico que importa: recortar 155 de 168 decisiones significa que
   M03 estaba casi siempre con sus 5 posiciones en el mismo grupo.

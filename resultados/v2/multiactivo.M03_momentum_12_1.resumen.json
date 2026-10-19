@@ -4,16 +4,16 @@
   "fin": "2026-10-19",
   "anos": 13.9904,
   "nav_inicial": 1000.0,
-  "nav_final": 3981.513754,
-  "retorno_total": 2.981514,
+  "nav_final": 3981.511196,
+  "retorno_total": 2.981511,
   "cagr": 0.103799,
-  "volatilidad_anual_diaria": 0.175736,
-  "max_drawdown_diario": -0.321692,
+  "volatilidad_anual_diaria": 0.175711,
+  "max_drawdown_diario": -0.321691,
   "sharpe_diferencial": 0.6522,
   "sharpe_detalle": {
     "sharpe": 0.6522,
-    "media_diferencial_periodica": 0.00045479,
-    "desviacion_diferencial_periodica": 0.01107031,
+    "media_diferencial_periodica": 0.00045477,
+    "desviacion_diferencial_periodica": 0.01106874,
     "periodos": 3516,
     "periodos_por_ano": 252,
     "referencia": "tasa constante 0.00000000 por periodo"
@@ -26,12 +26,12 @@
       "observaciones": 47
     },
     "2013": {
-      "retorno": 0.273683,
+      "retorno": 0.273159,
       "completo": true,
       "observaciones": 252
     },
     "2014": {
-      "retorno": 0.019524,
+      "retorno": 0.019523,
       "completo": true,
       "observaciones": 252
     },
@@ -56,7 +56,7 @@
       "observaciones": 251
     },
     "2019": {
-      "retorno": 0.207465,
+      "retorno": 0.207466,
       "completo": true,
       "observaciones": 252
     },
@@ -76,7 +76,7 @@
       "observaciones": 251
     },
     "2023": {
-      "retorno": -0.052572,
+      "retorno": -0.052571,
       "completo": true,
       "observaciones": 250
     },
@@ -116,12 +116,12 @@
   },
   "decisiones": 168,
   "intenciones": 1050,
-  "intenciones_ejecutadas": 1037,
-  "intenciones_rechazadas": 13,
-  "comisiones_moneda": 140.340522,
-  "nominal_ejecutado": 175425.65,
+  "intenciones_ejecutadas": 1035,
+  "intenciones_rechazadas": 15,
+  "comisiones_moneda": 140.340398,
+  "nominal_ejecutado": 175425.5,
   "coste_sobre_nominal_pb": 8.0,
-  "coste_por_intencion_moneda": 0.135333,
+  "coste_por_intencion_moneda": 0.135595,
   "rotacion_anual_nominal": 12.539,
   "concentracion_final": {
     "invertido": 1.0,
@@ -138,19 +138,19 @@
   },
   "estado_libro_final": {
     "moneda_cuenta": "USD",
-    "efectivo": 0.0,
-    "efectivo_utilizable": 0.0,
+    "efectivo": 1e-06,
+    "efectivo_utilizable": 1e-06,
     "reservado": 0.0,
-    "valor_posiciones": 3981.513754,
+    "valor_posiciones": 3981.511195,
     "derechos": 0.0,
     "obligaciones": 0.0,
-    "nav": 3981.513754,
+    "nav": 3981.511196,
     "posiciones": {
-      "SLV": 14.20151786,
-      "USO": 5.31460041,
-      "XLK": 3.95466011,
-      "DBC": 23.95187878,
-      "XLE": 12.57844673
+      "SLV": 14.20150873,
+      "USO": 5.314597,
+      "XLK": 3.95465756,
+      "DBC": 23.95186339,
+      "XLE": 12.57843865
     },
     "concentracion": {
       "invertido": 1.0,

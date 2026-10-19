@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-19 20:55 UTC
-Commit:  bc69da70
+Fecha:   2026-10-19 21:09 UTC
+Commit:  26299697
 Disparo: push
 
 ## Entorno
@@ -83,6 +83,12 @@ RESULTADO: 4 pruebas pasadas, 0 fallos
 ==============================================================
 RESULTADO: 19 pruebas pasadas, 0 fallos
 ==============================================================
+  PASA   editar la lista a mano rompe el hash y se detecta
+  PASA   la alerta dice que se ha editado despues de congelar
+
+==============================================================
+RESULTADO: 15 pruebas pasadas, 0 fallos
+==============================================================
   N/C    I29 mas Sharpe pero menos dinero  -> es requisito del INFORME del experimento, no del codigo
 
 ==============================================================
@@ -154,7 +160,7 @@ ACEPTACION: 43 pasan, 0 FALLAN
 
 ## Imports
 ```
-37/37 modulos importan
+38/38 modulos importan
 ```
 
 ## Diagnostico del feed
@@ -1083,8 +1089,8 @@ rechaza" significa indetectable, no inexistente.
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash d826b296dc88f803
-Commit: bc69da705c14-sucio
+Registro escrito ANTES de calcular: hash 1b29ecf0ec5e86f6
+Commit: 26299697b5b3-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -1103,7 +1109,10 @@ DATOS
 ========================================================================
   cargados 31/31 activos
   referencia de efectivo (BIL): OK
-  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash 6d62ccbb7d90b5d4
+
+  Universo congelado el 2026-10-19, 32 instrumentos
+  Comprobado el 2026-10-19: 32 con datos (100.0%)
+  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash e32be177f00d1150
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)
@@ -1153,7 +1162,7 @@ M04 BASICO: que cuesta limitar la cartera
   i25_g40             6.72%    0.60   -21.4%   0.804  155/168 
   i25_g40_e90         6.62%    0.60   -21.4%   0.804  168/168 
 
-  el tope por grupo cuesta -3.66 puntos de CAGR y mejora la caida en -10.7 puntos
+  el tope por grupo cuesta -3.66 puntos de CAGR y reduce la caida maxima en 10.7 puntos
   I29: mas control, menos dinero. Es una preferencia, no una mejora del beneficio.
   Y el diagnostico que importa: recortar 155 de 168 decisiones significa que
   M03 estaba casi siempre con sus 5 posiciones en el mismo grupo.
@@ -1391,11 +1400,11 @@ cripto_sesgo_extremo  (2 activos)
 
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
-comprar_y_mantener       62.54%    0.84   -81.3%   94.5%    0.17  334.611
+comprar_y_mantener       62.55%    0.84   -81.3%   94.5%    0.17  335.007
 M02_tendencia            52.52%    0.83   -66.3%   70.3%    1.67  156.258
-M03_momentum_12_1        52.04%    0.81   -79.8%   69.7%    2.26  150.488
-M02_mas_M03              50.84%    0.84   -64.8%   63.4%    1.84  136.923
-M03_con_banda            51.01%    0.81   -78.7%   68.2%    2.17  138.780
+M03_momentum_12_1        52.04%    0.81   -79.8%   69.7%    2.26  150.487
+M02_mas_M03              50.84%    0.84   -64.8%   63.4%    1.84  136.922
+M03_con_banda            51.01%    0.81   -78.7%   68.2%    2.17  138.779
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
 
@@ -1403,21 +1412,21 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   corte train/test: 2021-12-18
 
   M02_tendencia
-    anual +52.52%  vs comprar y mantener +62.54%  -> NO bate
+    anual +52.52%  vs comprar y mantener +62.55%  -> NO bate
     train: +99.33% vs +122.27%  -> NO bate
-    test : +16.81% vs +23.42%  -> NO bate
+    test : +16.81% vs +23.45%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M03_momentum_12_1
-    anual +52.04%  vs comprar y mantener +62.54%  -> NO bate
+    anual +52.04%  vs comprar y mantener +62.55%  -> NO bate
     train: +104.17% vs +122.27%  -> NO bate
-    test : +14.20% vs +23.42%  -> NO bate
+    test : +14.20% vs +23.45%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M02_mas_M03
-    anual +50.84%  vs comprar y mantener +62.54%  -> NO bate
+    anual +50.84%  vs comprar y mantener +62.55%  -> NO bate
     train: +97.54% vs +122.27%  -> NO bate
-    test : +16.83% vs +23.42%  -> NO bate
+    test : +16.83% vs +23.45%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
 ======================================================================
