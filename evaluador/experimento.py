@@ -359,6 +359,23 @@ def main(descargar=None):
         raise SinDatosSuficientes(
             f"solo {len(series)} activos: no hay con que medir")
 
+    # Universo congelado: se comprueba contra la lista fijada el
+    # 2026-10-19 y se registran las bajas SIN quitarlas. Un activo que
+    # desaparece tiene que seguir contando en el denominador; borrarlo
+    # reinventaria el sesgo de supervivencia dentro del propio sistema.
+    congelado = {}
+    try:
+        import universo_congelado as UC
+        disponibles = set(series) | ({TICKER_EFECTIVO} if efectivo is not None
+                                     else set())
+        congelado = UC.comprobar(disponibles)
+        print()
+        print("  " + UC.resumen_texto(congelado).replace("\n", "\n  "))
+    except Exception as e:
+        print(f"  universo congelado: no se pudo comprobar "
+              f"({type(e).__name__}: {e})")
+        congelado = {"error": f"{type(e).__name__}: {e}"}
+
     panel = guardar_panel(series, efectivo, SALIDA)
     print(f"  panel guardado: {panel['filas']} filas, "
           f"{panel['desde']} -> {panel['hasta']}, hash {panel['hash']}")
@@ -560,6 +577,7 @@ def main(descargar=None):
     salida = {
         "registro": reg,
         "panel": panel,
+        "universo_congelado": congelado,
         "supervivencia": supervivencia,
         "m04": m04,
         "incidencias_carga": incidencias,

@@ -96,6 +96,7 @@ jobs:
           # descalibrado convierte cualquier resultado en basura y eso no
           # se ve leyendo el codigo.
           python tests/test_inferencia.py 2>&1 | tail -8  | tee -a resultados/ultimo.md
+          python tests/test_universo.py   2>&1 | tail -6  | tee -a resultados/ultimo.md
           python tests/test_institucional.py 2>&1 | tail -10 | tee -a resultados/ultimo.md
           python tests/test_observacion.py 2>&1 | tail -8  | tee -a resultados/ultimo.md
           { echo '```'; echo; } >> resultados/ultimo.md
@@ -139,7 +140,7 @@ jobs:
               "institucional.contratos", "institucional.configuracion",
               "institucional.vista", "institucional.modulos",
               "institucional.observacion", "institucional.snapshot",
-              "libro", "limites_cartera",
+              "libro", "limites_cartera", "universo_congelado",
               "evaluador.metricas", "evaluador.mensual",
               "evaluador.inferencia", "evaluador.registro",
               "evaluador.supervivencia", "evaluador.experimento",

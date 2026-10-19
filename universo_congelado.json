@@ -1,0 +1,202 @@
+{
+  "version": "2026-10-19.congelado.1",
+  "fecha_congelacion": "2026-10-19",
+  "regla_de_inclusion": "ETF cotizados en EEUU con al menos 15 anos de historico diario disponible en yfinance al 2026-10-19, cubriendo renta variable amplia y sectorial, materias primas, bonos y divisas, mas BIL como referencia de efectivo. La lista es la misma que se uso en la medicion v2, para que la serie hacia delante sea comparable con la retrospectiva.",
+  "notas": "Congelado tras la auditoria del 2026-10-19. TODO lo medido hasta esa fecha usa el universo de supervivientes y queda etiquetado EXPLORATORY_SURVIVOR_UNIVERSE. Esta lista no arregla eso: empieza una serie nueva en la que los que cierren seguiran contando. No da potencia estadistica en anos.",
+  "hash": "1f77c7430757dbdb",
+  "instrumentos": {
+    "BIL": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "DBA": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "DBC": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "DIA": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "FXB": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "FXE": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "FXF": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "FXY": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "GLD": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "HYG": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "IEF": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "IWM": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "LQD": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "MDY": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "PPLT": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "QQQ": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "SHY": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "SLV": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "SPY": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "TLT": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "UNG": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "USO": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "UUP": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "XLB": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "XLE": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "XLF": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "XLI": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "XLK": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "XLP": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "XLU": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "XLV": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    },
+    "XLY": {
+      "alta": "2026-10-19",
+      "sin_datos_desde": null,
+      "baja_candidata": false,
+      "observaciones": ""
+    }
+  },
+  "_aviso": "Esta lista NO se edita para quitar instrumentos. Un activo que desaparece se marca, y sigue contando en el denominador. Borrarlo reinventaria el sesgo de supervivencia dentro del sistema que pretendia evitarlo."
+}
