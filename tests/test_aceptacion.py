@@ -40,6 +40,7 @@ sys.modules.setdefault("yfinance", types.ModuleType("yfinance"))
 import _ta_stub
 _ta_stub.instalar_si_falta()
 
+import numpy as np
 import pandas as pd
 
 PASA = []
@@ -177,6 +178,45 @@ check("B4", "B1 queda intacto: sin declarar efectivo, el tamano no cambia",
       and "recorte_por_efectivo" not in setup_b1,
       f"-> nominal B1 {nominal_b1:.2f}. Preservar la linea base significa "
       f"que su comportamiento no se toca.")
+
+
+# =====================================================================
+# El artefacto tiene que REPRODUCIR la corrida, no solo documentarla.
+# La primera version del panel guardaba solo los cierres; al recargarlo
+# hubo que inventar la apertura como el cierre anterior y los fills
+# salieron distintos (el diferencial base daba +1,51 pts en vez de
+# +1,33). Un artefacto que no permite repetir el experimento es un
+# adorno.
+import tempfile as _tmp2
+from evaluador.experimento import cargar_panel, guardar_panel
+
+_idx = pd.date_range("2011-01-03", periods=400, freq="B", tz="UTC")
+_rng = np.random.default_rng(3)
+
+
+def _serie_ohlc(deriva):
+    r = _rng.normal(deriva, 0.011, len(_idx))
+    c = pd.Series(np.cumprod(1 + r) * 100.0, index=_idx)
+    return pd.DataFrame({"Open": c * 0.999, "High": c * 1.004,
+                         "Low": c * 0.996, "Close": c, "Volume": 1e7},
+                        index=_idx)
+
+
+_series_rt = {"AAA": _serie_ohlc(0.0003), "BBB": _serie_ohlc(0.0001)}
+_dir_rt = _tmp2.mkdtemp()
+_info_rt = guardar_panel(_series_rt, _serie_ohlc(0.00003), _dir_rt)
+_recargado = cargar_panel(_info_rt["ruta"])
+_identico = all(
+    np.allclose(_series_rt[t][c].values, _recargado[t][c].values, rtol=1e-9)
+    and _series_rt[t].index.equals(_recargado[t].index)
+    for t in _series_rt
+    for c in ("Open", "High", "Low", "Close", "Volume"))
+check("B6", "el panel guardado se recarga IDENTICO al que se consumio",
+      _identico and "BIL" in _recargado,
+      f"-> instrumentos recargados: {sorted(_recargado)}")
+check("B7", "el panel guarda la apertura, que es el precio de ejecucion",
+      "Open" in _info_rt["columnas"],
+      f"-> columnas {_info_rt['columnas']}")
 
 
 # =====================================================================

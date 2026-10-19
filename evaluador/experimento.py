@@ -213,21 +213,58 @@ def guardar_artefactos(nombre, resultado, carpeta):
 
 
 def guardar_panel(series, efectivo, carpeta):
-    """El panel EXACTO que se consumió, con su procedencia."""
+    """El panel EXACTO que se consumió, con OHLC completo y su procedencia.
+
+    La primera version guardaba SOLO los cierres. Al reconstruir el panel
+    para el analisis de supervivencia tuve que inventar la apertura como el
+    cierre anterior, y los fills salieron distintos: el diferencial base
+    daba +1,51 puntos en vez de +1,33. Una diferencia pequena, pero
+    significa que el artefacto NO reproducia la corrida, que es justo lo
+    que un artefacto tiene que hacer.
+
+    La ejecucion usa la apertura del dia siguiente negociable. Sin la
+    apertura guardada, el panel no permite repetir el experimento.
+    """
     os.makedirs(carpeta, exist_ok=True)
-    cierres = {t: df["Close"] for t, df in series.items()}
+    trozos = []
+    todas = dict(series)
     if efectivo is not None:
-        cierres[TICKER_EFECTIVO] = efectivo["Close"]
-    panel = pd.DataFrame(cierres).sort_index()
+        todas[TICKER_EFECTIVO] = efectivo
+    for t, df in sorted(todas.items()):
+        d = df[["Open", "High", "Low", "Close", "Volume"]].copy()
+        d.insert(0, "instrumento", t)
+        d.index.name = "fecha"
+        trozos.append(d)
+    panel = pd.concat(trozos).sort_index(kind="stable")
     ruta = os.path.join(carpeta, "prices_snapshot.csv")
     panel.to_csv(ruta)
+
     import hashlib
     with open(ruta, "rb") as f:
         h = hashlib.sha256(f.read()).hexdigest()[:16]
     return {"ruta": ruta, "hash": h, "filas": len(panel),
+            "instrumentos": sorted(todas),
             "columnas": list(panel.columns),
-            "desde": str(panel.index[0].date()),
-            "hasta": str(panel.index[-1].date())}
+            "formato": "largo: una fila por instrumento y fecha, con OHLCV",
+            "desde": str(panel.index.min().date()),
+            "hasta": str(panel.index.max().date())}
+
+
+def cargar_panel(ruta):
+    """Reconstruye el diccionario de series desde el panel guardado.
+
+    Esto es lo que hace que el artefacto sirva: si no se puede volver a
+    cargar y obtener las MISMAS series, no es un artefacto reproducible,
+    es un adorno.
+    """
+    panel = pd.read_csv(ruta, index_col=0, parse_dates=True)
+    panel.index = (panel.index.tz_localize("UTC") if panel.index.tz is None
+                   else panel.index.tz_convert("UTC"))
+    salida = {}
+    for t, trozo in panel.groupby("instrumento"):
+        d = trozo.drop(columns=["instrumento"]).sort_index()
+        salida[str(t)] = d[~d.index.duplicated(keep="last")]
+    return salida
 
 
 # =====================================================================
@@ -402,10 +439,51 @@ def main(descargar=None):
         print(f"    {clave:24} p={v['p']}  umbral={v['umbral_holm']:.5f}  "
               f"-> {marca}")
 
+    # ---------- supervivencia por escenarios ----------
+    print(f"\n{'=' * 72}\nSESGO DE SUPERVIVENCIA, POR ESCENARIOS DECLARADOS"
+          f"\n{'=' * 72}")
+    print("  No es una correccion del sesgo: es cuanto se moveria el")
+    print("  resultado SI el mundo hubiera sido como cada escenario dice.")
+    supervivencia = {}
+    try:
+        from evaluador import supervivencia as SUP
+        from evaluador.mensual import ComprarYMantener as _CYM
+        from evaluador.mensual import M03Momentum as _M03
+
+        supervivencia = SUP.medir(
+            universos["multiactivo"], pol,
+            lambda: _M03(K, LOOKBACK, SKIP), lambda: _CYM())
+        base_dif = supervivencia["base"]["diferencial_cagr"]
+        print(f"\n  base (solo supervivientes): diferencial "
+              f"{base_dif*100:+.2f} pts")
+        print(f"\n  {'ESCENARIO/FORMA':28} {'DIF':>8} {'CAMBIO':>8} "
+              f"{'%SEL.MUERTA':>12}")
+        print("  " + "-" * 60)
+        for nombre_e, v in supervivencia["escenarios"].items():
+            if "sin_datos" in v:
+                print(f"  {nombre_e:28} SIN DATOS")
+                continue
+            print(f"  {nombre_e:28} {v['diferencial_cagr']*100:+7.2f}% "
+                  f"{v['cambio_en_el_diferencial']*100:+7.2f} "
+                  f"{v['pct_selecciones_muertas']:11.1f}%")
+        d = supervivencia.get("dictamen", {})
+        if d:
+            print(f"\n  cambio en el diferencial: de "
+                  f"{d['cambio_minimo_en_el_diferencial']*100:+.2f} a "
+                  f"{d['cambio_maximo_en_el_diferencial']*100:+.2f} puntos")
+            print(f"  favorecia a la estrategia en TODOS los escenarios: "
+                  f"{d['el_sesgo_favorecia_a_la_estrategia']}")
+            print(f"  favorecia a la referencia en TODOS: "
+                  f"{d['el_sesgo_favorecia_a_la_referencia']}")
+    except Exception as e:
+        print(f"  no se pudo medir: {type(e).__name__}: {e}")
+        supervivencia = {"error": f"{type(e).__name__}: {e}"}
+
     # ---------- informe ----------
     salida = {
         "registro": reg,
         "panel": panel,
+        "supervivencia": supervivencia,
         "incidencias_carga": incidencias,
         "resumenes": {k: {kk: vv for kk, vv in v.items()
                           if not kk.startswith("_")}
