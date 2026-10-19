@@ -130,23 +130,34 @@ def cargar(tickers, ajustado, providers="yfinance,stooq"):
 # Motor comun: una cartera mensual, solo largos, con costes
 # =====================================================================
 
+def _a_utc(indice):
+    """Normaliza a dias en UTC, venga el indice con zona o sin ella.
+
+    yfinance devuelve las velas DIARIAS sin zona horaria y las intradia
+    con zona. Hacer tz_convert a secas sobre las primeras lanza "Cannot
+    convert tz-naive timestamps", que es como reventaba esto en CI.
+    """
+    indice = indice.normalize()
+    if indice.tz is None:
+        return indice.tz_localize("UTC")
+    return indice.tz_convert("UTC")
+
+
 def _panel_mensual(series):
     """Cierres mensuales alineados en un DataFrame. No rellena huecos."""
     cierres = {}
     for t, df in series.items():
-        m = cierres_mensuales(df)
-        s = m["Close"]
-        s.index = s.index.normalize().tz_convert("UTC")
-        cierres[t] = s
-    panel = pd.DataFrame(cierres).sort_index()
-    return panel
+        s = cierres_mensuales(df)["Close"].copy()
+        s.index = _a_utc(s.index)
+        cierres[t] = s[~s.index.duplicated(keep="last")]
+    return pd.DataFrame(cierres).sort_index()
 
 
 def _diario_alineado(series):
     diario = {}
     for t, df in series.items():
-        s = df["Close"]
-        s.index = s.index.normalize().tz_convert("UTC")
+        s = df["Close"].copy()
+        s.index = _a_utc(s.index)
         diario[t] = s[~s.index.duplicated(keep="last")]
     return pd.DataFrame(diario).sort_index()
 
@@ -641,13 +652,26 @@ if __name__ == "__main__":
         print("=" * 70)
         print(rastro)
         try:
-            _guardar({
+            # MEZCLAR, no sobrescribir. La primera version reemplazaba
+            # el JSON entero por el traceback, y con eso se perdia el
+            # diagnostico de carga que main() habia guardado a
+            # proposito justo antes de medir: me quedo sin saber que
+            # activo habia llegado y tuve que gastar otra corrida.
+            previo = {}
+            try:
+                with open(SALIDA_JSON) as f:
+                    previo = json.load(f)
+            except Exception:
+                pass
+            previo.update({
                 "fallo": True,
                 "periodo": PERIODO,
-                "traceback": rastro.splitlines()[-12:],
+                "traceback": rastro.splitlines()[-14:],
                 "traceback_completo": rastro,
             })
-            print(f"El fallo queda guardado en {SALIDA_JSON}")
+            _guardar(previo)
+            print(f"El fallo queda guardado en {SALIDA_JSON}, junto al "
+                  f"diagnostico de carga")
         except Exception as e:
             print(f"Ni el fallo se pudo guardar: {e}")
         raise

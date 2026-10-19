@@ -58,6 +58,16 @@ def no_cubierto(nombre, motivo):
     print(f"  N/C    {nombre}  -> {motivo}")
 
 
+# OJO: una exponencial PERFECTA tiene retornos diarios constantes, asi
+# que su desviacion muestral es cero y trend_signal la rechaza por
+# "volatilidad degenerada". Eso esta BIEN: no se puede dimensionar una
+# posicion dividiendo por cero. Las series de prueba llevan ruido
+# determinista para parecerse a un activo de verdad.
+def _ruido(i, amplitud=0.004):
+    """Oscilacion reproducible, sin random: mismo resultado siempre."""
+    return 1.0 + amplitud * ((i * 7919 % 101) / 100.0 - 0.5)
+
+
 def serie(valores, inicio="2024-01-01", freq="B"):
     valores = list(valores)
     idx = pd.date_range(inicio, periods=len(valores), freq=freq, tz="UTC")
@@ -375,17 +385,58 @@ check("un mes que falta no se inventa",
               for d in cierres_mensuales(sin_un_mes).index))
 
 
+print("\n=== B) Series diarias SIN zona horaria (el caso real) ===")
+
+# yfinance devuelve las velas DIARIAS con indice sin zona horaria, y
+# las intradia con zona. _normalize_df no localiza nada. La vista as-of
+# RECHAZA un indice sin zona, a proposito. Resultado: alimentados con
+# series diarias reales, M02 y M03 habrian devuelto NO_DATA para
+# siempre, en silencio, pareciendo que funcionaban.
+import data_feed
+
+_sin_zona = pd.DataFrame(
+    {"Open": 1.0, "High": 1.0, "Low": 1.0, "Close": 1.0, "Volume": 1.0},
+    index=pd.date_range("2020-01-01", periods=300, freq="B"))
+check("una serie diaria de yfinance llega SIN zona horaria "
+      "(esto es el punto de partida, no un fallo)",
+      _sin_zona.index.tz is None)
+
+_localizada = data_feed._localizar_utc(_sin_zona)
+check("_localizar_utc le pone zona", str(_localizada.index.tz) == "UTC")
+check("y no toca los valores",
+      bool((_localizada["Close"] == 1.0).all())
+      and len(_localizada) == len(_sin_zona))
+check("y no desplaza las fechas",
+      [d.date() for d in _localizada.index[:3]]
+      == [d.date() for d in _sin_zona.index[:3]])
+
+# Sin localizar, la vista la rechaza. Con localizar, la acepta.
+try:
+    recortar_disponible(_sin_zona, pd.Timestamp("2021-01-01", tz="UTC"), "1d")
+    check("sin localizar, la vista as-of la rechaza", False, "-> la acepto")
+except DataError:
+    check("sin localizar, la vista as-of la rechaza", True)
+
+_v = recortar_disponible(_localizada, pd.Timestamp("2021-01-01", tz="UTC"), "1d")
+check("localizada, la vista as-of SI la acepta", len(_v) > 200, f"-> {len(_v)}")
+
+# Y el modulo entero, de punta a punta, sobre series localizadas.
+_tr = data_feed._localizar_utc(pd.DataFrame(
+    {"Open": 1.0, "High": 1.0, "Low": 1.0, "Volume": 1.0,
+     "Close": [100 * (1.0008 ** i) * _ruido(i) for i in range(400)]},
+    index=pd.date_range("2024-01-01", periods=400, freq="B")))
+_ef = data_feed._localizar_utc(pd.DataFrame(
+    {"Open": 1.0, "High": 1.0, "Low": 1.0, "Volume": 1.0,
+     "Close": [100 * (1.00008 ** i) * _ruido(i, 0.0002) for i in range(400)]},
+    index=pd.date_range("2024-01-01", periods=400, freq="B")))
+_ev = M.m02_contexto("DIARIO", _tr, _ef,
+                     _tr.index[-1] + pd.Timedelta(days=1), "s1", "h",
+                     signal="BUY")
+check("M02 sobre series diarias localizadas devuelve READY, no NO_DATA",
+      _ev.status == C.READY, f"-> {_ev.status} {_ev.reason_codes}")
+
+
 print("\n=== B) M02 contexto ===")
-
-# OJO: una exponencial PERFECTA tiene retornos diarios constantes, asi
-# que su desviacion muestral es cero y trend_signal la rechaza por
-# "volatilidad degenerada". Eso esta BIEN: no se puede dimensionar una
-# posicion dividiendo por cero. Las series de prueba llevan ruido
-# determinista para parecerse a un activo de verdad.
-def _ruido(i, amplitud=0.004):
-    """Oscilacion reproducible, sin random: mismo resultado siempre."""
-    return 1.0 + amplitud * ((i * 7919 % 101) / 100.0 - 0.5)
-
 
 subida = serie([100 * (1.0008 ** i) * _ruido(i) for i in range(400)])
 efectivo = serie([100 * (1.00008 ** i) * _ruido(i, 0.0002)

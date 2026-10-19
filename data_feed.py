@@ -675,12 +675,54 @@ def get_data(symbol: str, timeframe: str = "1h", period: str = "6mo"):
 # prohibe eso sin una variante explicita y su propia medicion.
 # ---------------------------------------------------------------------
 
+def _localizar_utc(df: pd.DataFrame) -> pd.DataFrame:
+    """Asegura que el indice lleve zona horaria. Imprescindible, no cosmetico.
+
+    yfinance devuelve las velas DIARIAS con un indice SIN zona horaria
+    (son fechas sueltas), mientras las intradia si la llevan.
+    _normalize_df no localiza nada, asi que una serie diaria sale sin
+    zona.
+
+    Eso rompia dos cosas a la vez:
+
+      - el experimento reventaba con "Cannot convert tz-naive
+        timestamps" al intentar alinear series
+      - y, mucho peor, institucional/vista.py RECHAZA por diseno un
+        indice sin zona ("no se puede comparar"). Alimentado con series
+        diarias reales, M02 y M03 habrian devuelto NO_DATA para
+        siempre, en silencio, pareciendo que funcionaban. El mismo
+        fallo que el filtro de sesion bloqueando el 100% de las velas
+        diarias.
+
+    Se localiza a UTC, no a la zona del mercado: un cierre diario no
+    tiene hora intradia, y la vista as-of ya exige que pase un dia
+    entero desde la marca antes de considerar la vela cerrada. Asi el
+    recorte causal sigue siendo el conservador.
+
+    Esta funcion NO se aplica a get_data: cambiar la zona de los datos
+    que entran al nucleo cambiaria el filtro de sesion, y eso es
+    exactamente lo que no se puede tocar sin medirlo aparte.
+    """
+    if df is None or len(df) == 0:
+        return df
+    if not isinstance(df.index, pd.DatetimeIndex):
+        return df
+    if df.index.tz is None:
+        df = df.copy()
+        df.index = df.index.tz_localize("UTC")
+    else:
+        df = df.copy()
+        df.index = df.index.tz_convert("UTC")
+    return df
+
+
 def get_serie_total_return(symbol: str, period: str = "15y", timeframe: str = "1d"):
     """Nivel total-return diario para senales. Devuelve (df, provider).
 
     Las columnas son las mismas que get_data, pero ajustadas por
-    dividendos y splits. NO usar estos precios para simular fills: el
-    nivel ajustado no es un precio al que se pudiera comprar.
+    dividendos y splits, y el indice SIEMPRE lleva zona horaria. NO
+    usar estos precios para simular fills: el nivel ajustado no es un
+    precio al que se pudiera comprar.
     """
     errores = []
 
@@ -696,13 +738,13 @@ def get_serie_total_return(symbol: str, period: str = "15y", timeframe: str = "1
                     threads=False,
                     prepost=False,
                 )
-                return _normalize_df(df), "yfinance_tr"
+                return _localizar_utc(_normalize_df(df)), "yfinance_tr"
 
             if provider == "coinbase":
                 # Cripto no reparte dividendos ni hace splits: la serie
                 # cruda ya es total-return. No se "ajusta" nada.
                 df, _ = _coinbase_download(symbol, timeframe, period)
-                return df, "coinbase_tr"
+                return _localizar_utc(df), "coinbase_tr"
 
         except Exception as e:
             errores.append(f"{provider}: {e}")
