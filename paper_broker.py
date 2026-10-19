@@ -1,6 +1,8 @@
 import math
 from datetime import datetime
 
+from config import MENSAJE_BROKER_AL_ABRIR
+
 from storage import (
     get_paper_capital,
     update_paper_capital,
@@ -130,8 +132,12 @@ def open_trade(ticker, signal, regime, trade_setup):
         f"Size: {_safe_float(trade_setup['position_size']):.4f}"
     )
 
-    msg = format_open_trade_message(ticker, signal, trade_setup, capital)
-    send_telegram_message(msg)
+    # El aviso corto del broker solo se manda si se pide: la
+    # ficha movil de live_engine ya lleva todo esto y mas, y
+    # mandar los dos duplicaba cada apertura en Telegram.
+    if MENSAJE_BROKER_AL_ABRIR:
+        msg = format_open_trade_message(ticker, signal, trade_setup, capital)
+        send_telegram_message(msg)
 
     return capital
 

@@ -20,7 +20,11 @@ on:
         required: false
         default: true
   push:
-    branches: [main]
+    # Todas las ramas: asi una rama se valida ANTES de fusionarla
+    # a main, que es lo que Render despliega automaticamente. Sin
+    # esto, codigo roto llegaria al bot en vivo y los tests se
+    # enterarian despues.
+    branches: ["**"]
     paths-ignore:
       - "resultados/**"
       - "**.md"
@@ -83,6 +87,7 @@ jobs:
           python tests/test_historial.py 2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_costes.py    2>&1 | tail -12 | tee -a resultados/ultimo.md
           python tests/test_cartera.py   2>&1 | tail -5  | tee -a resultados/ultimo.md
+          python tests/test_noticias.py  2>&1 | tail -5  | tee -a resultados/ultimo.md
           python tests/test_cooldown.py  2>&1 | tail -14 | tee -a resultados/ultimo.md
           { echo '```'; echo; } >> resultados/ultimo.md
 
@@ -99,6 +104,7 @@ jobs:
               "session_volatility_intelligence", "risk_control_engine",
               "trade_intelligence", "ai_filter", "final_decision_engine",
               "paper_broker", "telegram_alerts", "historial_mercado",
+              "noticias", "gemini_filter",
               "live_engine", "main",
           ]
           fallos = []
@@ -204,7 +210,7 @@ jobs:
           } >> resultados/ultimo.md
 
       - name: Analisis de robustez (diario)
-        if: ${{ always() && github.event.inputs.historico_largo != 'false' }}
+        if: ${{ always() && github.ref == 'refs/heads/main' && github.event.inputs.historico_largo != 'false' }}
         env:
           TIMEFRAME: "1d"
           PERIOD: "15y"
@@ -221,7 +227,7 @@ jobs:
           } >> resultados/ultimo.md
 
       - name: Experimento de universo
-        if: ${{ always() && github.event.inputs.historico_largo != 'false' }}
+        if: ${{ always() && github.ref == 'refs/heads/main' && github.event.inputs.historico_largo != 'false' }}
         run: |
           set -o pipefail
           python validator/experimento_universo.py 2>&1 | tee resultados/experimento_universo.txt
@@ -292,7 +298,7 @@ jobs:
           } >> resultados/ultimo.md
 
       - name: Experimento por clase de activo
-        if: ${{ always() && github.event.inputs.historico_largo != 'false' }}
+        if: ${{ always() && github.ref == 'refs/heads/main' && github.event.inputs.historico_largo != 'false' }}
         run: |
           set -o pipefail
           python validator/experimento_clases.py 2>&1 | tee resultados/experimento_clases.txt
@@ -310,7 +316,9 @@ jobs:
           python dashboard/generar.py 2>&1 | tail -20
 
       - name: Guardar resultados en el repositorio
-        if: always()
+        # Solo main guarda resultados: una rama no debe commitear
+        # sobre la rama principal.
+        if: ${{ always() && github.ref == 'refs/heads/main' }}
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

@@ -1,0 +1,195 @@
+"""
+Pruebas del lector de noticias y del filtro de Gemini.
+
+Ninguna toca la red: las respuestas de las APIs se sustituyen por
+objetos falsos. Lo que se comprueba es el comportamiento que
+importa cuando algo va mal, que es cuando un filtro mal hecho
+hace dano.
+"""
+import json
+import os
+import sys
+import tempfile
+import types
+from datetime import datetime, timedelta, timezone
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO)
+
+_tmpdb = tempfile.NamedTemporaryFile(suffix=".db", delete=False)
+_tmpdb.close()
+os.environ["DATABASE_NAME"] = _tmpdb.name
+os.environ["TELEGRAM_TOKEN"] = ""
+
+OK = 0
+FALLOS = []
+
+
+def check(nombre, cond, detalle=""):
+    global OK
+    if cond:
+        OK += 1
+        print(f"  PASA   {nombre}")
+    else:
+        FALLOS.append(nombre)
+        print(f"  FALLA  {nombre}  {detalle}")
+
+
+class RespuestaFalsa:
+    def __init__(self, datos, codigo=200):
+        self._datos = datos
+        self.status_code = codigo
+        self.text = json.dumps(datos) if not isinstance(datos, str) else datos
+
+    def raise_for_status(self):
+        if self.status_code >= 400:
+            raise RuntimeError(f"HTTP {self.status_code}")
+
+    def json(self):
+        if isinstance(self._datos, str):
+            raise ValueError("no es json")
+        return self._datos
+
+
+import noticias
+import gemini_filter
+
+
+print("\n=== 1) lectura de noticias ===")
+
+ahora = datetime.now(timezone.utc)
+feed = [
+    {"datetime": int((ahora - timedelta(hours=2)).timestamp()),
+     "headline": "NVDA sube tras resultados", "summary": "Resumen",
+     "source": "Reuters"},
+    {"datetime": int((ahora - timedelta(hours=5)).timestamp()),
+     "headline": "Analistas elevan precio objetivo", "summary": "",
+     "source": "Bloomberg"},
+    # Demasiado vieja: debe quedar fuera (HORAS_ATRAS = 48)
+    {"datetime": int((ahora - timedelta(days=5)).timestamp()),
+     "headline": "Noticia antigua", "summary": "", "source": "X"},
+]
+
+noticias._CACHE.clear()
+noticias.FINNHUB_API_KEY = "clave-falsa"
+noticias.requests = types.SimpleNamespace(get=lambda *a, **k: RespuestaFalsa(feed))
+
+titulares, fuente, error = noticias.obtener_noticias("NVDA", usar_cache=False)
+check("lee titulares de Finnhub", len(titulares) == 2, f"-> {len(titulares)}")
+check("descarta las noticias de mas de 48h",
+      all("antigua" not in t["titular"] for t in titulares))
+check("ordena de mas nueva a mas vieja",
+      titulares[0]["horas"] < titulares[1]["horas"])
+check("fuente correcta", fuente == "finnhub", f"-> {fuente}")
+check("sin error", error is None)
+
+texto = noticias.formatear_para_prompt(titulares)
+check("el prompt incluye los titulares", "NVDA sube" in texto)
+check("el prompt incluye la antiguedad", "hace 2h" in texto)
+check("sin titulares da texto explicito",
+      "sin noticias" in noticias.formatear_para_prompt([]))
+
+# Las dos fuentes caidas: no debe explotar.
+noticias._CACHE.clear()
+noticias.requests = types.SimpleNamespace(
+    get=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("red caida")))
+noticias.ALPHA_VANTAGE_API_KEY = "otra-falsa"
+t2, f2, e2 = noticias.obtener_noticias("NVDA", usar_cache=False)
+check("si fallan todas las fuentes NO lanza excepcion", t2 == [] and f2 is None)
+check("y explica el motivo", e2 is not None and "red caida" in e2)
+
+
+print("\n=== 2) filtro de Gemini: comportamiento ante fallos ===")
+
+gemini_filter.HABILITADO = True
+gemini_filter.GEMINI_API_KEY = "clave-falsa"
+
+def responder(payload):
+    return RespuestaFalsa({"candidates": [{"content": {"parts": [
+        {"text": json.dumps(payload)}]}}]})
+
+gemini_filter.requests = types.SimpleNamespace(
+    post=lambda *a, **k: responder(
+        {"veredicto": "VETAR", "confianza": 85, "motivo": "resultados malos"}))
+
+gemini_filter.MODO = "sombra"
+r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "titulares")
+check("lee el veredicto", r["veredicto"] == "VETAR", f"-> {r}")
+check("lee la confianza", r["confianza"] == 85)
+check("EN MODO SOMBRA NO BLOQUEA", r["bloquea"] is False,
+      "-> bloqueo en modo sombra: el filtro no puede vetar sin medirse")
+
+gemini_filter.MODO = "bloqueo"
+r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "titulares")
+check("en modo bloqueo SI bloquea un veto con confianza alta", r["bloquea"] is True)
+
+gemini_filter.requests = types.SimpleNamespace(
+    post=lambda *a, **k: responder(
+        {"veredicto": "VETAR", "confianza": 30, "motivo": "dudoso"}))
+r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "t")
+check("un veto con poca confianza no bloquea", r["bloquea"] is False)
+
+# API caida
+gemini_filter.requests = types.SimpleNamespace(
+    post=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("timeout")))
+r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "t")
+check("si Gemini falla devuelve NEUTRAL", r["veredicto"] == "NEUTRAL")
+check("y NO bloquea la operacion", r["bloquea"] is False,
+      "-> un fallo de la API no puede parar la cuenta")
+
+# Respuesta ilegible
+gemini_filter.requests = types.SimpleNamespace(
+    post=lambda *a, **k: RespuestaFalsa({"candidates": [{"content": {"parts": [
+        {"text": "lo siento, no puedo"}]}}]}))
+r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "t")
+check("respuesta ilegible -> NEUTRAL", r["veredicto"] == "NEUTRAL" and not r["bloquea"])
+
+# JSON envuelto en markdown
+gemini_filter.requests = types.SimpleNamespace(
+    post=lambda *a, **k: RespuestaFalsa({"candidates": [{"content": {"parts": [
+        {"text": '```json\n{"veredicto":"APROBAR","confianza":70,"motivo":"ok"}\n```'}]}}]}))
+r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "t")
+check("entiende el JSON envuelto en markdown", r["veredicto"] == "APROBAR", f"-> {r}")
+
+# Veredicto inventado
+gemini_filter.requests = types.SimpleNamespace(
+    post=lambda *a, **k: responder(
+        {"veredicto": "COMPRA_FUERTE", "confianza": 99, "motivo": "x"}))
+r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "t")
+check("un veredicto inventado se trata como NEUTRAL",
+      r["veredicto"] == "NEUTRAL" and not r["bloquea"])
+
+gemini_filter.HABILITADO = False
+r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "t")
+check("apagado devuelve NEUTRAL sin llamar a la API",
+      r["veredicto"] == "NEUTRAL" and r["fuente"] == "interno")
+
+
+print("\n=== 3) los veredictos se guardan siempre ===")
+
+import storage
+storage.init_db()
+
+for v, c in [("APROBAR", 70), ("VETAR", 90), ("NEUTRAL", 0)]:
+    storage.guardar_veredicto_noticias(
+        timestamp=datetime.now().isoformat(), ticker="NVDA", signal="BUY",
+        regime="TREND", precio=180.0, veredicto=v, confianza=c,
+        motivo="prueba", fuente="gemini", bloqueo_aplicado=False, n_titulares=2)
+
+cuenta = storage.contar_veredictos_noticias()
+check("se guardan los tres veredictos", sum(cuenta.values()) == 3, f"-> {cuenta}")
+check("incluido el VETAR que no bloqueo", cuenta.get("VETAR") == 1,
+      "-> sin registrar los vetos en sombra no habria nada que medir")
+
+ultimo = storage.obtener_veredictos_noticias(1)[0]
+check("guarda el motivo", ultimo["motivo"] == "prueba")
+check("guarda si bloqueo o no", ultimo["bloqueo_aplicado"] == 0)
+
+print("\n" + "=" * 62)
+print(f"RESULTADO: {OK} pruebas pasadas, {len(FALLOS)} fallos")
+for f in FALLOS:
+    print(f"  - {f}")
+print("=" * 62)
+
+os.unlink(_tmpdb.name)
+sys.exit(1 if FALLOS else 0)

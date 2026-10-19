@@ -63,6 +63,32 @@ except Exception:
     def evaluate_risk_controls(ticker=None, signal=None):
         return {"allow": True, "reason": "risk_control_engine no disponible"}
 
+# Noticias + verificacion con Gemini. Opcionales las dos: si
+# fallan, el bot opera igual. Un filtro de noticias caido no puede
+# dejar la cuenta parada ni, peor, operando a ciegas creyendo que
+# alguien ha verificado algo.
+try:
+    from noticias import obtener_noticias, formatear_para_prompt
+    from gemini_filter import verificar_operacion, estado as estado_gemini
+    NOTICIAS_DISPONIBLES = True
+except Exception as _e:
+    print(f"AVISO: filtro de noticias no disponible ({_e})")
+    NOTICIAS_DISPONIBLES = False
+
+    def obtener_noticias(ticker, usar_cache=True):
+        return [], None, "modulo no disponible"
+
+    def formatear_para_prompt(titulares):
+        return "(sin noticias)"
+
+    def verificar_operacion(*a, **k):
+        return {"veredicto": "NEUTRAL", "confianza": 0,
+                "motivo": "modulo no disponible", "fuente": "interno",
+                "bloquea": False}
+
+    def estado_gemini():
+        return "Filtro de noticias: NO DISPONIBLE"
+
 # Archivo histórico de velas. Es opcional: si falla, el bot sigue
 # operando igual, solo deja de acumular histórico. Por eso va en
 # try/except, al contrario que paper_broker, que es esencial.
@@ -142,6 +168,7 @@ def _send_mobile_signal_message(
     ticker, signal, data, regime,
     ai_result, context_result, session_result,
     volatility_result, risk_result, trade_setup, final_result,
+    veredicto_noticias=None,
 ):
     last = data.iloc[-1]
 
@@ -204,10 +231,57 @@ def _send_mobile_signal_message(
         f"Volatilidad: {vol_label}\n\n"
         f"AI: {ai_result.get('decision', 'NEUTRAL')} ({ai_score:.1f})\n"
         f"Contexto: {context_result.get('decision', 'NEUTRAL')} ({ctx_score:.1f})\n"
-        f"Risk: {'ALLOW' if risk_result.get('allow', True) else 'BLOCK'}\n\n"
+        f"Risk: {'ALLOW' if risk_result.get('allow', True) else 'BLOCK'}\n"
+        f"{_linea_noticias(veredicto_noticias)}\n"
         f"Motivo:\n{motivo}"
     )
     send_telegram_message(msg)
+
+
+def _linea_noticias(veredicto):
+    """Linea de noticias para la ficha de Telegram."""
+    if not veredicto or veredicto.get("fuente") != "gemini":
+        return ""
+    icono = {"APROBAR": "🟢", "VETAR": "🔴"}.get(veredicto["veredicto"], "⚪")
+    sufijo = " (modo sombra: no bloquea)" if not veredicto.get("bloquea") \
+        and veredicto["veredicto"] == "VETAR" else ""
+    return (f"Noticias: {icono} {veredicto['veredicto']} "
+            f"({veredicto['confianza']}%){sufijo}\n"
+            f"  {veredicto['motivo'][:90]}\n")
+
+
+def comprobar_proveedores():
+    """
+    Prueba cada proveedor de la cascada al arrancar y devuelve el
+    resultado en texto.
+
+    Existe porque las claves de API viven en Render, no en CI: yo
+    puedo verificar yfinance y coinbase desde fuera, pero finnhub,
+    alpha_vantage y twelve_data solo se pueden probar donde estan
+    sus claves. Si el principal se cae y los respaldos tampoco
+    funcionan, mas vale saberlo el dia que arranca el bot y no el
+    dia que Yahoo cambie la web.
+    """
+    import data_feed
+
+    cascada = list(data_feed.DATA_PROVIDER_ORDER)
+    ticker = ASSETS[0] if ASSETS else "SPY"
+    lineas = []
+    funcionan = 0
+
+    for proveedor in cascada:
+        original = data_feed.DATA_PROVIDER_ORDER
+        try:
+            data_feed.DATA_PROVIDER_ORDER = [proveedor]
+            df, _ = get_data(ticker, TIMEFRAME, PERIOD)
+            lineas.append(f"✅ {proveedor}: {len(df)} velas")
+            funcionan += 1
+        except Exception as e:
+            lineas.append(f"❌ {proveedor}: {type(e).__name__}")
+        finally:
+            data_feed.DATA_PROVIDER_ORDER = original
+
+    return funcionan, len(cascada), lineas
 
 
 def _log(msg):
@@ -387,6 +461,64 @@ def run_live_cycle():
                 _log(f"--> BLOQUEADO | {ticker} | position_size inválido")
                 continue
 
+            # --- VERIFICACION DE NOTICIAS ---
+            # Va aqui a proposito: solo sobre operaciones que ya
+            # pasaron todo lo demas. Consultar noticias de cada
+            # señal descartada gastaria la cuota de las APIs en
+            # operaciones que nunca se iban a abrir.
+            veredicto_noticias = None
+            if NOTICIAS_DISPONIBLES:
+                try:
+                    titulares, fuente_noticias, error_noticias = obtener_noticias(ticker)
+
+                    veredicto_noticias = verificar_operacion(
+                        ticker=ticker,
+                        direccion=signal,
+                        precio=_safe_float(last.get("Close")),
+                        regimen=regime,
+                        noticias_texto=formatear_para_prompt(titulares),
+                    )
+
+                    _log(
+                        f"NOTICIAS | {ticker} | {len(titulares)} titulares"
+                        f"{f' ({fuente_noticias})' if fuente_noticias else ''} | "
+                        f"{veredicto_noticias['veredicto']} "
+                        f"({veredicto_noticias['confianza']}%) | "
+                        f"{veredicto_noticias['motivo'][:70]}"
+                    )
+                    if error_noticias:
+                        _log(f"NOTICIAS warning | {ticker}: {error_noticias[:100]}")
+
+                    try:
+                        from storage import guardar_veredicto_noticias
+                        guardar_veredicto_noticias(
+                            timestamp=datetime.now().isoformat(),
+                            ticker=ticker,
+                            signal=signal,
+                            regime=regime,
+                            precio=_safe_float(last.get("Close")),
+                            veredicto=veredicto_noticias["veredicto"],
+                            confianza=veredicto_noticias["confianza"],
+                            motivo=veredicto_noticias["motivo"],
+                            fuente=veredicto_noticias["fuente"],
+                            bloqueo_aplicado=veredicto_noticias["bloquea"],
+                            n_titulares=len(titulares),
+                        )
+                    except Exception as e:
+                        _log(f"veredicto no guardado | {ticker}: {e}")
+
+                    if veredicto_noticias["bloquea"]:
+                        _log(
+                            f"--> VETADO POR NOTICIAS | {ticker} | "
+                            f"{veredicto_noticias['motivo']}"
+                        )
+                        continue
+
+                except Exception as e:
+                    # Cualquier fallo aqui deja pasar la operacion:
+                    # el filtro no es esencial.
+                    _log(f"NOTICIAS error | {ticker}: {e}")
+
             # --- ABRIR TRADE ---
             # El orden importa y antes estaba al revés: se mandaba
             # la alerta a Telegram y DESPUÉS se intentaba abrir el
@@ -418,6 +550,7 @@ def run_live_cycle():
                 risk_result=risk_result,
                 trade_setup=trade_setup,
                 final_result=final_result,
+                veredicto_noticias=veredicto_noticias,
             )
 
         except Exception as e:
@@ -442,6 +575,30 @@ def run_live_engine():
     # Si la base de datos está en almacenamiento efímero, todo el
     # histórico desaparece en el próximo reinicio. Hay que verlo al
     # arrancar, no descubrirlo cuando el capital vuelva a 1000.
+    print(estado_gemini())
+
+    # Autodiagnostico de proveedores: cuales responden de verdad
+    # desde donde corre el bot.
+    try:
+        ok, total, detalle = comprobar_proveedores()
+        print(f"Proveedores: {ok} de {total} responden")
+        for linea in detalle:
+            print(f"  {linea}")
+        if ok == 0:
+            _send_error_message(
+                "NINGUN PROVEEDOR DE DATOS RESPONDE\n\n"
+                + "\n".join(detalle)
+                + "\n\nEl bot no va a poder operar."
+            )
+        elif ok == 1:
+            _send_error_message(
+                "SIN RESPALDO DE DATOS\n\n"
+                + "\n".join(detalle)
+                + "\n\nSolo responde un proveedor: si se cae, el bot se para."
+            )
+    except Exception as e:
+        print(f"No se pudo comprobar proveedores: {e}")
+
     persistente, mensaje_persistencia = comprobar_persistencia()
     print(mensaje_persistencia)
     print("=" * 50)

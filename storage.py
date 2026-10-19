@@ -107,6 +107,24 @@ def init_db():
     """)
 
     cursor.execute("""
+    CREATE TABLE IF NOT EXISTS veredictos_noticias (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        timestamp TEXT NOT NULL,
+        ticker TEXT NOT NULL,
+        signal TEXT NOT NULL,
+        regime TEXT,
+        precio REAL,
+        veredicto TEXT NOT NULL,
+        confianza INTEGER,
+        motivo TEXT,
+        fuente TEXT,
+        bloqueo_aplicado INTEGER NOT NULL DEFAULT 0,
+        n_titulares INTEGER,
+        trade_id INTEGER
+    )
+    """)
+
+    cursor.execute("""
     CREATE TABLE IF NOT EXISTS setup_alerts (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         timestamp TEXT,
@@ -503,3 +521,66 @@ def log_risk_event(timestamp, ticker, signal, event_type, reason):
 
     conn.commit()
     conn.close()
+
+# =========================================================
+# VEREDICTOS DE NOTICIAS (filtro de Gemini)
+#
+# Cada opinion se guarda SIEMPRE, bloquee o no. Ese registro es
+# lo unico que permitira saber, dentro de unos meses, si el
+# filtro acierta: comparar como acabaron las operaciones que
+# aprobo contra las que habria vetado.
+#
+# Sin este registro el filtro seria un adorno imposible de
+# evaluar, que es justo lo que no queremos.
+# =========================================================
+
+def guardar_veredicto_noticias(timestamp, ticker, signal, regime, precio,
+                               veredicto, confianza, motivo, fuente,
+                               bloqueo_aplicado, n_titulares, trade_id=None):
+    conn = _get_connection()
+    conn.execute("""
+        INSERT INTO veredictos_noticias
+        (timestamp, ticker, signal, regime, precio, veredicto, confianza,
+         motivo, fuente, bloqueo_aplicado, n_titulares, trade_id)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    """, (timestamp, ticker, signal, regime, precio, veredicto, confianza,
+          motivo, fuente, 1 if bloqueo_aplicado else 0, n_titulares, trade_id))
+    conn.commit()
+    conn.close()
+
+
+def obtener_veredictos_noticias(limite=1000):
+    conn = _get_connection()
+    filas = conn.execute("""
+        SELECT * FROM veredictos_noticias
+        ORDER BY timestamp DESC LIMIT ?
+    """, (limite,)).fetchall()
+    conn.close()
+    return [dict(f) for f in filas]
+
+
+def contar_veredictos_noticias():
+    conn = _get_connection()
+    filas = conn.execute("""
+        SELECT veredicto, COUNT(*) AS n FROM veredictos_noticias
+        GROUP BY veredicto
+    """).fetchall()
+    conn.close()
+    return {f["veredicto"]: f["n"] for f in filas}
+
+
+def obtener_trades_cerrados(limite=5000):
+    """
+    Operaciones cerradas completas, no solo sus estadisticas.
+
+    get_closed_trade_stats devuelve agregados; para emparejar cada
+    operacion con su veredicto de noticias hacen falta las filas.
+    """
+    conn = _get_connection()
+    filas = conn.execute("""
+        SELECT * FROM paper_trades
+        WHERE timestamp_close IS NOT NULL
+        ORDER BY timestamp_open ASC LIMIT ?
+    """, (limite,)).fetchall()
+    conn.close()
+    return [dict(f) for f in filas]
