@@ -113,6 +113,31 @@ def _puntuar(nombre):
     return (len(PREFERENCIAS), 1, nombre)
 
 
+def _probar_modelo(nombre):
+    """
+    Llamada minima para ver si el modelo responde de verdad.
+    Devuelve (funciona, detalle_corto).
+    """
+    try:
+        respuesta = requests.post(
+            f"{URL_BASE}/{nombre}:generateContent",
+            params={"key": GEMINI_API_KEY},
+            json={
+                "contents": [{"parts": [{"text": "Responde solo: ok"}]}],
+                "generationConfig": {"maxOutputTokens": 5, "temperature": 0},
+            },
+            timeout=REQUEST_TIMEOUT,
+        )
+        if respuesta.status_code == 200:
+            return True, "ok"
+        # El cuerpo explica mejor que el codigo; se censura por si
+        # lleva la clave.
+        detalle = _censurar(respuesta.text)[:100] if respuesta.text else ""
+        return False, f"HTTP {respuesta.status_code} {detalle}"
+    except Exception as e:
+        return False, f"{type(e).__name__}: {_censurar(str(e))[:80]}"
+
+
 def resolver_modelo(forzar=False):
     """
     Devuelve (modelo, nota). Usa el configurado si funciona; si
@@ -129,28 +154,48 @@ def resolver_modelo(forzar=False):
     try:
         disponibles = listar_modelos()
     except Exception as e:
-        return None, f"no se pudo listar modelos: {type(e).__name__}: {str(e)[:120]}"
+        return None, (f"no se pudo listar modelos: {type(e).__name__}: "
+                      f"{_censurar(str(e))[:150]}")
 
     if not disponibles:
         return None, "la cuenta no tiene ningun modelo con generateContent"
 
-    # 1) el configurado, si existe tal cual
+    # Orden de candidatos: el configurado primero, luego los que
+    # empiezan igual, luego el resto por preferencia.
+    candidatos = []
     if MODELO in disponibles:
-        _MODELO_RESUELTO = MODELO
-        return MODELO, "el configurado existe"
+        candidatos.append(MODELO)
+    candidatos += sorted([m for m in disponibles
+                          if m.startswith(MODELO) and m not in candidatos],
+                         key=_puntuar)
+    candidatos += sorted([m for m in disponibles if m not in candidatos],
+                         key=_puntuar)
 
-    # 2) alguno que empiece igual (gemini-2.0-flash -> gemini-2.0-flash-001)
-    parecidos = [m for m in disponibles if m.startswith(MODELO)]
-    if parecidos:
-        elegido = sorted(parecidos, key=_puntuar)[0]
-        _MODELO_RESUELTO = elegido
-        return elegido, f"{MODELO!r} no existe, se usa {elegido!r}"
+    # PROBAR, no solo elegir.
+    #
+    # La primera version se fiaba de que si un modelo salia en
+    # ListModels con generateContent entre sus metodos, la llamada
+    # funcionaria. En produccion no fue asi: gemini-2.5-flash-lite
+    # aparecia en la lista y devolvia 404 al generar.
+    #
+    # Descubrir sin verificar es media solucion. Ahora se prueba
+    # cada candidato con una llamada minima y se usa el primero
+    # que conteste de verdad.
+    fallos = []
+    for candidato in candidatos[:6]:
+        funciona, detalle = _probar_modelo(candidato)
+        if funciona:
+            _MODELO_RESUELTO = candidato
+            nota = (f"{candidato!r} responde"
+                    if candidato == MODELO
+                    else f"{MODELO!r} no sirve, se usa {candidato!r}")
+            if fallos:
+                nota += f" (descartados: {', '.join(fallos)})"
+            return candidato, nota
+        fallos.append(f"{candidato} [{detalle}]")
 
-    # 3) el mejor disponible segun preferencias
-    elegido = sorted(disponibles, key=_puntuar)[0]
-    _MODELO_RESUELTO = elegido
-    return elegido, (f"{MODELO!r} no existe; elegido {elegido!r} "
-                     f"de {len(disponibles)} disponibles")
+    return None, (f"ninguno de los {len(candidatos)} modelos respondio. "
+                  f"Probados: {' | '.join(fallos[:4])}")
 
 HABILITADO = GEMINI_FILTER_ENABLED
 MODO = GEMINI_FILTER_MODO
@@ -187,6 +232,31 @@ Criterios:
   activo: solo los titulares de arriba."""
 
 
+def _censurar(texto):
+    """
+    Quita claves de API de cualquier texto antes de que salga del
+    proceso.
+
+    Existe por un fallo real: los mensajes de error de requests
+    incluyen la URL completa, y la API de Gemini lleva la clave
+    como parametro ?key=. Al ampliar el recorte de errores de 80 a
+    200 caracteres, la clave empezo a caber y acabo publicada en
+    Telegram en texto plano.
+
+    Se aplica a TODO lo que pueda acabar en un log, un mensaje o
+    la base de datos. Censurar en el borde es mas seguro que
+    recordar censurar en cada sitio.
+    """
+    if not texto:
+        return texto
+    texto = str(texto)
+    # ?key=... o &key=... hasta el siguiente separador
+    texto = re.sub(r"([?&]key=)[^&\s\"']+", r"\1[CENSURADO]", texto)
+    # Claves de Google sueltas: AIza seguido de 35 caracteres
+    texto = re.sub(r"AIza[0-9A-Za-z_\-]{10,}", "[CLAVE_CENSURADA]", texto)
+    return texto
+
+
 def _neutral(motivo, fuente="interno", respondio=False):
     """
     Resultado neutro. `respondio` dice si Gemini contesto de
@@ -200,7 +270,7 @@ def _neutral(motivo, fuente="interno", respondio=False):
     return {
         "veredicto": "NEUTRAL",
         "confianza": 0,
-        "motivo": motivo,
+        "motivo": _censurar(motivo),
         "fuente": fuente,
         "bloquea": False,
         "respondio": respondio,
@@ -302,7 +372,7 @@ def verificar_operacion(ticker, direccion, precio, regimen, noticias_texto):
         }
 
     except Exception as e:
-        return _neutral(f"{type(e).__name__}: {str(e)[:200]}", "gemini")
+        return _neutral(f"{type(e).__name__}: {_censurar(str(e))[:200]}", "gemini")
 
 
 def probar_conexion():
