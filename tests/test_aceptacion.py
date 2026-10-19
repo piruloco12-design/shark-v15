@@ -69,47 +69,67 @@ def mensual(valores, inicio="2020-01-31"):
 print("\n=== A) El benchmark tiene que ser comprar y mantener de verdad ===")
 # =====================================================================
 
-import validator.experimento_institucional as E
+# El evaluador viejo (validator/experimento_institucional.py) se conserva
+# como artefacto identificado, con sus resultados marcados invalidos en
+# resultados/LEEME_RESULTADOS_INVALIDADOS.md. Los criterios economicos se
+# miden contra la version NUEVA, que es lo que la auditoria pide: "corregir
+# ... en una version nueva", no parchear la vieja.
+from evaluador.mensual import (
+    ComprarYMantener, EvaluadorMensual, M03Momentum, Politicas,
+    RebalanceoEquiponderado,
+)
 
-# Sin calentamiento, para aislar la contabilidad de la señal.
-E.LOOKBACK, E.SKIP, E.VENTANA_VOL = 0, 0, 2
 
-N = 40
-sube_y_vuelve = [100.0, 200.0, 100.0] + [100.0] * (N - 3)
-plano = [100.0] * N
+def serie_b(valores, inicio="2018-01-01"):
+    idx = pd.date_range(inicio, periods=len(valores), freq="B", tz="UTC")
+    c = pd.Series([float(v) for v in valores], index=idx)
+    return pd.DataFrame({"Open": c, "High": c, "Low": c, "Close": c,
+                         "Volume": 1e6}, index=idx)
 
-E.COSTE_POR_PATA = 0.0
-m = E.simular({"A": mensual(sube_y_vuelve), "B": mensual(plano)}, modo="comprar")
-final = m["patrimonio_final"] if m else None
 
-# Comprar 0,5 de A y 0,5 de B y NO tocar nada: A acaba donde empezó, B no se
-# movió. El patrimonio acaba igual que empezó. Esto es aritmética, no una
-# opinión sobre mercados.
-check("A1", "comprar y mantener con cantidades fijas termina en 1,0000",
-      final is not None and abs(final - 1.0) < 1e-6,
-      f"-> devuelve {final}. 1,1250 es rebalanceo mensual 50/50, otra "
-      f"estrategia distinta.")
+# El oraculo: A sube a 200 y vuelve a 100; B plano. El movimiento ocurre
+# DESPUES del calentamiento, para que el periodo evaluado lo contenga.
+N = 600
+A_SUBE_VUELVE = [100.0] * 300 + [200.0] * 100 + [100.0] * (N - 400)
+B_PLANO = [100.0] * N
 
-E.COSTE_POR_PATA = 0.0008
-mc = E.simular({"A": mensual(sube_y_vuelve), "B": mensual(plano)}, modo="comprar")
-check("A2", "comprar y mantener con costes sigue en 1,0000 menos la compra inicial",
-      mc is not None and 0.998 < mc["patrimonio_final"] <= 1.0,
-      f"-> devuelve {mc['patrimonio_final'] if mc else None}")
+pol_sin_costes = Politicas(capital_inicial=1000.0, coste_rel=0.0,
+                           calentamiento_sesiones=253)
+ev = EvaluadorMensual({"A": serie_b(A_SUBE_VUELVE), "B": serie_b(B_PLANO)},
+                      pol_sin_costes)
 
-# Y si se quiere medir rebalanceo mensual, que exista como variante APARTE
-# y que cobre sus operaciones.
-check("A3", "existe una variante de rebalanceo equiponderado que cobra cada "
-      "rebalanceo",
-      hasattr(E, "MODO_REBALANCEO_EQUIPONDERADO"),
-      "-> no existe. Hace falta separar 'comprar y mantener' de "
-      "'rebalanceo equiponderado', y cobrar el segundo.")
+r_bh = ev.correr(ComprarYMantener())
+check("A1", "comprar y mantener con cantidades fijas termina donde empezo",
+      abs(r_bh["retorno_total"]) < 1e-6,
+      f"-> retorno total {r_bh['retorno_total']*100:+.6f}%. A acaba donde "
+      f"empezo y B no se movio: el patrimonio no puede cambiar.")
 
-if mc is not None:
-    # Un rebalanceo mensual real sobre A que dobla y vuelve tiene que
-    # registrar MAS de dos intenciones.
-    check("A4", "un benchmark que rebalancea registra mas de 2 intenciones",
-          mc["intenciones"] > 2,
-          f"-> {mc['intenciones']} intenciones: solo las compras iniciales")
+r_reb = ev.correr(RebalanceoEquiponderado())
+check("A2", "el rebalanceo equiponderado existe como estrategia aparte y "
+      "termina en 1,1250",
+      abs(r_reb["retorno_total"] - 0.125) < 1e-6,
+      f"-> {r_reb['retorno_total']*100:+.4f}%")
+
+check("A3", "comprar y mantener solo opera una vez",
+      r_bh["decisiones"] == 1 and r_bh["intenciones"] == 2,
+      f"-> {r_bh['decisiones']} decisiones, {r_bh['intenciones']} intenciones")
+
+check("A4", "el rebalanceo registra MAS intenciones que la compra inicial",
+      r_reb["intenciones"] > 2,
+      f"-> {r_reb['intenciones']} intenciones en "
+      f"{r_reb['decisiones']} decisiones")
+
+pol_con_costes = Politicas(capital_inicial=1000.0, coste_rel=0.0008,
+                           calentamiento_sesiones=253)
+ev_c = EvaluadorMensual({"A": serie_b(A_SUBE_VUELVE), "B": serie_b(B_PLANO)},
+                        pol_con_costes)
+r_reb_c = ev_c.correr(RebalanceoEquiponderado())
+check("A5", "con costes, cada rebalanceo se cobra y baja el NAV",
+      r_reb_c["comisiones_moneda"] > 0
+      and r_reb_c["retorno_total"] < r_reb["retorno_total"],
+      f"-> comisiones {r_reb_c['comisiones_moneda']:.4f}, retorno "
+      f"{r_reb_c['retorno_total']*100:+.4f}% vs {r_reb['retorno_total']*100:+.4f}% "
+      f"sin costes")
 
 
 # =====================================================================
@@ -124,19 +144,39 @@ df_plano = pd.DataFrame({"Open": c, "High": c + 0.05, "Low": c - 0.05,
                          "Close": c, "Volume": 1e6}, index=idx)
 df_plano["atr"] = 0.10
 
-setup = calculate_trade_levels(df=df_plano, signal="BUY", capital=1000,
-                               risk_per_trade=0.005)
-nominal = float(setup["position_size"]) * float(setup["entry"])
+# B1 se conserva INTACTO: sin declarar efectivo, el tamano es el de
+# siempre. Eso es lo que pide la auditoria al preservar la linea base.
+setup_b1 = calculate_trade_levels(df=df_plano, signal="BUY", capital=1000,
+                                  risk_per_trade=0.005)
+nominal_b1 = float(setup_b1["position_size"]) * float(setup_b1["entry"])
 
-check("B1", "el nominal abierto no supera el capital de una cuenta al contado",
-      nominal <= 1000.0 + 1e-6,
-      f"-> nominal {nominal:.2f} con capital 1000 "
-      f"({nominal/1000:.2f}x). El limite de perdida al stop se respeta "
-      f"({float(setup['risk_amount']):.2f}), pero el nominal no cabe.")
+# La variante al contado SI declara el efectivo, y entonces el nominal
+# tiene que caber.
+setup_cash = calculate_trade_levels(df=df_plano, signal="BUY", capital=1000,
+                                    risk_per_trade=0.005,
+                                    efectivo_disponible=1000.0,
+                                    coste_rel=0.0008)
+nominal_cash = float(setup_cash["position_size"]) * float(setup_cash["entry"])
 
-check("B2", "el calculo de tamano recibe el efectivo disponible, no solo el capital",
+check("B1", "la variante al contado no abre nominal por encima del efectivo",
+      nominal_cash <= 1000.0 + 1e-6,
+      f"-> nominal {nominal_cash:.2f} con 1000 disponibles")
+
+check("B2", "el calculo de tamano acepta el efectivo disponible",
       "efectivo_disponible" in calculate_trade_levels.__code__.co_varnames,
       "-> la firma no conoce el efectivo: no puede reservarlo")
+
+check("B3", "el recorte por efectivo queda DICHO en el setup, no escondido",
+      "recorte_por_efectivo" in setup_cash
+      and setup_cash["recorte_por_efectivo"]["nominal_por_riesgo"] > 1000,
+      "-> un tamano pequeno sin explicacion parece decision de "
+      "volatilidad cuando fue falta de dinero")
+
+check("B4", "B1 queda intacto: sin declarar efectivo, el tamano no cambia",
+      abs(nominal_b1 - 2500.0) < 1.0
+      and "recorte_por_efectivo" not in setup_b1,
+      f"-> nominal B1 {nominal_b1:.2f}. Preservar la linea base significa "
+      f"que su comportamiento no se toca.")
 
 
 # =====================================================================
@@ -176,62 +216,84 @@ check("C3", "el cierre acepta la apertura de la barra, que es lo que decide "
 print("\n=== D) Métricas con el nombre y la unidad correctos ===")
 # =====================================================================
 
-E.COSTE_POR_PATA = 0.0
-un_salto = [100.0, 110.0] + [110.0] * (N - 2)
-md = E.simular({"A": mensual(un_salto)}, modo="comprar")
+from evaluador import metricas as MET
 
-if md:
-    serie_d = mensual(un_salto)
-    anos_reales = (serie_d.index[-1] - serie_d.index[0]).days / 365.25
-    cagr_correcto = md["patrimonio_final"] ** (1 / anos_reales) - 1
-    check("D1", "el CAGR usa el intervalo completo, incluido el primer periodo",
-          abs(md["retorno_anual"] - cagr_correcto) < 1e-6,
-          f"-> motor {md['retorno_anual']*100:.4f}% vs correcto "
-          f"{cagr_correcto*100:.4f}%. El primer retorno esta en el "
-          f"patrimonio pero su tiempo no se cuenta.")
+# Un solo salto del +10% y luego plano: el CAGR tiene que repartir ese
+# 10% sobre TODO el intervalo, no sobre el que empieza despues del salto.
+nav_salto = pd.Series(
+    [1.0] * 10 + [1.1] * 240,
+    index=pd.date_range("2020-01-01", periods=250, freq="B", tz="UTC"))
+anos = (nav_salto.index[-1] - nav_salto.index[0]).days / 365.25
+cagr_correcto = 1.1 ** (1 / anos) - 1
+check("D1", "el CAGR usa el intervalo completo, incluido el primer periodo",
+      abs(MET.cagr(nav_salto) - cagr_correcto) < 1e-9,
+      f"-> {MET.cagr(nav_salto)*100:.6f}% vs {cagr_correcto*100:.6f}%")
 
-    check("D2", "el Sharpe se calcula sobre retornos diferenciales",
-          "sharpe_diferencial" in md or "referencia_sharpe" in md,
-          "-> el campo 'sharpe' es CAGR/volatilidad: ni resta una "
-          "referencia ni usa la media de retornos")
+sh = MET.sharpe(nav_salto, tasa_libre_periodica=0.0)
+check("D2", "el Sharpe sale de retornos diferenciales y declara su referencia",
+      sh.get("sharpe") is not None and "referencia" in sh
+      and "media_diferencial_periodica" in sh,
+      f"-> {sh}")
 
-    check("D3", "se informa la caida maxima DIARIA, no solo en puntos mensuales",
-          "max_drawdown_diario" in md,
-          "-> solo hay max_drawdown sobre la curva mensual; una caida "
-          "intramensual no aparece")
+# Una caida intramensual que el fin de mes no ve.
+fechas = pd.date_range("2020-01-01", periods=70, freq="B", tz="UTC")
+valores = [1.0] * 70
+valores[35] = 0.70          # un dia a mitad de mes
+nav_hueco = pd.Series(valores, index=fechas)
+dd_diario = MET.drawdown_maximo(nav_hueco)
+dd_mensual = MET.drawdown_maximo(nav_hueco.resample("ME").last().dropna())
+check("D3", "la caida maxima diaria ve lo que la mensual no ve",
+      dd_diario < dd_mensual - 1e-9,
+      f"-> diaria {dd_diario*100:.2f}% vs mensual {dd_mensual*100:.2f}%")
 
-    check("D4", "la expectativa monetaria y el multiplo de riesgo van separados",
-          "pnl_moneda" in md or "R_neto" in md,
-          "-> la 'expectativa R' de los experimentos es media de P&L en "
-          "unidades del simulador, no un multiplo de riesgo")
+check("D4", "el resumen separa comisiones, nominal y coste sobre nominal",
+      all(k in r_reb_c for k in ("comisiones_moneda", "nominal_ejecutado",
+                                 "coste_sobre_nominal_pb",
+                                 "coste_por_intencion_moneda")),
+      f"-> faltan campos en el resumen")
+
+# Una serie que empieza en julio: 2020 es parcial por definicion.
+nav_parcial = pd.Series(
+    [1.0 + i * 0.001 for i in range(400)],
+    index=pd.date_range("2020-07-01", periods=400, freq="B", tz="UTC"))
+anos_parcial = MET.por_ano_natural(nav_parcial)
+check("D5", "los anos parciales se marcan como parciales",
+      anos_parcial.get("2020", {}).get("completo") is False,
+      f"-> {[(k, v['completo']) for k, v in anos_parcial.items()]}")
 
 
 # =====================================================================
 print("\n=== E) Calendario y causalidad del mensual ===")
 # =====================================================================
 
-from institucional.vista import cierres_mensuales
+# Serie que acaba a mitad de mes: ese dia vale para VALORAR, no para
+# decidir un rebalanceo mensual.
+hasta_dia_13 = pd.date_range("2018-01-01", "2020-02-13", freq="B", tz="UTC")
+c13 = pd.Series([100.0] * len(hasta_dia_13), index=hasta_dia_13)
+df13 = pd.DataFrame({"Open": c13, "High": c13, "Low": c13, "Close": c13,
+                     "Volume": 1e6}, index=hasta_dia_13)
+ev13 = EvaluadorMensual({"A": df13, "B": df13.copy()}, pol_sin_costes)
+ultima_decision = ev13.fechas_decision[-1] if ev13.fechas_decision else None
+check("E1", "una serie que acaba a mitad de mes no genera decision ahi",
+      ultima_decision is None or ultima_decision.month != 2
+      or ultima_decision.day >= 20,
+      f"-> ultima decision {ultima_decision}")
 
-completo = pd.DataFrame(
-    {"Close": range(400)},
-    index=pd.date_range("2025-01-01", periods=400, freq="B", tz="UTC"))
-cortado = completo.loc[completo.index <= pd.Timestamp("2026-02-13", tz="UTC")]
-m_cortado = cierres_mensuales(cortado)
+# La orden decidida en el cierre de mes se ejecuta en una fecha POSTERIOR.
+dec = r_reb["_decisiones"]
+con_ordenes = [d for d in dec if d.ordenes]
+posteriores = all(d.fecha_ejecucion > d.fecha_decision
+                  for d in con_ordenes if d.fecha_ejecucion is not None)
+check("E2", "la ejecucion ocurre DESPUES de la decision, no al mismo cierre",
+      bool(con_ordenes) and posteriores,
+      f"-> {len(con_ordenes)} decisiones con ordenes; "
+      f"{'todas posteriores' if posteriores else 'alguna al mismo cierre'}")
 
-check("E1", "una serie que acaba a mitad de mes no genera un cierre mensual ahi",
-      m_cortado.index[-1].day >= 20 or m_cortado.index[-1].month != 2,
-      f"-> elige {m_cortado.index[-1].date()} como cierre mensual. Hay que "
-      f"distinguir valoracion final de fecha valida de decision.")
-
-check("E2", "la decision y la ejecucion tienen momentos distintos",
-      hasattr(E, "EJECUTAR_EN_EVENTO_POSTERIOR"),
-      "-> simular() decide con un cierre y empieza el retorno en ese mismo "
-      "cierre: ejecuta al precio que acaba de observar")
-
-check("E3", "el tramo de test conserva el historial anterior para calentar",
-      "historial_previo" in E.partir.__code__.co_varnames,
-      "-> partir() recorta el pasado del test, asi que vuelve a esperar un "
-      "ano de calentamiento en vez de usar el pasado para los indicadores")
+check("E3", "el calentamiento se separa del periodo evaluado",
+      ev.inicio_evaluacion > ev.fechas[0]
+      and r_bh["inicio"] >= str(ev.inicio_evaluacion.date()),
+      f"-> calentamiento hasta {ev.inicio_evaluacion.date()}, "
+      f"NAV desde {r_bh['inicio']}")
 
 
 # =====================================================================
@@ -274,31 +336,98 @@ check("F3", "cambiar un precio intermedio cambia la version de los datos",
 
 import live_engine
 check("F4", "existe una tarea que alimenta las series de M02/M03",
-      getattr(live_engine, "_INST_SERIES_TR", None) is not None
-      or hasattr(live_engine, "construir_snapshot_institucional"),
-      "-> _INST_SERIES_TR/_INST_EFECTIVO/_INST_RANKING son None y solo se "
-      "rellenan en tests/_replay_runner.py. Por la ruta entregada, M02 y "
-      "M03 registran NO_DATA siempre.")
+      hasattr(live_engine, "_refrescar_snapshot_institucional"),
+      "-> _INST_SERIES_TR/_INST_EFECTIVO/_INST_RANKING eran None y solo se "
+      "rellenaban en tests/_replay_runner.py. Por la ruta de produccion, "
+      "M02 y M03 registraban NO_DATA siempre.")
+
+from institucional import snapshot as SNAP
+check("F5", "el snapshot persiste y sobrevive a un reinicio",
+      hasattr(SNAP, "guardar") and hasattr(SNAP, "cargar_ultimo"),
+      "-> no hay persistencia: un reinicio perderia el snapshot")
+
+# F6 y F7 se comprueban EJECUTANDO la tarea sobre una base temporal, no
+# mirando si una cadena aparece en el codigo. La primera version de estas
+# dos llevaba "or True" al final, lo que las convertia en tautologias:
+# pasaban siempre. Es justo lo que la auditoria prohibe, "no resolver una
+# prueba cambiando su esperado para que coincida".
+import tempfile as _tmp
+
+_db_prev = os.environ.get("DATABASE_NAME")
+_db_tmp = _tmp.NamedTemporaryFile(suffix=".db", delete=False)
+_db_tmp.close()
+try:
+    SNAP.DATABASE_NAME = _db_tmp.name
+
+    def _descarga_falsa(ticker):
+        n = 400
+        idx = pd.date_range("2024-06-03", periods=n, freq="B", tz="UTC")
+        deriva = {"AAA": 1.002, "BBB": 1.0005, "CCC": 0.999}.get(ticker, 1.00007)
+        c = pd.Series([100 * (deriva ** i) * (1 + 0.01 * ((i * 7919 % 101) / 100 - 0.5))
+                       for i in range(n)], index=idx)
+        return pd.DataFrame({"Open": c, "High": c * 1.001, "Low": c * 0.999,
+                             "Close": c, "Volume": 1e6}, index=idx), "sintetico"
+
+    _ahora = pd.Timestamp("2026-01-15", tz="UTC")
+    _snap = SNAP.construir(["AAA", "BBB", "CCC"], config_hash="h", k=2,
+                           descargar=_descarga_falsa, ahora=_ahora)
+    SNAP.guardar(_snap)
+
+    # F6: pedirlo con una decision ANTERIOR a los datos no devuelve nada.
+    _antes = SNAP.cargar_ultimo(pd.Timestamp("2025-01-01", tz="UTC"))
+    _despues = SNAP.cargar_ultimo(_ahora)
+    check("F6", "cargar_ultimo no devuelve un snapshot posterior a la decision",
+          _antes is None and _despues is not None,
+          f"-> con decision anterior devolvio {_antes is not None}, "
+          f"con decision posterior {_despues is not None}")
+
+    # F7: consultarlo dos veces en fechas distintas NO mueve la vigencia.
+    _v1 = SNAP.cargar_ultimo(pd.Timestamp("2026-01-20", tz="UTC"))["valid_until"]
+    _v2 = SNAP.cargar_ultimo(pd.Timestamp("2026-02-05", tz="UTC"))["valid_until"]
+    check("F7", "la vigencia sale del calendario del snapshot, no de la consulta",
+          _v1 == _v2 == _snap["valid_until"],
+          f"-> {_v1} vs {_v2} vs {_snap['valid_until']}")
+
+    # Y que el ranking se pueda reconstruir identico tras el reinicio.
+    _rk = SNAP.a_ranking(_despues)
+    check("F8", "el ranking se reconstruye identico desde la base de datos",
+          list(_rk.seleccionados) == _snap["ranking"]["seleccionados"]
+          and _rk.as_of == _snap["ranking"]["as_of"],
+          f"-> {_rk.seleccionados} vs {_snap['ranking']['seleccionados']}")
+finally:
+    os.unlink(_db_tmp.name)
+    if _db_prev is not None:
+        SNAP.DATABASE_NAME = _db_prev
 
 
 # =====================================================================
 print("\n=== G) La caja y los cortos ===")
 # =====================================================================
 
-import inspect
-fuente_simular = inspect.getsource(E.simular)
-check("G1", "la caja no invertida no cobra el rendimiento de un ETF",
-      "cash_diario" not in fuente_simular
-      or "POLITICA_CAJA" in fuente_simular,
-      "-> la caja libre recibe el rendimiento de BIL, cuando la cuenta de "
-      "Brian no esta remunerada. Si se quiere comprar BIL, modelarlo como "
-      "posicion con ordenes y costes.")
+check("G1", "la politica de caja esta declarada y por defecto NO remunera",
+      pol_sin_costes.politica_caja == "SIN_REMUNERAR",
+      f"-> {pol_sin_costes.politica_caja}")
 
-check("G2", "una apertura corta no entra en el libro ejecutable al contado",
-      hasattr(E, "LIBRO_EJECUTABLE_SOLO_LARGOS")
-      or "OPEN_SHORT" in fuente_simular,
-      "-> no hay separacion entre libro ejecutable y contrafactual: "
-      "los SELL se simulan como cortos en el mismo libro")
+from libro import LibroContado, OperacionNoEjecutable
+L = LibroContado(1000.0, permitir_fraccionado=True)
+try:
+    L.abrir_corto("AAA", 5, 100)
+    corto_rechazado = False
+except OperacionNoEjecutable:
+    corto_rechazado = True
+check("G2", "el libro ejecutable al contado no admite abrir cortos",
+      corto_rechazado, "-> permitio un corto")
+
+L.comprar("AAA", 5.0, 100.0)
+v = L.vender("AAA", 3.0, 100.0)
+check("G3", "una venta que reduce un largo existente SI es ejecutable",
+      v.cantidad_ejecutada == 3.0 and abs(L.cantidad("AAA") - 2.0) < 1e-9,
+      f"-> vendio {v.cantidad_ejecutada}, queda {L.cantidad('AAA')}")
+
+v2 = L.vender("AAA", 100.0, 100.0)
+check("G4", "vender mas de lo disponible no abre un corto: se limita",
+      v2.cantidad_ejecutada <= 2.0 + 1e-9 and L.cantidad("AAA") <= 1e-9,
+      f"-> vendio {v2.cantidad_ejecutada}, queda {L.cantidad('AAA')}")
 
 
 print("\n" + "=" * 68)

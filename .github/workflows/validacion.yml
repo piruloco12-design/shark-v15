@@ -95,21 +95,20 @@ jobs:
           python tests/test_observacion.py 2>&1 | tail -8  | tee -a resultados/ultimo.md
           { echo '```'; echo; } >> resultados/ultimo.md
 
-      - name: Pruebas de aceptacion economica (hoy FALLAN a proposito)
-        # No bloquea: hoy fallan las 22 porque el motor economico esta sin
-        # corregir tras la auditoria del 2026-10-19. Corre igual para que
-        # el hueco sea visible en cada corrida en vez de quedar escondido.
-        # Cuando pasen todas, quitar continue-on-error y pasarla al paso de
-        # regresion.
-        continue-on-error: true
+      - name: Pruebas de aceptacion economica
+        # Ya BLOQUEA: las 32 pasan desde el 2026-10-19. Son los contratos
+        # economicos que la auditoria exigio, y cada uno llama al ejecutor
+        # real con un caso cuyo resultado correcto se conoce de antemano.
+        # Si una vuelve a fallar, se corrige el motor; nunca el esperado.
         run: |
-          python tests/test_aceptacion.py 2>&1 | tee /tmp/aceptacion.txt || true
+          set -o pipefail
+          python tests/test_aceptacion.py 2>&1 | tee /tmp/aceptacion.txt
           {
-            echo '## Aceptacion economica (pendiente)'
+            echo '## Aceptacion economica'
             echo
-            echo 'Contratos economicos que el motor todavia NO cumple.'
-            echo 'Mientras fallen, ninguna cifra de resultados/ es una'
-            echo 'medicion. Ver resultados/LEEME_RESULTADOS_INVALIDADOS.md'
+            echo 'Contratos economicos con oraculos de resultado conocido,'
+            echo 'llamando al ejecutor real. Vienen de la auditoria del'
+            echo '2026-10-19.'
             echo
             echo '```'
             tail -40 /tmp/aceptacion.txt
@@ -134,7 +133,8 @@ jobs:
               "institucional", "institucional.referencia",
               "institucional.contratos", "institucional.configuracion",
               "institucional.vista", "institucional.modulos",
-              "institucional.observacion",
+              "institucional.observacion", "institucional.snapshot",
+              "libro", "evaluador.metricas", "evaluador.mensual",
               "live_engine", "main",
           ]
           fallos = []

@@ -96,10 +96,18 @@ class Instrumento:
     precision_cantidad: int = 8
 
     def redondear_a_lote(self, cantidad: float) -> float:
-        """Siempre HACIA ABAJO: redondear hacia arriba inventa dinero."""
+        """Siempre HACIA ABAJO: redondear hacia arriba inventa dinero.
+
+        El caso fraccionable usaba round(), y round() redondea al par mas
+        cercano: puede subir. Con eso la cantidad maxima comprable salia
+        unos céntimos por encima de lo que cabia y la invariante de
+        no-margen saltaba. Que saltara esta bien; lo que estaba mal era
+        usar round() en una funcion cuyo docstring dice "hacia abajo".
+        """
         c = _no_negativo(cantidad, "cantidad")
         if self.lote <= 0:
-            return round(c, self.precision_cantidad)
+            escala = 10.0 ** self.precision_cantidad
+            return math.floor(c * escala) / escala
         return math.floor(c / self.lote + CENTIMO) * self.lote
 
 

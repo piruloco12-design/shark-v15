@@ -42,12 +42,70 @@ except Exception as _e_inst:      # pragma: no cover
     INSTITUCIONAL_DISPONIBLE = False
     _INST_ERROR = str(_e_inst)
 
-# Series diarias para M02/M03. El ciclo intradia no las descarga: son
-# mensuales y pedirlas cada 15 minutos seria gastar cuota para nada.
-# Las rellena quien corra el ciclo (o una tarea mensual aparte).
+# Series diarias y ranking para M02/M03.
+#
+# Esto estaba a None y SOLO se rellenaba en tests/_replay_runner.py, asi que
+# por la ruta de produccion M02 y M03 registraban NO_DATA siempre: los logs
+# mostraban evaluaciones, la tabla se llenaba de filas, y ninguna llevaba una
+# opinion dentro. Parecia que los modulos funcionaban.
+#
+# Ahora los llena una tarea mensual persistida (institucional/snapshot.py).
+# El ciclo intradia NO descarga: lee el snapshot de la base de datos. Solo
+# cuando el snapshot caduca, una vez al mes, se vuelve a descargar.
 _INST_SERIES_TR = None
 _INST_EFECTIVO = None
 _INST_RANKING = None
+_INST_SNAPSHOT_ID = None
+
+
+def _refrescar_snapshot_institucional(forzar=False):
+    """Carga el snapshot mensual y, si caduco, lo reconstruye.
+
+    Nunca lanza: si falla, los modulos se quedan sin datos y registran
+    NO_DATA, que es la degradacion correcta. Lo que no puede pasar es que
+    un fallo aqui tumbe un ciclo del bot.
+    """
+    global _INST_SERIES_TR, _INST_EFECTIVO, _INST_RANKING, _INST_SNAPSHOT_ID
+
+    if not INSTITUCIONAL_DISPONIBLE or _INST_EXTENSION is None:
+        return
+    if _INST_EXTENSION.mode == "OFF":
+        return
+
+    try:
+        from institucional import snapshot as _snap
+
+        hace_falta, motivo = _snap.hace_falta_actualizar()
+        if hace_falta or forzar:
+            _log(f"INST | snapshot: {motivo} -> reconstruyendo")
+            resultado = _snap.actualizar_si_toca(
+                list(ASSETS), config_hash=_INST_EXTENSION.config_hash())
+            snap = resultado["snapshot"]
+        else:
+            snap = _snap.cargar_ultimo()
+
+        if snap is None:
+            _log("INST | sin snapshot disponible: M02/M03 quedan en NO_DATA")
+            return
+
+        _INST_SERIES_TR = snap.get("series") or None
+        _INST_EFECTIVO = snap.get("efectivo")
+        _INST_RANKING = _snap.a_ranking(snap)
+        _INST_SNAPSHOT_ID = snap.get("snapshot_id")
+
+        import pandas as _pd
+        _log(
+            f"INST | snapshot {_INST_SNAPSHOT_ID} | "
+            f"{len(_INST_SERIES_TR or {})} series | "
+            f"vigente hasta "
+            f"{_pd.Timestamp(snap['valid_until'], unit='s', tz='UTC').date()} | "
+            f"ranking {snap['ranking']['seleccionados']}"
+        )
+        if snap.get("incidencias"):
+            _log(f"INST | incidencias del snapshot: {snap['incidencias']}")
+
+    except Exception as e:
+        _log(f"INST | no se pudo refrescar el snapshot: {type(e).__name__}: {e}")
 
 # Imports directos — NO en try/except para que fallen ruidosamente si hay error
 from paper_broker import (
@@ -338,6 +396,11 @@ def _log(msg):
 def run_live_cycle():
     _log("\n=== SHARK V15 SNIPER LIVE CYCLE ===")
     _log(f"Hora: {_ahora_utc()}")
+
+    # Comprobacion barata: una consulta a la base de datos. Solo descarga
+    # si el snapshot ha caducado, que es una vez al mes.
+    if INSTITUCIONAL_DISPONIBLE and _INST_SERIES_TR is None:
+        _refrescar_snapshot_institucional()
 
     # -------------------------------------------------
     # 1) DESCARGAR DATOS DE TODOS LOS ACTIVOS
@@ -660,6 +723,9 @@ def run_live_engine():
                  f"config {_INST_EXTENSION.config_hash()}")
         except Exception as e:
             _log(f"INST | no se pudo inicializar la observacion: {e}")
+        # Sin esto, M02 y M03 no ven ningun dato y registran NO_DATA
+        # para siempre sin que nada parezca roto.
+        _refrescar_snapshot_institucional()
     else:
         _log(f"INST | ampliacion no disponible: "
              f"{globals().get('_INST_ERROR', 'motivo desconocido')}")
