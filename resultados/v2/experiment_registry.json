@@ -1,7 +1,7 @@
 {
   "nombre": "M02/M03 solo largos con el motor corregido",
-  "creado_en": "2026-10-19T19:44:33Z",
-  "commit": "aaf2ba7313d4-sucio",
+  "creado_en": "2026-10-19T20:44:23Z",
+  "commit": "680f4bd62006-sucio",
   "estado": "EXPLORATORIO",
   "universo_etiqueta": "EXPLORATORY_SURVIVOR_UNIVERSE",
   "familia": [
@@ -73,7 +73,7 @@
     "mensual.py": "aa6e11e270efae00",
     "metricas.py": "e1285d65c273d244",
     "inferencia.py": "719f9017173a13a7",
-    "experimento.py": "f41f55f83fba6a9c"
+    "experimento.py": "2ba24f8b4bfc838a"
   },
   "dependencias": {
     "python": "3.11.17",
@@ -81,5 +81,5 @@
     "numpy": "2.4.6"
   },
   "_aviso": "Este registro se escribe ANTES de calcular los resultados. Si la familia, la m\u00e9trica o el umbral cambian despu\u00e9s, cambia el hash y queda a la vista.",
-  "hash_registro": "701bbc6bdc863c75"
+  "hash_registro": "c05c7e0cbd2e755d"
 }

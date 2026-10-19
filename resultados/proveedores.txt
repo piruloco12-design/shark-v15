@@ -1,7 +1,7 @@
 PRUEBA DE PROVEEDORES — cada uno por separado
 Cascada por defecto: ['yfinance', 'finnhub', 'alpha_vantage', 'twelve_data']
 
-  OK    yfinance   SPY         3771 velas  2011-10-19 -> 2026-10-19
+  OK    yfinance   SPY         3770 velas  2011-10-20 -> 2026-10-19
   FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: Stooq
   OK    yfinance   BTC-USD     4416 velas  2014-09-17 -> 2026-10-19
   OK    coinbase   BTC-USD     4110 velas  2015-07-20 -> 2026-10-19

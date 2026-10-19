@@ -1,29 +1,29 @@
 {
   "etiqueta": "M02_tendencia_252_63",
-  "inicio": "2012-10-19",
+  "inicio": "2012-10-22",
   "fin": "2026-10-19",
-  "anos": 13.9986,
+  "anos": 13.9904,
   "nav_inicial": 1000.0,
-  "nav_final": 5401.380851,
-  "retorno_total": 4.401381,
-  "cagr": 0.128046,
-  "volatilidad_anual_diaria": 0.158584,
+  "nav_final": 5391.799142,
+  "retorno_total": 4.391799,
+  "cagr": 0.127983,
+  "volatilidad_anual_diaria": 0.158612,
   "max_drawdown_diario": -0.322965,
-  "sharpe_diferencial": 0.8417,
+  "sharpe_diferencial": 0.841,
   "sharpe_detalle": {
-    "sharpe": 0.8417,
-    "media_diferencial_periodica": 0.00052971,
-    "desviacion_diferencial_periodica": 0.00998988,
-    "periodos": 3517,
+    "sharpe": 0.841,
+    "media_diferencial_periodica": 0.00052936,
+    "desviacion_diferencial_periodica": 0.00999165,
+    "periodos": 3516,
     "periodos_por_ano": 252,
     "referencia": "tasa constante 0.00000000 por periodo"
   },
-  "observaciones_diarias": 3518,
+  "observaciones_diarias": 3517,
   "retorno_por_ano": {
     "2012": {
       "retorno": 0.014306,
       "completo": false,
-      "observaciones": 48
+      "observaciones": 47
     },
     "2013": {
       "retorno": 0.292963,
@@ -51,7 +51,7 @@
       "observaciones": 251
     },
     "2018": {
-      "retorno": -0.070307,
+      "retorno": -0.070308,
       "completo": true,
       "observaciones": 251
     },
@@ -71,7 +71,7 @@
       "observaciones": 252
     },
     "2022": {
-      "retorno": -0.050719,
+      "retorno": -0.050718,
       "completo": true,
       "observaciones": 251
     },
@@ -91,7 +91,7 @@
       "observaciones": 250
     },
     "2026": {
-      "retorno": 0.136572,
+      "retorno": 0.134556,
       "completo": false,
       "observaciones": 200
     }
@@ -114,58 +114,58 @@
   },
   "decisiones": 168,
   "intenciones": 2000,
-  "intenciones_ejecutadas": 1999,
-  "intenciones_rechazadas": 1,
-  "comisiones_moneda": 116.737111,
-  "nominal_ejecutado": 145921.39,
+  "intenciones_ejecutadas": 2000,
+  "intenciones_rechazadas": 0,
+  "comisiones_moneda": 116.737122,
+  "nominal_ejecutado": 145921.4,
   "coste_sobre_nominal_pb": 8.0,
-  "coste_por_intencion_moneda": 0.058398,
-  "rotacion_anual_nominal": 10.424,
+  "coste_por_intencion_moneda": 0.058369,
+  "rotacion_anual_nominal": 10.43,
   "concentracion_final": {
     "invertido": 1.0,
-    "peso_maximo": 0.098482,
-    "posiciones_efectivas": 10.98,
+    "peso_maximo": 0.098454,
+    "posiciones_efectivas": 10.979,
     "posiciones": 11
   },
   "pesos_finales": {
-    "XLI": 0.08925,
-    "QQQ": 0.08684,
-    "SPY": 0.08979,
-    "DIA": 0.09109,
-    "XLK": 0.08498,
-    "IWM": 0.08715,
-    "MDY": 0.0898,
-    "XLB": 0.0933,
-    "XLE": 0.09848,
-    "XLP": 0.0965,
-    "XLV": 0.09283
+    "XLI": 0.08914,
+    "QQQ": 0.08672,
+    "SPY": 0.08976,
+    "DIA": 0.09115,
+    "XLK": 0.08484,
+    "IWM": 0.08718,
+    "MDY": 0.08981,
+    "XLB": 0.09343,
+    "XLE": 0.09845,
+    "XLP": 0.09663,
+    "XLV": 0.09289
   },
   "estado_libro_final": {
     "moneda_cuenta": "USD",
     "efectivo": 1e-06,
     "efectivo_utilizable": 1e-06,
     "reservado": 0.0,
-    "valor_posiciones": 5401.380849,
+    "valor_posiciones": 5391.799141,
     "derechos": 0.0,
     "obligaciones": 0.0,
-    "nav": 5401.380851,
+    "nav": 5391.799142,
     "posiciones": {
-      "XLI": 2.88367498,
-      "QQQ": 0.65089963,
-      "SPY": 0.63138879,
-      "DIA": 0.94704826,
-      "XLK": 2.45985203,
-      "IWM": 1.7327576,
-      "MDY": 0.73322474,
-      "XLB": 9.88739278,
-      "XLE": 7.82952904,
-      "XLP": 5.97414448,
-      "XLV": 2.85140764
+      "XLI": 2.88367551,
+      "QQQ": 0.65089975,
+      "SPY": 0.6313889,
+      "DIA": 0.94704843,
+      "XLK": 2.45985248,
+      "IWM": 1.73275792,
+      "MDY": 0.73322487,
+      "XLB": 9.88739459,
+      "XLE": 7.82953047,
+      "XLP": 5.97414557,
+      "XLV": 2.8514082
     },
     "concentracion": {
       "invertido": 1.0,
-      "peso_maximo": 0.098482,
-      "posiciones_efectivas": 10.98,
+      "peso_maximo": 0.098454,
+      "posiciones_efectivas": 10.979,
       "posiciones": 11
     },
     "movimientos": 2000,

@@ -1,8 +1,8 @@
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash 701bbc6bdc863c75
-Commit: aaf2ba7313d4-sucio
+Registro escrito ANTES de calcular: hash c05c7e0cbd2e755d
+Commit: 680f4bd62006-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -21,45 +21,66 @@ DATOS
 ========================================================================
   cargados 31/31 activos
   referencia de efectivo (BIL): OK
-  panel guardado: 3771 filas, 2011-10-19 -> 2026-10-19, hash e8d578ccf9b5ce8b
+  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash b38b329b8de297b8
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)
 ========================================================================
-  calentamiento hasta 2012-10-19, 168 decisiones mensuales
+  calentamiento hasta 2012-10-22, 168 decisiones mensuales
 
   ESTRATEGIA                     CAGR  SHARPE  MAXDD-D   ROT/A  INTENC
   --------------------------------------------------------------------
   comprar_y_mantener            9.05%    0.77   -27.1%    0.07      31
   rebalanceo_equiponderado      6.67%    0.73   -23.8%    0.63    5208
-  M03_momentum_12_1            10.39%    0.65   -32.2%   12.53    1050
+  M03_momentum_12_1            10.38%    0.65   -32.2%   12.54    1050
   M02_tendencia                 6.51%    0.65   -25.0%    6.19    3515
 
 ========================================================================
 UNIVERSO: renta_variable  (14 activos)
 ========================================================================
-  calentamiento hasta 2012-10-19, 168 decisiones mensuales
+  calentamiento hasta 2012-10-22, 168 decisiones mensuales
 
   ESTRATEGIA                     CAGR  SHARPE  MAXDD-D   ROT/A  INTENC
   --------------------------------------------------------------------
-  comprar_y_mantener           13.76%    0.86   -35.0%    0.07      14
-  rebalanceo_equiponderado     13.43%    0.86   -36.5%    0.81    2352
-  M03_momentum_12_1            13.77%    0.85   -30.5%   14.47     967
-  M02_tendencia                12.80%    0.84   -32.3%   10.42    2000
+  comprar_y_mantener           13.75%    0.86   -35.0%    0.07      14
+  rebalanceo_equiponderado     13.42%    0.86   -36.5%    0.81    2352
+  M03_momentum_12_1            13.76%    0.85   -30.5%   14.48     967
+  M02_tendencia                12.80%    0.84   -32.3%   10.43    2000
 
 ========================================================================
 INFERENCIA (al final, sobre la familia declarada)
 ========================================================================
-  multiactivo/M03          CAGR +10.39% vs  +9.05%  dif +1.33 pts  p=0.2799
+  multiactivo/M03          CAGR +10.38% vs  +9.05%  dif +1.33 pts  p=0.2799
   multiactivo/M02          CAGR  +6.51% vs  +9.05%  dif -2.54 pts  p=0.9158
-  renta_variable/M03       CAGR +13.77% vs +13.76%  dif +0.01 pts  p=0.5335
-  renta_variable/M02       CAGR +12.80% vs +13.76%  dif -0.95 pts  p=0.9196
+  renta_variable/M03       CAGR +13.76% vs +13.75%  dif +0.01 pts  p=0.5341
+  renta_variable/M02       CAGR +12.80% vs +13.75%  dif -0.95 pts  p=0.9186
 
   CORRECCION DE HOLM sobre 4 hipotesis, error familiar 0.05
     multiactivo/M03          p=0.279944  umbral=0.01250  -> no rechaza
-    renta_variable/M03       p=0.533493  umbral=0.01667  -> no rechaza
+    renta_variable/M03       p=0.534093  umbral=0.01667  -> no rechaza
     multiactivo/M02          p=0.915817  umbral=0.02500  -> no rechaza
-    renta_variable/M02       p=0.919616  umbral=0.05000  -> no rechaza
+    renta_variable/M02       p=0.918616  umbral=0.05000  -> no rechaza
+
+========================================================================
+SESGO DE SUPERVIVENCIA, POR ESCENARIOS DECLARADOS
+========================================================================
+  No es una correccion del sesgo: es cuanto se moveria el
+  resultado SI el mundo hubiera sido como cada escenario dice.
+
+  base (solo supervivientes): diferencial +1.33 pts
+
+  ESCENARIO/FORMA                   DIF   CAMBIO  %SEL.MUERTA
+  ------------------------------------------------------------
+  leve/colapso                   +1.44%   +0.10         8.5%
+  moderado/colapso               +2.73%   +1.39        15.9%
+  severo/colapso                 +3.40%   +2.07        17.2%
+  leve/desvanecimiento           +1.40%   +0.07         2.0%
+  moderado/desvanecimiento       +3.25%   +1.92         2.1%
+  severo/desvanecimiento         +3.38%   +2.04         0.5%
+
+  cambio en el diferencial: de +0.07 a +2.07 puntos
+  favorecia a la estrategia en TODOS los escenarios: False
+  favorecia a la referencia en TODOS: True
 
 ========================================================================
 CONCLUSION

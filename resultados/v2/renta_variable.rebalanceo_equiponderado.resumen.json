@@ -1,29 +1,29 @@
 {
   "etiqueta": "rebalanceo_equiponderado",
-  "inicio": "2012-10-19",
+  "inicio": "2012-10-22",
   "fin": "2026-10-19",
-  "anos": 13.9986,
+  "anos": 13.9904,
   "nav_inicial": 1000.0,
-  "nav_final": 5833.833449,
-  "retorno_total": 4.833833,
-  "cagr": 0.13427,
-  "volatilidad_anual_diaria": 0.162866,
+  "nav_final": 5825.47172,
+  "retorno_total": 4.825472,
+  "cagr": 0.134237,
+  "volatilidad_anual_diaria": 0.162889,
   "max_drawdown_diario": -0.364961,
-  "sharpe_diferencial": 0.8579,
+  "sharpe_diferencial": 0.8574,
   "sharpe_detalle": {
-    "sharpe": 0.8579,
-    "media_diferencial_periodica": 0.00055443,
-    "desviacion_diferencial_periodica": 0.0102596,
-    "periodos": 3517,
+    "sharpe": 0.8574,
+    "media_diferencial_periodica": 0.00055418,
+    "desviacion_diferencial_periodica": 0.01026106,
+    "periodos": 3516,
     "periodos_por_ano": 252,
     "referencia": "tasa constante 0.00000000 por periodo"
   },
-  "observaciones_diarias": 3518,
+  "observaciones_diarias": 3517,
   "retorno_por_ano": {
     "2012": {
       "retorno": 0.014306,
       "completo": false,
-      "observaciones": 48
+      "observaciones": 47
     },
     "2013": {
       "retorno": 0.292963,
@@ -46,7 +46,7 @@
       "observaciones": 252
     },
     "2017": {
-      "retorno": 0.1955,
+      "retorno": 0.195499,
       "completo": true,
       "observaciones": 251
     },
@@ -61,7 +61,7 @@
       "observaciones": 252
     },
     "2020": {
-      "retorno": 0.135549,
+      "retorno": 0.135548,
       "completo": true,
       "observaciones": 253
     },
@@ -91,7 +91,7 @@
       "observaciones": 250
     },
     "2026": {
-      "retorno": 0.139206,
+      "retorno": 0.137573,
       "completo": false,
       "observaciones": 200
     }
@@ -116,62 +116,62 @@
   "intenciones": 2352,
   "intenciones_ejecutadas": 2352,
   "intenciones_rechazadas": 0,
-  "comisiones_moneda": 9.020468,
+  "comisiones_moneda": 9.020466,
   "nominal_ejecutado": 11275.58,
   "coste_sobre_nominal_pb": 8.0,
   "coste_por_intencion_moneda": 0.003835,
-  "rotacion_anual_nominal": 0.805,
+  "rotacion_anual_nominal": 0.806,
   "concentracion_final": {
     "invertido": 0.999947,
-    "peso_maximo": 0.076967,
-    "posiciones_efectivas": 13.978,
+    "peso_maximo": 0.076919,
+    "posiciones_efectivas": 13.977,
     "posiciones": 14
   },
   "pesos_finales": {
-    "DIA": 0.07119,
+    "DIA": 0.07121,
     "IWM": 0.06811,
-    "MDY": 0.07018,
-    "QQQ": 0.06787,
-    "SPY": 0.07017,
-    "XLB": 0.07292,
-    "XLE": 0.07697,
-    "XLF": 0.07186,
-    "XLI": 0.06975,
-    "XLK": 0.06641,
-    "XLP": 0.07542,
-    "XLU": 0.07301,
-    "XLV": 0.07274,
-    "XLY": 0.07335
+    "MDY": 0.07016,
+    "QQQ": 0.06775,
+    "SPY": 0.07012,
+    "XLB": 0.073,
+    "XLE": 0.07692,
+    "XLF": 0.07194,
+    "XLI": 0.06965,
+    "XLK": 0.06628,
+    "XLP": 0.07549,
+    "XLU": 0.07317,
+    "XLV": 0.07277,
+    "XLY": 0.07337
   },
   "estado_libro_final": {
     "moneda_cuenta": "USD",
-    "efectivo": 0.307062,
-    "efectivo_utilizable": 0.307062,
+    "efectivo": 0.307063,
+    "efectivo_utilizable": 0.307063,
     "reservado": 0.0,
-    "valor_posiciones": 5833.526387,
+    "valor_posiciones": 5825.164657,
     "derechos": 0.0,
     "obligaciones": 0.0,
-    "nav": 5833.833449,
+    "nav": 5825.47172,
     "posiciones": {
-      "DIA": 0.79941269,
-      "IWM": 1.46263763,
-      "MDY": 0.61892217,
-      "QQQ": 0.54943075,
-      "SPY": 0.53296146,
-      "XLB": 8.34604492,
-      "XLE": 6.60898202,
-      "XLF": 7.61146783,
-      "XLI": 2.43413824,
-      "XLK": 2.07638516,
-      "XLP": 5.04283377,
-      "XLU": 10.30558844,
-      "XLV": 2.41332621,
-      "XLY": 3.73440286
+      "DIA": 0.79941272,
+      "IWM": 1.46263768,
+      "MDY": 0.61892219,
+      "QQQ": 0.54943077,
+      "SPY": 0.53296148,
+      "XLB": 8.34604522,
+      "XLE": 6.60898225,
+      "XLF": 7.61146811,
+      "XLI": 2.43413833,
+      "XLK": 2.07638524,
+      "XLP": 5.04283395,
+      "XLU": 10.30558882,
+      "XLV": 2.41332629,
+      "XLY": 3.734403
     },
     "concentracion": {
       "invertido": 0.999947,
-      "peso_maximo": 0.076967,
-      "posiciones_efectivas": 13.978,
+      "peso_maximo": 0.076919,
+      "posiciones_efectivas": 13.977,
       "posiciones": 14
     },
     "movimientos": 2352,

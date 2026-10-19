@@ -12,11 +12,11 @@
 =================================================================
 
 Descargando IWM...
-  OK | yfinance | 3771 velas
+  OK | yfinance | 3770 velas
 Descargando NVDA...
-  OK | yfinance | 3771 velas
+  OK | yfinance | 3770 velas
 Descargando AMZN...
-  OK | yfinance | 3771 velas
+  OK | yfinance | 3770 velas
 Descargando META...
   OK | yfinance | 3625 velas
 
@@ -25,7 +25,7 @@ Descargando META...
 =================================================================
 
 ============================================================
-IWM | FULL | Bars: 3571
+IWM | FULL | Bars: 3570
 ============================================================
 Capital:     1000.00 → 928.24  (-71.76)
 Señales:     180 generadas | 104 ALLOW | 76 BLOCK
@@ -47,7 +47,7 @@ Bloqueos principales:
      1x  ADX insuficiente para sniper: 21.29 < 22.0 | Score final insuficiente para sniper: 54.56 <
 
 ============================================================
-NVDA | FULL | Bars: 3571
+NVDA | FULL | Bars: 3570
 ============================================================
 Capital:     1000.00 → 1181.95  (+181.95)
 Señales:     214 generadas | 136 ALLOW | 78 BLOCK
@@ -69,7 +69,7 @@ Bloqueos principales:
      1x  ADX insuficiente para sniper: 20.79 < 22.0 | Score final insuficiente para sniper: 54.24 <
 
 ============================================================
-AMZN | FULL | Bars: 3571
+AMZN | FULL | Bars: 3570
 ============================================================
 Capital:     1000.00 → 1024.31  (+24.31)
 Señales:     218 generadas | 131 ALLOW | 87 BLOCK
@@ -163,7 +163,7 @@ Bloqueos principales:
 
 --- IWM TEST ---
   ============================================================
-  IWM | TEST | Bars: 1132
+  IWM | TEST | Bars: 1131
   ============================================================
   Capital:     1000.00 → 939.20  (-60.80)
   Señales:     50 generadas | 29 ALLOW | 21 BLOCK
@@ -209,26 +209,26 @@ Bloqueos principales:
 
 --- NVDA TEST ---
   ============================================================
-  NVDA | TEST | Bars: 1132
+  NVDA | TEST | Bars: 1131
   ============================================================
-  Capital:     1000.00 → 1071.52  (+71.52)
-  Señales:     63 generadas | 40 ALLOW | 23 BLOCK
-  Trades:      40 cerrados | 24 wins | 16 losses
-  Winrate:     60.0%
-  Avg Trade:   1.79
-  Avg Win:     6.53  |  Avg Loss: 5.33
-  Expectancy:  1.79 por trade
-  PF:          1.84
-  Max DD:      17.80 (1.8%)
-  Avg Bars:    9 velas
+  Capital:     1000.00 → 1083.64  (+83.64)
+  Señales:     61 generadas | 40 ALLOW | 21 BLOCK
+  Trades:      40 cerrados | 25 wins | 15 losses
+  Winrate:     62.5%
+  Avg Trade:   2.09
+  Avg Win:     6.59  |  Avg Loss: 5.41
+  Expectancy:  2.09 por trade
+  PF:          2.03
+  Max DD:      18.00 (1.8%)
+  Avg Bars:    11 velas
   Regímenes:   {'BEAR_TREND': 6, 'BULL_TREND': 24, 'TREND': 10}
   Señales:     {'SELL': 8, 'BUY': 32}
   Bloqueos principales:
-      16x  Cooldown por activo (6h)
-       1x  ADX insuficiente para sniper: 20.01 < 22.0 | Score final insuficiente para sniper: 53.76 <
+      15x  Cooldown por activo (6h)
        1x  ADX insuficiente para sniper: 20.82 < 22.0 | Score final insuficiente para sniper: 54.26 <
        1x  ADX insuficiente para sniper: 20.90 < 22.0 | Score final insuficiente para sniper: 54.31 <
        1x  ADX insuficiente para sniper: 20.41 < 22.0 | Score final insuficiente para sniper: 54.01 <
+       1x  ADX insuficiente para sniper: 21.79 < 22.0 | Score final insuficiente para sniper: 54.87 <
 
 --- AMZN TRAIN ---
   ============================================================
@@ -255,7 +255,7 @@ Bloqueos principales:
 
 --- AMZN TEST ---
   ============================================================
-  AMZN | TEST | Bars: 1132
+  AMZN | TEST | Bars: 1131
   ============================================================
   Capital:     1000.00 → 992.73  (-7.27)
   Señales:     54 generadas | 36 ALLOW | 18 BLOCK
@@ -345,17 +345,17 @@ Bloqueos principales:
 #################################################################
   CONSOLIDADO TEST (OUT-OF-SAMPLE) — 4 activos
 #################################################################
-  Señales:     230 generadas | 149 ALLOW | 81 BLOCK
-  Trades:      147 cerrados | 71 wins | 76 losses
-  Winrate:     48.3%
-  Avg Trade:   0.44
-  Avg Win:     6.82  |  Avg Loss: 5.51
-  Expectancy:  0.44 por trade
-  PF:          1.16
-  PnL total:   +64.87
+  Señales:     228 generadas | 149 ALLOW | 79 BLOCK
+  Trades:      147 cerrados | 72 wins | 75 losses
+  Winrate:     49.0%
+  Avg Trade:   0.53
+  Avg Win:     6.83  |  Avg Loss: 5.53
+  Expectancy:  0.53 por trade
+  PF:          1.19
+  PnL total:   +76.99
   Peor DD:     74.11
   -------------------------------------------------------------
-  Suma PnL trades:  +65.07   (debe cuadrar con PnL total)
+  Suma PnL trades:  +77.19   (debe cuadrar con PnL total)
   ✅ Cuadra (dif. 0.20, son costes de trades aún abiertos)
 #################################################################
 
@@ -374,7 +374,7 @@ Bloqueos principales:
 
   NVDA:
     TRAIN: 96 trades | WR 53.1% | PF 1.36 | Exp 0.95
-    TEST:  40 trades | WR 60.0% | PF 1.84 | Exp 1.79
+    TEST:  40 trades | WR 62.5% | PF 2.03 | Exp 2.09
     ✅  Consistente entre train y test
 
   AMZN:
