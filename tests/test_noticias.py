@@ -108,9 +108,16 @@ def responder(payload):
     return RespuestaFalsa({"candidates": [{"content": {"parts": [
         {"text": json.dumps(payload)}]}}]})
 
-gemini_filter.requests = types.SimpleNamespace(
-    post=lambda *a, **k: responder(
-        {"veredicto": "VETAR", "confianza": 85, "motivo": "resultados malos"}))
+CAT_MIN = {"models": [{"name": "models/gemini-2.5-flash",
+                       "baseModelId": "gemini-2.5-flash",
+                       "supportedGenerationMethods": ["generateContent"]}]}
+def _reqs(post):
+    return types.SimpleNamespace(post=post,
+                                 get=lambda *a, **k: RespuestaFalsa(CAT_MIN))
+gemini_filter.MODELO = "gemini-2.5-flash"
+gemini_filter._MODELO_RESUELTO = "gemini-2.5-flash"
+gemini_filter.requests = _reqs(lambda *a, **k: responder(
+    {"veredicto": "VETAR", "confianza": 85, "motivo": "resultados malos"}))
 
 gemini_filter.MODO = "sombra"
 r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "titulares")
@@ -123,38 +130,35 @@ gemini_filter.MODO = "bloqueo"
 r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "titulares")
 check("en modo bloqueo SI bloquea un veto con confianza alta", r["bloquea"] is True)
 
-gemini_filter.requests = types.SimpleNamespace(
-    post=lambda *a, **k: responder(
-        {"veredicto": "VETAR", "confianza": 30, "motivo": "dudoso"}))
+gemini_filter.requests = _reqs(lambda *a, **k: responder(
+    {"veredicto": "VETAR", "confianza": 30, "motivo": "dudoso"}))
 r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "t")
 check("un veto con poca confianza no bloquea", r["bloquea"] is False)
 
 # API caida
-gemini_filter.requests = types.SimpleNamespace(
-    post=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("timeout")))
+gemini_filter.requests = _reqs(
+    lambda *a, **k: (_ for _ in ()).throw(RuntimeError("timeout")))
 r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "t")
 check("si Gemini falla devuelve NEUTRAL", r["veredicto"] == "NEUTRAL")
 check("y NO bloquea la operacion", r["bloquea"] is False,
       "-> un fallo de la API no puede parar la cuenta")
 
 # Respuesta ilegible
-gemini_filter.requests = types.SimpleNamespace(
-    post=lambda *a, **k: RespuestaFalsa({"candidates": [{"content": {"parts": [
-        {"text": "lo siento, no puedo"}]}}]}))
+gemini_filter.requests = _reqs(lambda *a, **k: RespuestaFalsa(
+    {"candidates": [{"content": {"parts": [{"text": "lo siento, no puedo"}]}}]}))
 r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "t")
 check("respuesta ilegible -> NEUTRAL", r["veredicto"] == "NEUTRAL" and not r["bloquea"])
 
 # JSON envuelto en markdown
-gemini_filter.requests = types.SimpleNamespace(
-    post=lambda *a, **k: RespuestaFalsa({"candidates": [{"content": {"parts": [
+gemini_filter.requests = _reqs(lambda *a, **k: RespuestaFalsa(
+    {"candidates": [{"content": {"parts": [
         {"text": '```json\n{"veredicto":"APROBAR","confianza":70,"motivo":"ok"}\n```'}]}}]}))
 r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "t")
 check("entiende el JSON envuelto en markdown", r["veredicto"] == "APROBAR", f"-> {r}")
 
 # Veredicto inventado
-gemini_filter.requests = types.SimpleNamespace(
-    post=lambda *a, **k: responder(
-        {"veredicto": "COMPRA_FUERTE", "confianza": 99, "motivo": "x"}))
+gemini_filter.requests = _reqs(lambda *a, **k: responder(
+    {"veredicto": "COMPRA_FUERTE", "confianza": 99, "motivo": "x"}))
 r = gemini_filter.verificar_operacion("NVDA", "BUY", 180.0, "TREND", "t")
 check("un veredicto inventado se trata como NEUTRAL",
       r["veredicto"] == "NEUTRAL" and not r["bloquea"])
@@ -165,29 +169,102 @@ check("apagado devuelve NEUTRAL sin llamar a la API",
       r["veredicto"] == "NEUTRAL" and r["fuente"] == "interno")
 
 
-print("\n=== 3) prueba de conexion al arrancar ===")
+print("\n=== 3) descubrimiento de modelo ===")
+
+# El fallo real del 2026-10-19: el bot pedia gemini-2.0-flash y
+# la API devolvia 404. Los nombres de modelo caducan, asi que
+# ahora se preguntan en vez de fijarse.
+
+CATALOGO = {"models": [
+    {"name": "models/gemini-1.5-pro", "baseModelId": "gemini-1.5-pro",
+     "supportedGenerationMethods": ["generateContent"]},
+    {"name": "models/gemini-2.5-flash", "baseModelId": "gemini-2.5-flash",
+     "supportedGenerationMethods": ["generateContent"]},
+    {"name": "models/gemini-2.5-flash-preview", "baseModelId": "gemini-2.5-flash-preview",
+     "supportedGenerationMethods": ["generateContent"]},
+    {"name": "models/text-embedding-004", "baseModelId": "text-embedding-004",
+     "supportedGenerationMethods": ["embedContent"]},
+]}
+
+gemini_filter.GEMINI_API_KEY = "clave-falsa"
+gemini_filter.requests = types.SimpleNamespace(
+    get=lambda *a, **k: RespuestaFalsa(CATALOGO))
+
+disponibles = gemini_filter.listar_modelos()
+check("lista solo los que generan contenido",
+      set(disponibles) == {"gemini-1.5-pro", "gemini-2.5-flash",
+                           "gemini-2.5-flash-preview"},
+      f"-> {disponibles}")
+check("descarta los de embeddings", "text-embedding-004" not in disponibles)
+
+# Modelo configurado inexistente -> elige uno real
+gemini_filter.MODELO = "gemini-2.0-flash"
+gemini_filter._MODELO_RESUELTO = None
+modelo, nota = gemini_filter.resolver_modelo(forzar=True)
+check("si el configurado no existe, elige uno disponible",
+      modelo in disponibles, f"-> {modelo} ({nota})")
+check("prefiere flash sobre pro", "flash" in modelo, f"-> {modelo}")
+check("evita las versiones preview", "preview" not in modelo, f"-> {modelo}")
+check("la nota explica el cambio", "no existe" in nota, f"-> {nota}")
+
+# Modelo configurado que si existe -> se respeta
+gemini_filter.MODELO = "gemini-1.5-pro"
+gemini_filter._MODELO_RESUELTO = None
+modelo, nota = gemini_filter.resolver_modelo(forzar=True)
+check("si el configurado existe, se respeta", modelo == "gemini-1.5-pro",
+      f"-> {modelo}")
+
+# Prefijo: gemini-2.5-flash -> coincide exacto
+gemini_filter.MODELO = "gemini-2.5"
+gemini_filter._MODELO_RESUELTO = None
+modelo, _ = gemini_filter.resolver_modelo(forzar=True)
+check("un prefijo encuentra la version concreta",
+      modelo and modelo.startswith("gemini-2.5"), f"-> {modelo}")
+
+# Catalogo vacio
+gemini_filter.requests = types.SimpleNamespace(
+    get=lambda *a, **k: RespuestaFalsa({"models": []}))
+gemini_filter._MODELO_RESUELTO = None
+modelo, nota = gemini_filter.resolver_modelo(forzar=True)
+check("catalogo vacio -> ningun modelo y lo dice", modelo is None, f"-> {nota}")
+
+# API caida al listar
+gemini_filter.requests = types.SimpleNamespace(
+    get=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("403 forbidden")))
+gemini_filter._MODELO_RESUELTO = None
+modelo, nota = gemini_filter.resolver_modelo(forzar=True)
+check("si no se puede listar, lo dice sin explotar",
+      modelo is None and "no se pudo listar" in nota, f"-> {nota}")
+
+gemini_filter.MODELO = "gemini-2.5-flash"
+gemini_filter._MODELO_RESUELTO = "gemini-2.5-flash"
+
+
+print("\n=== 4) prueba de conexion al arrancar ===")
 
 gemini_filter.HABILITADO = True
 gemini_filter.GEMINI_API_KEY = "clave-falsa"
 
 # Caso bueno: ante una noticia mala en una compra, veta.
-gemini_filter.requests = types.SimpleNamespace(
-    post=lambda *a, **k: responder(
-        {"veredicto": "VETAR", "confianza": 80, "motivo": "resultados malos"}))
+def falsas(post):
+    return types.SimpleNamespace(post=post,
+                                 get=lambda *a, **k: RespuestaFalsa(CATALOGO))
+
+gemini_filter.requests = falsas(lambda *a, **k: responder(
+    {"veredicto": "VETAR", "confianza": 80, "motivo": "resultados malos"}))
 ok, msg = gemini_filter.probar_conexion()
 check("clave valida y respuesta coherente -> OK", ok is True, f"-> {msg}")
 
 # Caso malo: aprueba una compra con una noticia claramente mala.
-gemini_filter.requests = types.SimpleNamespace(
-    post=lambda *a, **k: responder(
-        {"veredicto": "APROBAR", "confianza": 90, "motivo": "todo bien"}))
+gemini_filter.requests = falsas(lambda *a, **k: responder(
+    {"veredicto": "APROBAR", "confianza": 90, "motivo": "todo bien"}))
 ok, msg = gemini_filter.probar_conexion()
 check("si aprueba una compra con noticia mala -> AVISA", ok is False, f"-> {msg}")
 
 # Clave invalida / API caida: tiene que detectarse, no pasar
 # desapercibido. Es el escenario que motiva toda esta prueba.
-gemini_filter.requests = types.SimpleNamespace(
-    post=lambda *a, **k: (_ for _ in ()).throw(RuntimeError("401 invalid key")))
+gemini_filter.requests = falsas(
+    lambda *a, **k: (_ for _ in ()).throw(RuntimeError("401 invalid key")))
 ok, msg = gemini_filter.probar_conexion()
 check("clave invalida se DETECTA al arrancar", ok is False, f"-> {msg}")
 check("y el mensaje dice que no respondio", "no respondio" in msg.lower())
@@ -203,7 +280,7 @@ check("apagado no comprueba nada y no molesta", ok is True)
 gemini_filter.GEMINI_API_KEY = "clave-falsa"
 
 
-print("\n=== 4) los veredictos se guardan siempre ===")
+print("\n=== 5) los veredictos se guardan siempre ===")
 
 import storage
 storage.init_db()

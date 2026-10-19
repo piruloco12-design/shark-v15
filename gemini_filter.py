@@ -59,6 +59,99 @@ from config import (
 MODELO = GEMINI_MODELO
 URL_BASE = "https://generativelanguage.googleapis.com/v1beta/models"
 
+# Modelo descubierto en ejecucion. Se rellena la primera vez que
+# hace falta y se reutiliza.
+_MODELO_RESUELTO = None
+
+# Preferencias, de mas a menos deseable. Flash va primero: es el
+# mas barato y rapido, y la tarea (leer cuatro titulares y decir
+# si contradicen una operacion) no necesita mas.
+PREFERENCIAS = ("flash-lite", "flash", "pro")
+
+
+def listar_modelos():
+    """
+    Pregunta a Google que modelos existen de verdad.
+
+    Existe porque el nombre fijo fallo en produccion: el bot
+    pedia gemini-2.0-flash y la API devolvia 404. Los nombres de
+    modelo cambian y caducan, asi que codificarlos a fuego es
+    garantizar que un dia se rompa.
+
+    El propio error de Google lo dice: "Call ListModels to see the
+    list of available models and their supported methods."
+    """
+    respuesta = requests.get(
+        URL_BASE,
+        params={"key": GEMINI_API_KEY, "pageSize": 200},
+        timeout=REQUEST_TIMEOUT,
+    )
+    respuesta.raise_for_status()
+    datos = respuesta.json()
+
+    utiles = []
+    for m in datos.get("models", []):
+        metodos = m.get("supportedGenerationMethods", [])
+        if "generateContent" not in metodos:
+            continue
+        # name viene como "models/gemini-2.5-flash"; para generar
+        # se usa lo que hay detras de la barra.
+        nombre = m.get("baseModelId") or m.get("name", "").split("/")[-1]
+        if nombre:
+            utiles.append(nombre)
+    return utiles
+
+
+def _puntuar(nombre):
+    """Ordena los modelos segun PREFERENCIAS."""
+    bajo = nombre.lower()
+    for i, clave in enumerate(PREFERENCIAS):
+        if clave in bajo:
+            # Penaliza preview/exp: son los que desaparecen.
+            inestable = any(x in bajo for x in ("preview", "exp", "thinking"))
+            return (i, 1 if inestable else 0, nombre)
+    return (len(PREFERENCIAS), 1, nombre)
+
+
+def resolver_modelo(forzar=False):
+    """
+    Devuelve (modelo, nota). Usa el configurado si funciona; si
+    no, descubre uno disponible.
+    """
+    global _MODELO_RESUELTO
+
+    if _MODELO_RESUELTO and not forzar:
+        return _MODELO_RESUELTO, "ya resuelto"
+
+    if not GEMINI_API_KEY:
+        return None, "sin clave"
+
+    try:
+        disponibles = listar_modelos()
+    except Exception as e:
+        return None, f"no se pudo listar modelos: {type(e).__name__}: {str(e)[:120]}"
+
+    if not disponibles:
+        return None, "la cuenta no tiene ningun modelo con generateContent"
+
+    # 1) el configurado, si existe tal cual
+    if MODELO in disponibles:
+        _MODELO_RESUELTO = MODELO
+        return MODELO, "el configurado existe"
+
+    # 2) alguno que empiece igual (gemini-2.0-flash -> gemini-2.0-flash-001)
+    parecidos = [m for m in disponibles if m.startswith(MODELO)]
+    if parecidos:
+        elegido = sorted(parecidos, key=_puntuar)[0]
+        _MODELO_RESUELTO = elegido
+        return elegido, f"{MODELO!r} no existe, se usa {elegido!r}"
+
+    # 3) el mejor disponible segun preferencias
+    elegido = sorted(disponibles, key=_puntuar)[0]
+    _MODELO_RESUELTO = elegido
+    return elegido, (f"{MODELO!r} no existe; elegido {elegido!r} "
+                     f"de {len(disponibles)} disponibles")
+
 HABILITADO = GEMINI_FILTER_ENABLED
 MODO = GEMINI_FILTER_MODO
 
@@ -156,9 +249,13 @@ def verificar_operacion(ticker, direccion, precio, regimen, noticias_texto):
         noticias=noticias_texto,
     )
 
+    modelo, _nota = resolver_modelo()
+    if not modelo:
+        return _neutral(f"sin modelo utilizable: {_nota}", "gemini")
+
     try:
         respuesta = requests.post(
-            f"{URL_BASE}/{MODELO}:generateContent",
+            f"{URL_BASE}/{modelo}:generateContent",
             params={"key": GEMINI_API_KEY},
             json={
                 "contents": [{"parts": [{"text": prompt}]}],
@@ -205,7 +302,7 @@ def verificar_operacion(ticker, direccion, precio, regimen, noticias_texto):
         }
 
     except Exception as e:
-        return _neutral(f"{type(e).__name__}: {str(e)[:80]}", "gemini")
+        return _neutral(f"{type(e).__name__}: {str(e)[:200]}", "gemini")
 
 
 def probar_conexion():
@@ -231,6 +328,10 @@ def probar_conexion():
         return False, ("Filtro de noticias ENCENDIDO pero falta GEMINI_API_KEY. "
                        "No va a verificar nada.")
 
+    modelo, nota = resolver_modelo(forzar=True)
+    if not modelo:
+        return False, f"No hay modelo de Gemini utilizable: {nota}"
+
     prueba = verificar_operacion(
         ticker="TEST",
         direccion="BUY",
@@ -250,9 +351,9 @@ def probar_conexion():
     if not coherente:
         return False, (f"Gemini responde pero aprueba una compra con una "
                        f"noticia claramente mala: {prueba['veredicto']}. "
-                       f"Revisar el modelo ({MODELO}).")
+                       f"Revisar el modelo ({modelo}).")
 
-    return True, (f"Gemini responde correctamente ({MODELO}): "
+    return True, (f"Gemini responde correctamente ({modelo}): "
                   f"ante una noticia mala en una compra dijo "
                   f"{prueba['veredicto']}. Modo: {MODO.upper()}.")
 
