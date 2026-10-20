@@ -4,16 +4,16 @@
   "fin": "2026-10-19",
   "anos": 13.9904,
   "nav_inicial": 1000.0,
-  "nav_final": 5825.471664,
-  "retorno_total": 4.825472,
+  "nav_final": 5825.471444,
+  "retorno_total": 4.825471,
   "cagr": 0.134237,
-  "volatilidad_anual_diaria": 0.162889,
+  "volatilidad_anual_diaria": 0.163404,
   "max_drawdown_diario": -0.364961,
-  "sharpe_diferencial": 0.8574,
+  "sharpe_diferencial": 0.8552,
   "sharpe_detalle": {
-    "sharpe": 0.8574,
-    "media_diferencial_periodica": 0.00055418,
-    "desviacion_diferencial_periodica": 0.01026106,
+    "sharpe": 0.8552,
+    "media_diferencial_periodica": 0.00055451,
+    "desviacion_diferencial_periodica": 0.01029347,
     "periodos": 3516,
     "periodos_por_ano": 252,
     "referencia": "tasa constante 0.00000000 por periodo"
@@ -22,78 +22,138 @@
   "retorno_por_ano": {
     "2012": {
       "retorno": 0.014306,
+      "factor": 1.0143060701862467,
       "completo": false,
-      "observaciones": 47
+      "observaciones": 47,
+      "nav_base": 1000.0,
+      "nav_final": 1014.30607,
+      "cobertura": "PARCIAL"
     },
     "2013": {
-      "retorno": 0.292963,
+      "retorno": 0.320073,
+      "factor": 1.3200729983289075,
       "completo": true,
-      "observaciones": 252
+      "observaciones": 252,
+      "nav_base": 1014.30607,
+      "nav_final": 1338.958055,
+      "cobertura": "COMPLETO"
     },
     "2014": {
-      "retorno": 0.130391,
+      "retorno": 0.126345,
+      "factor": 1.1263452673091425,
       "completo": true,
-      "observaciones": 252
+      "observaciones": 252,
+      "nav_base": 1338.958055,
+      "nav_final": 1508.129069,
+      "cobertura": "COMPLETO"
     },
     "2015": {
-      "retorno": -0.009645,
+      "retorno": -0.005718,
+      "factor": 0.9942817819083888,
       "completo": true,
-      "observaciones": 252
+      "observaciones": 252,
+      "nav_base": 1508.129069,
+      "nav_final": 1499.505258,
+      "cobertura": "COMPLETO"
     },
     "2016": {
-      "retorno": 0.166519,
+      "retorno": 0.148339,
+      "factor": 1.148339099490488,
       "completo": true,
-      "observaciones": 252
+      "observaciones": 252,
+      "nav_base": 1499.505258,
+      "nav_final": 1721.940517,
+      "cobertura": "COMPLETO"
     },
     "2017": {
-      "retorno": 0.1955,
+      "retorno": 0.203812,
+      "factor": 1.2038119487134902,
       "completo": true,
-      "observaciones": 251
+      "observaciones": 251,
+      "nav_base": 1721.940517,
+      "nav_final": 2072.89257,
+      "cobertura": "COMPLETO"
     },
     "2018": {
-      "retorno": -0.065919,
+      "retorno": -0.062247,
+      "factor": 0.9377526294181133,
       "completo": true,
-      "observaciones": 251
+      "observaciones": 251,
+      "nav_base": 2072.89257,
+      "nav_final": 1943.860458,
+      "cobertura": "COMPLETO"
     },
     "2019": {
-      "retorno": 0.30254,
+      "retorno": 0.283263,
+      "factor": 1.2832625896490086,
       "completo": true,
-      "observaciones": 252
+      "observaciones": 252,
+      "nav_base": 1943.860458,
+      "nav_final": 2494.483405,
+      "cobertura": "COMPLETO"
     },
     "2020": {
-      "retorno": 0.135549,
+      "retorno": 0.141678,
+      "factor": 1.1416780449137005,
       "completo": true,
-      "observaciones": 253
+      "observaciones": 253,
+      "nav_base": 2494.483405,
+      "nav_final": 2847.896937,
+      "cobertura": "COMPLETO"
     },
     "2021": {
-      "retorno": 0.267225,
+      "retorno": 0.273209,
+      "factor": 1.2732091292831484,
       "completo": true,
-      "observaciones": 252
+      "observaciones": 252,
+      "nav_base": 2847.896937,
+      "nav_final": 3625.968379,
+      "cobertura": "COMPLETO"
     },
     "2022": {
-      "retorno": -0.104496,
+      "retorno": -0.102158,
+      "factor": 0.8978422088496275,
       "completo": true,
-      "observaciones": 251
+      "observaciones": 251,
+      "nav_base": 3625.968379,
+      "nav_final": 3255.547459,
+      "cobertura": "COMPLETO"
     },
     "2023": {
-      "retorno": 0.174251,
+      "retorno": 0.17948,
+      "factor": 1.1794795026331761,
       "completo": true,
-      "observaciones": 250
+      "observaciones": 250,
+      "nav_base": 3255.547459,
+      "nav_final": 3839.851498,
+      "cobertura": "COMPLETO"
     },
     "2024": {
-      "retorno": 0.17187,
+      "retorno": 0.165827,
+      "factor": 1.1658266083557514,
       "completo": true,
-      "observaciones": 252
+      "observaciones": 252,
+      "nav_base": 3839.851498,
+      "nav_final": 4476.601048,
+      "cobertura": "COMPLETO"
     },
     "2025": {
-      "retorno": 0.132725,
+      "retorno": 0.139168,
+      "factor": 1.1391678375882557,
       "completo": true,
-      "observaciones": 250
+      "observaciones": 250,
+      "nav_base": 4476.601048,
+      "nav_final": 5099.599936,
+      "cobertura": "COMPLETO"
     },
     "2026": {
-      "retorno": 0.137573,
+      "retorno": 0.142339,
+      "factor": 1.1423389124311243,
       "completo": false,
-      "observaciones": 200
+      "observaciones": 200,
+      "nav_base": 5099.599936,
+      "nav_final": 5825.471444,
+      "cobertura": "PARCIAL"
     }
   },
   "max_drawdown_mensual": -0.232844,
@@ -118,8 +178,8 @@
   "intenciones": 2352,
   "intenciones_ejecutadas": 2352,
   "intenciones_rechazadas": 0,
-  "comisiones_moneda": 9.020469,
-  "nominal_ejecutado": 11275.59,
+  "comisiones_moneda": 9.020465,
+  "nominal_ejecutado": 11275.58,
   "coste_sobre_nominal_pb": 8.0,
   "coste_por_intencion_moneda": 0.003835,
   "rotacion_anual_nominal": 0.806,
@@ -147,28 +207,28 @@
   },
   "estado_libro_final": {
     "moneda_cuenta": "USD",
-    "efectivo": 0.307053,
-    "efectivo_utilizable": 0.307053,
+    "efectivo": 0.30706,
+    "efectivo_utilizable": 0.30706,
     "reservado": 0.0,
-    "valor_posiciones": 5825.164611,
-    "derechos": 0.0,
+    "valor_posiciones": 5825.164384,
+    "derechos": 0,
     "obligaciones": 0.0,
-    "nav": 5825.471664,
+    "nav": 5825.471444,
     "posiciones": {
-      "DIA": 0.79941272,
-      "IWM": 1.46263767,
-      "MDY": 0.61892219,
-      "QQQ": 0.54943077,
-      "SPY": 0.53296147,
-      "XLB": 8.34604514,
-      "XLE": 6.60898219,
-      "XLF": 7.61146804,
-      "XLI": 2.43413831,
-      "XLK": 2.07638522,
-      "XLP": 5.0428339,
-      "XLU": 10.30558872,
-      "XLV": 2.41332627,
-      "XLY": 3.73440296
+      "DIA": 0.79941268,
+      "IWM": 1.46263762,
+      "MDY": 0.61892216,
+      "QQQ": 0.54943075,
+      "SPY": 0.53296145,
+      "XLB": 8.34604483,
+      "XLE": 6.60898194,
+      "XLF": 7.61146775,
+      "XLI": 2.43413822,
+      "XLK": 2.07638514,
+      "XLP": 5.04283371,
+      "XLU": 10.30558833,
+      "XLV": 2.41332618,
+      "XLY": 3.73440282
     },
     "concentracion": {
       "invertido": 0.999947,
@@ -177,7 +237,9 @@
       "posiciones": 14
     },
     "movimientos": 2352,
-    "pendiente_liquidar": 0
+    "derechos_pendientes": 0,
+    "derechos_liquidados": 0
   },
-  "meses_evaluados": 169
+  "meses_evaluados": 169,
+  "incidencias_valoracion": []
 }

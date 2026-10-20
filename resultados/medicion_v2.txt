@@ -1,8 +1,8 @@
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash 76cfafcc7f2347f4
-Commit: 55379ada8100-sucio
+Registro escrito ANTES de calcular: hash c5d6f811b239d414
+Commit: bab706f15f84-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -23,8 +23,8 @@ DATOS
   referencia de efectivo (BIL): OK
 
   Universo congelado el 2026-10-19, 32 instrumentos
-  Comprobado el 2026-10-19: 32 con datos (100.0%)
-  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash cba4b3fa019f233e
+  Comprobado el 2026-10-20: 32 con datos (100.0%)
+  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash a385f428ebd26ef2
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)
@@ -71,7 +71,7 @@ M04 BASICO: que cuesta limitar la cartera
   VARIANTE             CAGR  SHARPE  MAXDD-D  INVERT  RECORTES
   --------------------------------------------------------------
   sin_limites        10.38%    0.65   -32.2%   1.000    0/168 
-  i25_g40             6.72%    0.60   -21.4%   0.804  155/168 
+  i25_g40             6.72%    0.61   -21.4%   0.804  155/168 
   i25_g40_e90         6.62%    0.60   -21.4%   0.804  168/168 
 
   el tope por grupo cuesta -3.66 puntos de CAGR y reduce la caida maxima en 10.7 puntos
