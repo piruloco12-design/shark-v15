@@ -1,0 +1,54 @@
+========================================================================
+MEDICION CON EL MOTOR CORREGIDO
+========================================================================
+Registro escrito ANTES de calcular: hash e9a00ec7c07a70c8
+Commit: 09a43d6a3fa6-sucio
+Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
+Familia declarada: 4 hipotesis
+  - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
+  - multiactivo/M02: M02_tendencia vs comprar_y_mantener
+  - renta_variable/M03: M03_momentum_12_1 vs comprar_y_mantener
+  - renta_variable/M02: M02_tendencia vs comprar_y_mantener
+
+Lo que este montaje PUEDE concluir:
+  tasa de falso positivo medida: 7,5% (nominal 5%)
+  potencia para +0,72%/ano: 12%   para +3,66%/ano: 60%
+  -> por debajo de ~3-4% anual, un 'no rechaza' solo significa
+     que la muestra no lo distingue de la suerte
+
+========================================================================
+DATOS
+========================================================================
+  cargados 31/31 activos
+  referencia de efectivo (BIL): OK
+
+  Universo congelado el 2026-10-19, 32 instrumentos
+  Comprobado el 2026-10-20: 32 con datos (100.0%)
+  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash e4027be893c7f61a
+
+========================================================================
+UNIVERSO: multiactivo  (31 activos)
+========================================================================
+  calentamiento hasta 2012-10-22, 168 decisiones mensuales
+
+  ESTRATEGIA                     CAGR  SHARPE  MAXDD-D   ROT/A  INTENC
+  --------------------------------------------------------------------
+
+========================================================================
+EL EXPERIMENTO FALLO
+========================================================================
+Traceback (most recent call last):
+  File "/home/runner/work/shark-v15/shark-v15/evaluador/experimento.py", line 682, in <module>
+    main()
+  File "/home/runner/work/shark-v15/shark-v15/evaluador/experimento.py", line 483, in main
+    f"{(r['rotacion_anual_nominal'] or 0):7.2f} "
+        ~^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'rotacion_anual_nominal'
+
+Traceback (most recent call last):
+  File "/home/runner/work/shark-v15/shark-v15/evaluador/experimento.py", line 682, in <module>
+    main()
+  File "/home/runner/work/shark-v15/shark-v15/evaluador/experimento.py", line 483, in main
+    f"{(r['rotacion_anual_nominal'] or 0):7.2f} "
+        ~^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyError: 'rotacion_anual_nominal'
