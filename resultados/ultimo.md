@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-20 07:45 UTC
-Commit:  ffa71f1e
+Fecha:   2026-10-20 07:54 UTC
+Commit:  3bb38655
 Disparo: push
 
 ## Entorno
@@ -94,7 +94,7 @@ RESULTADO: 15 pruebas pasadas, 0 fallos
 
 === 6) Walk-forward ===
   PASA   el walk-forward evalua varios tramos
-         R predicho medio +1.1428  realizado -0.6710  error absoluto medio 1.8137
+         R predicho medio +1.1428  realizado -0.2439  error absoluto medio 1.3387
   PASA   detecta que el pronostico falla cuando el regimen cambia
   PASA   el resumen avisa de cuando el pronostico no dice nada
   PASA   un corte sin muestra suficiente se registra como incidencia
@@ -178,9 +178,6 @@ Resultado exigido por PLAN_CLAUDE.md, no comportamiento
 actual del codigo. Las pendientes llegan con su cambio.
 
 ```
-  PASA       [V06d] la identidad de factores aguanta tambien con años parciales
-  PASA       [V06c] un año con una sola observacion se informa, no se borra
-
 === V08-V09: capacidades no implementadas se rechazan ===
   PASA       [V08] instrumento EUR en cuenta USD sin FX: rechazo antes de tocar el libro
   PASA       [V09] politica terminal no implementada: error explicito de configuracion
@@ -212,15 +209,18 @@ actual del codigo. Las pendientes llegan con su cambio.
   PASA       [V21] precio ausente: calidad visible y el NAV se declara no fiable
   PASA       [V21b] con EXIGIR_EVENTO no se emite NAV sin evidencia del evento
 
+=== V15, V16, V17, V18: M01 ===
+  PASA       [V15] bootstrap n=10 bloque=5: bloques circulares y sin sesgo
+  PASA       [V15b] cada replica tiene exactamente n valores, no menos
+  PASA       [V16] dos cortes y 25 decisiones: asignacion 10+15 sin duplicados
+  PASA       [V17] pronostico bruto perfecto: error bruto cero y coste aparte
+  PASA       [V18] mismo coste proporcional, distinta distancia: decisiones distintas
+
 === Puertas de cambios posteriores ===
-  PENDIENTE  [V15] bootstrap n=10 bloque=5 sin truncar  (cambio 4)
-  PENDIENTE  [V16] dos cortes, 25 decisiones futuras unicas  (cambio 4)
-  PENDIENTE  [V17] pronostico bruto perfecto con costes de 0,2 R  (cambio 4)
-  PENDIENTE  [V18] mismo coste proporcional, distinta distancia/precio  (cambio 4)
   PENDIENTE  [V24] reejecucion con los mismos artefactos  (cambio 5)
 
 ======================================================================
-PUERTAS: 32 pasan, 0 FALLAN, 5 pendientes de su cambio
+PUERTAS: 37 pasan, 0 FALLAN, 1 pendientes de su cambio
 ======================================================================
 ======================================================================
 ```
@@ -1156,8 +1156,8 @@ rechaza" significa indetectable, no inexistente.
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash a4a02f58d308aa4b
-Commit: ffa71f1e9655-sucio
+Registro escrito ANTES de calcular: hash 2398e570551e8dc3
+Commit: 3bb3865506ff-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -1179,7 +1179,7 @@ DATOS
 
   Universo congelado el 2026-10-19, 32 instrumentos
   Comprobado el 2026-10-20: 32 con datos (100.0%)
-  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash 5e341a03cfe32708
+  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash 2c25603a71b6b2ff
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)
@@ -1210,12 +1210,12 @@ INFERENCIA (al final, sobre la familia declarada)
 ========================================================================
   multiactivo/M03          CAGR +10.38% vs  +9.05%  dif +1.33 pts  p=0.2799
   multiactivo/M02          CAGR  +6.51% vs  +9.05%  dif -2.54 pts  p=0.9158
-  renta_variable/M03       CAGR +13.76% vs +13.75%  dif +0.01 pts  p=0.5339
+  renta_variable/M03       CAGR +13.76% vs +13.75%  dif +0.01 pts  p=0.5341
   renta_variable/M02       CAGR +12.80% vs +13.75%  dif -0.95 pts  p=0.9186
 
   CORRECCION DE HOLM sobre 4 hipotesis, error familiar 0.05
     multiactivo/M03          p=0.279944  umbral=0.01250  -> no rechaza
-    renta_variable/M03       p=0.533893  umbral=0.01667  -> no rechaza
+    renta_variable/M03       p=0.534093  umbral=0.01667  -> no rechaza
     multiactivo/M02          p=0.915817  umbral=0.02500  -> no rechaza
     renta_variable/M02       p=0.918616  umbral=0.05000  -> no rechaza
 
@@ -1244,7 +1244,7 @@ SESGO DE SUPERVIVENCIA, POR ESCENARIOS DECLARADOS
 
   ESCENARIO/FORMA                   DIF   CAMBIO  %SEL.MUERTA
   ------------------------------------------------------------
-  leve/colapso                   +1.44%   +0.10         8.5%
+  leve/colapso                   +1.42%   +0.09         8.5%
   moderado/colapso               +2.73%   +1.39        15.9%
   severo/colapso                 +3.40%   +2.07        17.2%
   leve/desvanecimiento           +1.40%   +0.07         2.0%
@@ -1467,10 +1467,10 @@ cripto_sesgo_extremo  (2 activos)
 
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
-comprar_y_mantener       62.45%    0.84   -81.3%   94.5%    0.17  332.935
+comprar_y_mantener       62.43%    0.84   -81.3%   94.5%    0.17  332.297
 M02_tendencia            52.50%    0.83   -66.3%   70.3%    1.67  156.258
 M03_momentum_12_1        52.02%    0.81   -79.8%   69.7%    2.26  150.488
-M02_mas_M03              50.83%    0.84   -64.8%   63.4%    1.84  136.923
+M02_mas_M03              50.83%    0.84   -64.8%   63.4%    1.84  136.922
 M03_con_banda            51.00%    0.81   -78.7%   68.2%    2.17  138.780
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
@@ -1479,21 +1479,21 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   corte train/test: 2021-12-19
 
   M02_tendencia
-    anual +52.50%  vs comprar y mantener +62.45%  -> NO bate
+    anual +52.50%  vs comprar y mantener +62.43%  -> NO bate
     train: +99.10% vs +122.00%  -> NO bate
-    test : +16.80% vs +23.28%  -> NO bate
+    test : +16.80% vs +23.23%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M03_momentum_12_1
-    anual +52.02%  vs comprar y mantener +62.45%  -> NO bate
+    anual +52.02%  vs comprar y mantener +62.43%  -> NO bate
     train: +103.93% vs +122.00%  -> NO bate
-    test : +14.20% vs +23.28%  -> NO bate
+    test : +14.20% vs +23.23%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M02_mas_M03
-    anual +50.83%  vs comprar y mantener +62.45%  -> NO bate
+    anual +50.83%  vs comprar y mantener +62.43%  -> NO bate
     train: +97.31% vs +122.00%  -> NO bate
-    test : +16.81% vs +23.28%  -> NO bate
+    test : +16.81% vs +23.23%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
 ======================================================================

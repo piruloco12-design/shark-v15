@@ -1,8 +1,8 @@
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash a4a02f58d308aa4b
-Commit: ffa71f1e9655-sucio
+Registro escrito ANTES de calcular: hash 2398e570551e8dc3
+Commit: 3bb3865506ff-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -24,7 +24,7 @@ DATOS
 
   Universo congelado el 2026-10-19, 32 instrumentos
   Comprobado el 2026-10-20: 32 con datos (100.0%)
-  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash 5e341a03cfe32708
+  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash 2c25603a71b6b2ff
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)
@@ -55,12 +55,12 @@ INFERENCIA (al final, sobre la familia declarada)
 ========================================================================
   multiactivo/M03          CAGR +10.38% vs  +9.05%  dif +1.33 pts  p=0.2799
   multiactivo/M02          CAGR  +6.51% vs  +9.05%  dif -2.54 pts  p=0.9158
-  renta_variable/M03       CAGR +13.76% vs +13.75%  dif +0.01 pts  p=0.5339
+  renta_variable/M03       CAGR +13.76% vs +13.75%  dif +0.01 pts  p=0.5341
   renta_variable/M02       CAGR +12.80% vs +13.75%  dif -0.95 pts  p=0.9186
 
   CORRECCION DE HOLM sobre 4 hipotesis, error familiar 0.05
     multiactivo/M03          p=0.279944  umbral=0.01250  -> no rechaza
-    renta_variable/M03       p=0.533893  umbral=0.01667  -> no rechaza
+    renta_variable/M03       p=0.534093  umbral=0.01667  -> no rechaza
     multiactivo/M02          p=0.915817  umbral=0.02500  -> no rechaza
     renta_variable/M02       p=0.918616  umbral=0.05000  -> no rechaza
 
@@ -89,7 +89,7 @@ SESGO DE SUPERVIVENCIA, POR ESCENARIOS DECLARADOS
 
   ESCENARIO/FORMA                   DIF   CAMBIO  %SEL.MUERTA
   ------------------------------------------------------------
-  leve/colapso                   +1.44%   +0.10         8.5%
+  leve/colapso                   +1.42%   +0.09         8.5%
   moderado/colapso               +2.73%   +1.39        15.9%
   severo/colapso                 +3.40%   +2.07        17.2%
   leve/desvanecimiento           +1.40%   +0.07         2.0%
