@@ -426,12 +426,46 @@ class EvaluadorMensual:
                 if not np.isfinite(precio_ejec) or precio_ejec <= 0:
                     precio_ejec = float(self.series[t].at[fecha, "Close"])
                 if lado == "COMPRA":
+                    # LIMITE DE ADMISION: el tope se recomprueba con el
+                    # precio al que de verdad se va a ejecutar, no con el
+                    # del dia de la decision. Antes el tope solo tocaba el
+                    # objetivo mensual: con el objetivo al 40% fijado a un
+                    # cierre de 100 y una apertura a 200, las unidades
+                    # compradas eran el 80% del patrimonio e iban
+                    # informadas como tope duro del 40%.
+                    pedida = cantidad
+                    nota_adm = ""
+                    if self.pol.limites is not None:
+                        from limites_cartera import admitir as _admitir
+                        cantidad, nota_adm = _admitir(
+                            pedida, t, precio_ejec, libro, self.pol.limites,
+                            coste_rel=self.pol.coste_rel)
+                    if cantidad <= 0:
+                        libro.rechazar(
+                            t, pedida, precio_ejec, fecha, tipo="COMPRA",
+                            motivo=estrategia.id,
+                            rechazo=f"ADMISION: {nota_adm}",
+                            precio_decision=precio_dec,
+                            momento_decision=f_dec,
+                            cantidad_pre_admision=pedida)
+                        if nota_adm:
+                            incidencias.append({
+                                "fecha": str(fecha), "instrumento": t,
+                                "motivo": f"admision rechazo la compra: {nota_adm}",
+                            })
+                        continue
                     libro.comprar(t, cantidad, precio_ejec, fecha,
                                   coste_rel=self.pol.coste_rel,
                                   coste_fijo=self.pol.coste_fijo,
                                   precio_decision=precio_dec,
                                   momento_decision=f_dec,
-                                  motivo=estrategia.id)
+                                  motivo=estrategia.id,
+                                  cantidad_pre_admision=pedida)
+                    if nota_adm:
+                        incidencias.append({
+                            "fecha": str(fecha), "instrumento": t,
+                            "motivo": f"admision recorto la compra: {nota_adm}",
+                        })
                 else:
                     libro.vender(t, cantidad, precio_ejec, fecha,
                                  coste_rel=self.pol.coste_rel,

@@ -312,11 +312,93 @@ check("V09", "politica terminal no implementada: error explicito de configuracio
       "-> Politicas acepto una politica terminal que nadie implementa")
 
 # =====================================================================
+print("\n=== V07, V10, V11, V22: admision de ordenes ===")
+# =====================================================================
+# Plan, cambio 2: "si exige ejecucion completa y no cabe: rechazar toda la
+# orden" y "reservar por order_id de forma atomica".
+
+# V07 / oraculo O06. Capital 100, se piden 2 unidades a 100 (hacen falta
+# 200) con la reduccion DESACTIVADA.
+P = LibroContado(100.0)
+try:
+    P.comprar("A", 2, 100.0, momento=T0, reducir_si_no_cabe=False)
+    rechazo_total = False
+except OperacionNoEjecutable:
+    rechazo_total = True
+check("V07", "compra impagable con reduccion desactivada: rechazo completo",
+      rechazo_total and P.cantidad("A") <= 0 and abs(P.efectivo - 100.0) < 1e-9,
+      f"-> rechazada={rechazo_total}, cantidad {P.cantidad('A')} (exigido 0), "
+      f"caja {P.efectivo} (exigido 100.0). Si compro 1 unidad, la bandera "
+      f"solo se honraba cuando no cabia NADA")
+
+# V10 / oraculo O14. Objetivo 40% fijado con el cierre a 100; la sesion
+# siguiente ABRE a 200. Cuatro unidades a 200 son el 80% del NAV, y el
+# tope se declaro duro.
+from limites_cartera import LimitesCartera
+serie_g = diaria(60, cierres={}, aperturas={})
+serie_g.loc[serie_g.index[21]:, ["Open", "High", "Low", "Close"]] = 200.0
+d_g = serie_g.index[20]
+f_g = serie_g.index[21]
+lim = LimitesCartera(max_por_instrumento=0.4, max_por_grupo=0.4,
+                     grupos={"A": "grupo_A"})
+ev_g = EvaluadorMensual({"A": serie_g},
+                        politicas_simples(limites=lim, permitir_fraccionado=False,
+                                          lote=1.0),
+                        fechas_decision=[d_g])
+r_g = ev_g.correr(TodoEnA())
+try:
+    peso_real = float(r_g["_ledger_diario"].loc[f_g, "expuesto"])
+except Exception as e:
+    peso_real = float("nan")
+check("V10", "objetivo 40% y apertura al doble: la admision no acepta el 80%",
+      peso_real <= 0.4 + 1e-6,
+      f"-> peso ejecutado {peso_real!r}, tope duro declarado 0.40. El tope "
+      f"se aplicaba al objetivo y nadie lo recalculaba con el precio "
+      f"ejecutable")
+
+# V11: dos ordenes compiten por el saldo. Reservas por order_id.
+Rv = LibroContado(1000.0)
+try:
+    Rv.reservar_orden("ord-1", 600.0)
+    try:
+        Rv.reservar_orden("ord-2", 600.0)
+        segunda_rechazada = False
+    except OperacionNoEjecutable:
+        segunda_rechazada = True
+    Rv.liberar_orden("ord-1")
+    Rv.liberar_orden("ord-1")          # repetir no libera dos veces
+    tras_liberar = Rv.reservado
+    Rv.reservar_orden("ord-2", 600.0)
+    ok_res = (segunda_rechazada and abs(tras_liberar) < 1e-9
+              and abs(Rv.reservado - 600.0) < 1e-9)
+    det_res = (f"-> segunda rechazada={segunda_rechazada}, reservado tras "
+               f"liberar dos veces {tras_liberar} (exigido 0.0), reservado "
+               f"final {Rv.reservado} (exigido 600.0)")
+except AttributeError as e:
+    ok_res = False
+    det_res = f"-> no hay reservas por order_id: {e}"
+check("V11", "dos ordenes por el mismo saldo: reserva atomica y liberacion individual",
+      ok_res, det_res)
+
+# V22: SELL con cero unidades al contado.
+Sv = LibroContado(1000.0)
+antes_mov = len(Sv.movimientos)
+try:
+    mv = Sv.vender("A", 5, 100.0, momento=T0)
+    sin_corto = Sv.cantidad("A") >= -1e-9
+    ejecuto_cero = mv is not None and mv.cantidad_ejecutada <= 1e-9
+    quedo_registro = len(Sv.movimientos) > antes_mov
+    motivo = bool(getattr(mv, "rechazo", ""))
+except OperacionNoEjecutable:
+    sin_corto = ejecuto_cero = quedo_registro = motivo = False
+check("V22", "SELL con cero unidades: senal registrada, orden rechazada, ningun corto",
+      sin_corto and ejecuto_cero and quedo_registro and motivo,
+      f"-> sin corto={sin_corto}, ejecuto cero={ejecuto_cero}, "
+      f"registro={quedo_registro}, motivo de rechazo={motivo}")
+
+# =====================================================================
 print("\n=== Puertas de cambios posteriores ===")
 # =====================================================================
-pendiente("V07", "compra impagable con reduccion desactivada", 2)
-pendiente("V10", "objetivo 40% y apertura al doble del cierre", 2)
-pendiente("V11", "dos ordenes compiten por saldo: reservas por order_id", 2)
 pendiente("V12", "snapshot caducado con el proceso en marcha", 3)
 pendiente("V13", "299 velas maduras mas una abierta", 3)
 pendiente("V14", "recuperacion posterior al corte historico", 3)
@@ -327,7 +409,6 @@ pendiente("V18", "mismo coste proporcional, distinta distancia/precio", 4)
 pendiente("V19", "fondo liquidado con cobro diferido", 3)
 pendiente("V20", "falta la descarga de un activo congelado", 3)
 pendiente("V21", "precio ausente o NAV invalido: calidad visible", 1)
-pendiente("V22", "SELL con cero unidades al contado", 2)
 pendiente("V23", "cambian comisiones o capital en el ejecutor del core", 2)
 pendiente("V24", "reejecucion con los mismos artefactos", 5)
 

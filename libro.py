@@ -158,6 +158,10 @@ class Movimiento:
     instrumento: str = ""
     cantidad_solicitada: float = 0.0
     cantidad_ejecutada: float = 0.0
+    # Cantidad que la estrategia queria ANTES de que la admision la
+    # recortase. Sin este campo el artefacto solo guarda lo recortado y la
+    # diferencia desaparece del registro.
+    cantidad_pre_admision: float = 0.0
     precio_decision: float = 0.0
     precio_ejecucion: float = 0.0
     momento_decision: object = None
@@ -198,6 +202,8 @@ class LibroContado:
         # Idempotencia: event_id -> movimiento ya aplicado. Repetir un fill
         # o un pago con el mismo identificador no vuelve a tocar el libro.
         self._eventos_aplicados: dict[str, object] = {}
+        # Reservas por order_id: importe apartado para cada orden viva.
+        self._reservas: dict[str, float] = {}
         self._secuencia: int = 0
 
         self.movimientos: list[Movimiento] = []
@@ -379,7 +385,8 @@ class LibroContado:
                 coste_rel=0.0, coste_fijo=0.0, precio_decision=None,
                 momento_decision=None, disponible_en=None,
                 riesgo_inicial=0.0, motivo="", reducir_si_no_cabe=True,
-                event_id=None, version_datos=""):
+                event_id=None, version_datos="", order_id=None,
+                cantidad_pre_admision=0.0):
         """Compra al contado. Nunca gasta más de lo que hay.
 
         Si la cantidad pedida no cabe y `reducir_si_no_cabe`, la reduce de
@@ -397,10 +404,30 @@ class LibroContado:
         coste_rel = _no_negativo(coste_rel, "coste_rel")
         coste_fijo = _no_negativo(coste_fijo, "coste_fijo")
 
+        # Consumir la reserva de ESTA orden: su efectivo se aparto para
+        # ella, asi que debe estar disponible para ella.
+        if order_id is not None:
+            self.liberar_orden(order_id)
+
         maxima = self.cantidad_maxima_comprable(iid, precio, coste_rel,
                                                 coste_fijo)
         pedida_en_lote = inst.redondear_a_lote(solicitada)
         ejecutada = min(pedida_en_lote, maxima)
+
+        # Ejecucion COMPLETA o nada. La bandera se honraba solo cuando no
+        # cabia NADA: si cabia una parte se compraba la parte y se ignoraba
+        # la exigencia. Textual del plan: "si exige ejecucion completa y no
+        # cabe: rechazar toda la orden".
+        if not reducir_si_no_cabe and ejecutada < pedida_en_lote - CENTIMO:
+            mov = self.rechazar(
+                iid, solicitada, precio, momento, tipo="COMPRA",
+                motivo=motivo,
+                rechazo=(f"exige ejecucion completa de {pedida_en_lote} y "
+                         f"solo caben {ejecutada}: se rechaza la orden "
+                         f"entera, no una parte"),
+                precio_decision=precio_decision,
+                momento_decision=momento_decision)
+            raise OperacionNoEjecutable(mov.rechazo)
 
         if ejecutada <= 0:
             mov = Movimiento(
@@ -416,8 +443,9 @@ class LibroContado:
                          f"{pedida_en_lote * precio * inst.multiplicador:.2f}"),
             )
             self.movimientos.append(mov)
-            if not reducir_si_no_cabe and pedida_en_lote > 0:
-                raise OperacionNoEjecutable(mov.rechazo)
+            # El caso `not reducir_si_no_cabe` ya se rechazo arriba, antes
+            # de llegar aqui: esta rama solo ve ordenes que SI admiten
+            # reduccion y en las que no cabe ni una unidad.
             return mov
 
         nominal = ejecutada * precio * inst.multiplicador
@@ -450,6 +478,7 @@ class LibroContado:
             disponible_en=disponible_en,
             costes={"comision": comision, "nominal": nominal},
             riesgo_inicial=riesgo_inicial, motivo=motivo,
+            cantidad_pre_admision=cantidad_pre_admision,
             efectivo_despues=self._efectivo, nav_despues=self.nav(),
             rechazo="" if ejecutada >= pedida_en_lote - CENTIMO
             else f"reducida de {pedida_en_lote} a {ejecutada} por efectivo",
@@ -609,6 +638,57 @@ class LibroContado:
             efectivo_despues=self._efectivo, nav_despues=self.nav()))
 
     # ---- reservas ----
+
+    def reservar_orden(self, order_id, importe):
+        """Aparta efectivo para UNA orden identificada.
+
+        `reservar` movia un escalar anonimo: liberar el importe de una
+        orden podia liberar el de otra, y reintentar la misma orden
+        reservaba dos veces. Con order_id la reserva es atomica y la
+        liberacion individual e idempotente, que es lo que el plan pide:
+        "reservar por order_id de forma atomica", "no las dupliques al
+        reintentar".
+        """
+        if order_id in self._reservas:
+            return self._reservas[order_id]
+        importe = _no_negativo(importe, "importe")
+        if importe > self.efectivo_utilizable + CENTIMO:
+            raise OperacionNoEjecutable(
+                f"la orden {order_id} pide reservar {importe:.2f} y solo hay "
+                f"{self.efectivo_utilizable:.2f} utilizable: dos ordenes no "
+                f"pueden gastar el mismo saldo"
+            )
+        self._reservas[order_id] = importe
+        self._reservado += importe
+        self.comprobar_invariantes()
+        return importe
+
+    def liberar_orden(self, order_id):
+        """Libera la reserva de una orden. Repetirlo no libera dos veces."""
+        importe = self._reservas.pop(order_id, 0.0)
+        if importe:
+            self._reservado = max(0.0, self._reservado - importe)
+        return importe
+
+    def reserva_de(self, order_id):
+        return self._reservas.get(order_id, 0.0)
+
+    def rechazar(self, iid, cantidad, precio, momento, *, tipo, motivo="",
+                 rechazo="", precio_decision=None, momento_decision=None,
+                 cantidad_pre_admision=0.0):
+        """Deja constancia de una orden NO ejecutada. Un rechazo es dato."""
+        mov = Movimiento(
+            momento=momento, tipo=tipo, instrumento=iid,
+            cantidad_solicitada=_no_negativo(cantidad, "cantidad"),
+            cantidad_ejecutada=0.0,
+            cantidad_pre_admision=cantidad_pre_admision,
+            precio_decision=precio if precio_decision is None
+            else precio_decision,
+            precio_ejecucion=precio, momento_decision=momento_decision,
+            motivo=motivo, efectivo_despues=self._efectivo,
+            nav_despues=self.nav(), rechazo=rechazo)
+        self.movimientos.append(mov)
+        return mov
 
     def reservar(self, importe):
         """Aparta efectivo para una orden pendiente.

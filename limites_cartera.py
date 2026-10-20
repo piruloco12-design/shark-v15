@@ -195,9 +195,16 @@ def verificar(pesos: dict, limites: LimitesCartera):
 def concentracion(pesos: dict, limites: LimitesCartera) -> dict:
     """Concentración observable: pesos reales, máximo y posiciones efectivas.
 
-    `1 / suma(w^2)` sobre la parte invertida. Cinco ETF que comparten gran
-    parte de sus acciones pueden dar un numero de posiciones efectivas
-    cercano a uno, y eso es lo que hay que ver.
+    `1 / suma(w^2)` sobre la parte invertida: el inverso de Herfindahl de
+    los PESOS.
+
+    Correccion de lo que decia antes este docstring. Afirmaba que cinco ETF
+    que comparten gran parte de sus acciones podian dar un numero de
+    posiciones efectivas cercano a uno. Es falso: cinco posiciones
+    equiponderadas dan exactamente 5,0 por mucho que solapen, porque esta
+    medida solo ve los pesos. No ve correlaciones ni carteras compartidas.
+    Para eso hace falta la composicion de cada fondo o la covarianza de sus
+    retornos, y ninguna de las dos esta aqui.
     """
     if not pesos:
         return {"invertido": 0.0, "peso_maximo": 0.0, "posiciones": 0,
@@ -244,3 +251,95 @@ GRUPOS_UNIVERSO = {
     "FXE": "divisas", "FXY": "divisas", "FXB": "divisas",
     "FXF": "divisas", "UUP": "divisas",
 }
+
+
+# =====================================================================
+
+def admitir(cantidad_pedida, instrumento, precio_ejecutable, libro,
+            limites: LimitesCartera, *, coste_rel: float = 0.0):
+    """Limite de ADMISION: el tope recalculado con el precio ejecutable.
+
+    Son tres cosas distintas y el plan exige nombrarlas por separado:
+
+    - **objetivo mensual**: el peso que la estrategia quiere al decidir,
+      con el cierre del dia de la decision.
+    - **limite de admision** (esto): el tope que se comprueba al aceptar
+      la orden, con el precio al que de verdad va a ejecutarse.
+    - **limite continuo**: un tope vigilado todos los dias. NO esta
+      implementado y no se declara como si lo estuviera: exigiria
+      rebalanceo diario, que es OTRA estrategia, con su identificador,
+      sus costes y su experimento.
+
+    Hacia falta porque el tope se aplicaba al objetivo y nadie volvia a
+    mirarlo: con un objetivo del 40% fijado a un cierre de 100 y una
+    apertura a 200, las cuatro unidades compradas eran el 80% del
+    patrimonio, informado como tope duro del 40%.
+
+    Nota de ejecucion declarada: redimensionar con la apertura supone que
+    la orden se envia DESPUES de observar ese precio. Rellenarla luego
+    exactamente a la apertura es un supuesto optimista, no un hecho; queda
+    dicho aqui en vez de escondido en el resultado.
+
+    Devuelve `(cantidad_admisible, motivo)`. La cantidad se redondea
+    siempre HACIA ABAJO.
+    """
+    if cantidad_pedida <= 0:
+        return 0.0, ""
+    try:
+        nav = float(libro.nav())
+    except Exception as e:
+        return 0.0, f"NAV no evaluable: {str(e)[:40]}"
+    precio_ejecutable = float(precio_ejecutable)
+    if not (nav > 0) or not (precio_ejecutable > 0):
+        return 0.0, "NAV o precio no admisibles"
+
+    inst = libro.instrumentos.get(instrumento)
+    mult = getattr(inst, "multiplicador", 1.0) if inst is not None else 1.0
+    valor_unidad = precio_ejecutable * mult
+    if valor_unidad <= 0:
+        return 0.0, "valor unitario no admisible"
+
+    ya = libro.cantidad(instrumento) * valor_unidad
+    grupo = limites.grupo_de(instrumento)
+
+    valor_grupo_otros = 0.0
+    expuesto_otros = 0.0
+    for t, pos in libro.posiciones.items():
+        if t == instrumento or pos.cantidad <= 0:
+            continue
+        inst_t = libro.instrumentos.get(t)
+        mult_t = getattr(inst_t, "multiplicador", 1.0) if inst_t is not None else 1.0
+        valor_t = pos.cantidad * pos.precio_valoracion * mult_t
+        expuesto_otros += valor_t
+        if limites.grupo_de(t) == grupo:
+            valor_grupo_otros += valor_t
+
+    # Numero de posiciones: una posicion NUEVA no entra si ya se alcanzo
+    # el tope. Reforzar una existente no crea una posicion.
+    abiertas = sum(1 for p in libro.posiciones.values() if p.cantidad > 0)
+    if libro.cantidad(instrumento) <= 0 and abiertas >= limites.max_posiciones:
+        return 0.0, f"max_posiciones ({limites.max_posiciones}) ya alcanzado"
+
+    techos = {
+        "max_por_instrumento": limites.max_por_instrumento * nav,
+        "max_por_grupo": limites.max_por_grupo * nav - valor_grupo_otros,
+        "max_exposicion_total": (
+            (limites.max_exposicion_total - limites.reserva_costes) * nav
+            - expuesto_otros),
+    }
+    nombre_tope = min(techos, key=lambda k: techos[k])
+    margen = techos[nombre_tope] - ya
+    if margen <= 0:
+        return 0.0, f"{nombre_tope} ya consumido (margen {margen:.2f})"
+
+    cantidad_tope = margen / (valor_unidad * (1.0 + max(0.0, coste_rel)))
+    admisible = min(float(cantidad_pedida), cantidad_tope)
+    if inst is not None:
+        admisible = inst.redondear_a_lote(max(0.0, admisible))
+    if admisible <= 0:
+        return 0.0, f"{nombre_tope}: no cabe ni un lote al precio ejecutable"
+    if admisible < float(cantidad_pedida) - TOLERANCIA:
+        return admisible, (f"{nombre_tope}: recortada de "
+                           f"{float(cantidad_pedida):.6f} a {admisible:.6f} "
+                           f"con el precio ejecutable {precio_ejecutable:.4f}")
+    return admisible, ""
