@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-20 07:20 UTC
-Commit:  108788e4
+Fecha:   2026-10-20 07:45 UTC
+Commit:  ffa71f1e
 Disparo: push
 
 ## Entorno
@@ -22,7 +22,7 @@ RESULTADO: 24 pruebas pasadas, 0 fallos
   PASA   PRIMARY_PROVIDER coherente
 
 ==============================================================
-RESULTADO: 61 pruebas pasadas, 0 fallos
+RESULTADO: 63 pruebas pasadas, 0 fallos
 ==============================================================
   PASA   el aviso NO depende de la variable RENDER
 
@@ -130,7 +130,6 @@ llamando al ejecutor real. Vienen de la auditoria del
 2026-10-19.
 
 ```
-  PASA   [D3] la caida maxima diaria ve lo que la mensual no ve
   PASA   [D4] el resumen separa comisiones, nominal y coste sobre nominal
   PASA   [D5] los anos parciales se marcan como parciales
 
@@ -146,6 +145,7 @@ llamando al ejecutor real. Vienen de la auditoria del
   PASA   [F4] existe una tarea que alimenta las series de M02/M03
   PASA   [F5] el snapshot persiste y sobrevive a un reinicio
   PASA   [F6] cargar_ultimo no devuelve un snapshot posterior a la decision
+  PASA   [F6b] un snapshot creado despues del corte no pasa por captura PIT
   PASA   [F7] la vigencia sale del calendario del snapshot, no de la consulta
   PASA   [F8] el ranking se reconstruye identico desde la base de datos
 
@@ -167,7 +167,7 @@ llamando al ejecutor real. Vienen de la auditoria del
   PASA   [G4] vender mas de lo disponible no abre un corto: se limita
 
 ====================================================================
-ACEPTACION: 43 pasan, 0 FALLAN
+ACEPTACION: 44 pasan, 0 FALLAN
 ====================================================================
 ====================================================================
 ```
@@ -178,20 +178,6 @@ Resultado exigido por PLAN_CLAUDE.md, no comportamiento
 actual del codigo. Las pendientes llegan con su cambio.
 
 ```
-=== V01-V02: el NAV de cierre no se mezcla con precios de fill ===
-  PASA       [V01] compra 10 a 100; cierre del mismo dia a 110 -> NAV 1.100
-  PASA       [V02] venta parcial: TODAS las unidades restantes se valoran al cierre
-
-=== V03-V05: derechos de cobro tipados e idempotencia ===
-  PASA       [V03] venta diferida de 5 a 100: NAV conservado y 500 no gastables
-  PASA       [V03b] al liquidar: baja el derecho y sube la caja, NAV intacto
-  PASA       [V04] dividendo 2 devengado y pagado despues: el NAV no gana otros 2
-  PASA       [V05] repetir un fill con el mismo event_id no duplica ejecucion
-  PASA       [V05b] repetir un pago con el mismo event_id no duplica caja ni derechos
-
-=== V06: retornos anuales reconciliados ===
-  PASA       [V06] 100 en diciembre y 110 la primera sesion de enero -> +10% en 2021
-  PASA       [V06b] el producto de los factores anuales reproduce NAV_final/NAV_inicial
   PASA       [V06d] la identidad de factores aguanta tambien con años parciales
   PASA       [V06c] un año con una sola observacion se informa, no se borra
 
@@ -205,22 +191,36 @@ actual del codigo. Las pendientes llegan con su cambio.
   PASA       [V11] dos ordenes por el mismo saldo: reserva atomica y liberacion individual
   PASA       [V22] SELL con cero unidades: senal registrada, orden rechazada, ningun corto
 
+=== V23: el ejecutor del CORE responde a comisiones y capital ===
+  PASA       [V23] las comisiones mueven el PnL neto y el capital del core
+  PASA       [V23b] la capacidad responde al efectivo disponible
+  PASA       [V23c] el core llama al dimensionado declarando efectivo y coste
+
+=== V12, V13, V14: datos y snapshots ===
+  PASA       [V13] 299 velas maduras mas una abierta: se usa la vista madura
+  PASA       [V13b] la referencia de efectivo se recorta a la misma observacion
+  PASA       [V14] un snapshot recuperado tras el corte no se da como captura anterior
+  PASA       [V14b] la ruta estricta SI devuelve una captura anterior al corte
+  PASA       [V12] el ciclo comprueba la caducidad aunque la cache este llena
+  PASA       [V12b] un snapshot caducado se detecta por calendario, no por reloj
+
+=== V19, V20, V21: bajas declaradas y calidad visible ===
+  PASA       [V19] fondo liquidado: unidades fuera, derecho dentro, y se cobra
+  PASA       [V19b] repetir el evento de liquidacion no cobra dos veces
+  PASA       [V19c] politica de reinversion no implementada: error explicito
+  PASA       [V20] falta la descarga de un congelado: se marca, no se borra
+  PASA       [V21] precio ausente: calidad visible y el NAV se declara no fiable
+  PASA       [V21b] con EXIGIR_EVENTO no se emite NAV sin evidencia del evento
+
 === Puertas de cambios posteriores ===
-  PENDIENTE  [V12] snapshot caducado con el proceso en marcha  (cambio 3)
-  PENDIENTE  [V13] 299 velas maduras mas una abierta  (cambio 3)
-  PENDIENTE  [V14] recuperacion posterior al corte historico  (cambio 3)
   PENDIENTE  [V15] bootstrap n=10 bloque=5 sin truncar  (cambio 4)
   PENDIENTE  [V16] dos cortes, 25 decisiones futuras unicas  (cambio 4)
   PENDIENTE  [V17] pronostico bruto perfecto con costes de 0,2 R  (cambio 4)
   PENDIENTE  [V18] mismo coste proporcional, distinta distancia/precio  (cambio 4)
-  PENDIENTE  [V19] fondo liquidado con cobro diferido  (cambio 3)
-  PENDIENTE  [V20] falta la descarga de un activo congelado  (cambio 3)
-  PENDIENTE  [V21] precio ausente o NAV invalido: calidad visible  (cambio 1)
-  PENDIENTE  [V23] cambian comisiones o capital en el ejecutor del core  (cambio 2)
   PENDIENTE  [V24] reejecucion con los mismos artefactos  (cambio 5)
 
 ======================================================================
-PUERTAS: 17 pasan, 0 FALLAN, 12 pendientes de su cambio
+PUERTAS: 32 pasan, 0 FALLAN, 5 pendientes de su cambio
 ======================================================================
 ======================================================================
 ```
@@ -1133,13 +1133,13 @@ PRUEBA DE PROVEEDORES — cada uno por separado
 Cascada por defecto: ['yfinance', 'finnhub', 'alpha_vantage', 'twelve_data']
 
   OK    yfinance   SPY         3770 velas  2011-10-20 -> 2026-10-19
-  FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ["stooq: Stooq
+  FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: Stooq
   OK    yfinance   BTC-USD     4417 velas  2014-09-17 -> 2026-10-20
   OK    coinbase   BTC-USD     4111 velas  2015-07-20 -> 2026-10-20
-  FALLA stooq      GLD       ValueError: No se pudo descargar GLD con ningún provider. Detalles: ["stooq: Stooq
+  FALLA stooq      GLD       ValueError: No se pudo descargar GLD con ningún provider. Detalles: ['stooq: Stooq
 
 CRUCE yfinance vs stooq en SPY (ultimos cierres comunes)
-  no se pudo cruzar: ValueError: No se pudo descargar SPY con ningún provider. Detalles: ["stooq: Stooq no sirvio spy.us: https://stooq.com/q/d/l/: ConnectTimeout: HTTPSConnectionPool(host='stooq.com', port=443): Max retries exceeded  | https://stooq.pl/q/d/l/: ConnectTimeout: HTTPSConnectionPool(host='stooq.pl', port=443): Max retries exceeded w"]
+  no se pudo cruzar: ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: Stooq no sirvio spy.us: https://stooq.com/q/d/l/: sin datos (<!DOCTYPE html><html><head><meta charset="utf-8"><meta name=) | https://stooq.pl/q/d/l/: sin datos (<!DOCTYPE html><html><head><meta charset="utf-8"><meta name=)']
 ```
 
 ## Medicion v2 (motor corregido)
@@ -1156,8 +1156,8 @@ rechaza" significa indetectable, no inexistente.
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash 7ecaaad92c0d440d
-Commit: 108788e42be5-sucio
+Registro escrito ANTES de calcular: hash a4a02f58d308aa4b
+Commit: ffa71f1e9655-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -1179,7 +1179,7 @@ DATOS
 
   Universo congelado el 2026-10-19, 32 instrumentos
   Comprobado el 2026-10-20: 32 con datos (100.0%)
-  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash 1e613f1a6c3d04a7
+  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash 5e341a03cfe32708
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)
@@ -1210,12 +1210,12 @@ INFERENCIA (al final, sobre la familia declarada)
 ========================================================================
   multiactivo/M03          CAGR +10.38% vs  +9.05%  dif +1.33 pts  p=0.2799
   multiactivo/M02          CAGR  +6.51% vs  +9.05%  dif -2.54 pts  p=0.9158
-  renta_variable/M03       CAGR +13.76% vs +13.75%  dif +0.01 pts  p=0.5341
+  renta_variable/M03       CAGR +13.76% vs +13.75%  dif +0.01 pts  p=0.5339
   renta_variable/M02       CAGR +12.80% vs +13.75%  dif -0.95 pts  p=0.9186
 
   CORRECCION DE HOLM sobre 4 hipotesis, error familiar 0.05
     multiactivo/M03          p=0.279944  umbral=0.01250  -> no rechaza
-    renta_variable/M03       p=0.534093  umbral=0.01667  -> no rechaza
+    renta_variable/M03       p=0.533893  umbral=0.01667  -> no rechaza
     multiactivo/M02          p=0.915817  umbral=0.02500  -> no rechaza
     renta_variable/M02       p=0.918616  umbral=0.05000  -> no rechaza
 
@@ -1467,11 +1467,11 @@ cripto_sesgo_extremo  (2 activos)
 
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
-comprar_y_mantener       62.44%    0.84   -81.3%   94.5%    0.17  332.675
+comprar_y_mantener       62.45%    0.84   -81.3%   94.5%    0.17  332.935
 M02_tendencia            52.50%    0.83   -66.3%   70.3%    1.67  156.258
 M03_momentum_12_1        52.02%    0.81   -79.8%   69.7%    2.26  150.488
-M02_mas_M03              50.83%    0.84   -64.8%   63.4%    1.84  136.922
-M03_con_banda            51.00%    0.81   -78.7%   68.2%    2.17  138.779
+M02_mas_M03              50.83%    0.84   -64.8%   63.4%    1.84  136.923
+M03_con_banda            51.00%    0.81   -78.7%   68.2%    2.17  138.780
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
 
@@ -1479,21 +1479,21 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   corte train/test: 2021-12-19
 
   M02_tendencia
-    anual +52.50%  vs comprar y mantener +62.44%  -> NO bate
+    anual +52.50%  vs comprar y mantener +62.45%  -> NO bate
     train: +99.10% vs +122.00%  -> NO bate
-    test : +16.80% vs +23.26%  -> NO bate
+    test : +16.80% vs +23.28%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M03_momentum_12_1
-    anual +52.02%  vs comprar y mantener +62.44%  -> NO bate
+    anual +52.02%  vs comprar y mantener +62.45%  -> NO bate
     train: +103.93% vs +122.00%  -> NO bate
-    test : +14.20% vs +23.26%  -> NO bate
+    test : +14.20% vs +23.28%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M02_mas_M03
-    anual +50.83%  vs comprar y mantener +62.44%  -> NO bate
+    anual +50.83%  vs comprar y mantener +62.45%  -> NO bate
     train: +97.31% vs +122.00%  -> NO bate
-    test : +16.81% vs +23.26%  -> NO bate
+    test : +16.81% vs +23.28%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
 ======================================================================

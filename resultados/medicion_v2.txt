@@ -1,8 +1,8 @@
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash 7ecaaad92c0d440d
-Commit: 108788e42be5-sucio
+Registro escrito ANTES de calcular: hash a4a02f58d308aa4b
+Commit: ffa71f1e9655-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -24,7 +24,7 @@ DATOS
 
   Universo congelado el 2026-10-19, 32 instrumentos
   Comprobado el 2026-10-20: 32 con datos (100.0%)
-  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash 1e613f1a6c3d04a7
+  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash 5e341a03cfe32708
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)
@@ -55,12 +55,12 @@ INFERENCIA (al final, sobre la familia declarada)
 ========================================================================
   multiactivo/M03          CAGR +10.38% vs  +9.05%  dif +1.33 pts  p=0.2799
   multiactivo/M02          CAGR  +6.51% vs  +9.05%  dif -2.54 pts  p=0.9158
-  renta_variable/M03       CAGR +13.76% vs +13.75%  dif +0.01 pts  p=0.5341
+  renta_variable/M03       CAGR +13.76% vs +13.75%  dif +0.01 pts  p=0.5339
   renta_variable/M02       CAGR +12.80% vs +13.75%  dif -0.95 pts  p=0.9186
 
   CORRECCION DE HOLM sobre 4 hipotesis, error familiar 0.05
     multiactivo/M03          p=0.279944  umbral=0.01250  -> no rechaza
-    renta_variable/M03       p=0.534093  umbral=0.01667  -> no rechaza
+    renta_variable/M03       p=0.533893  umbral=0.01667  -> no rechaza
     multiactivo/M02          p=0.915817  umbral=0.02500  -> no rechaza
     renta_variable/M02       p=0.918616  umbral=0.05000  -> no rechaza
 
