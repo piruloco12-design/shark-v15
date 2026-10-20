@@ -88,7 +88,8 @@ python tests/test_experimento_humo.py
 # Toda la bateria: 499 comprobaciones
 for t in tests/test_*.py; do python "$t"; done
 
-# Tus propios oraculos contra este arbol
+# Tus propios oraculos contra este arbol (oraculos_v2.py es TUYO: viene
+# en tu paquete de auditoria, no en este zip)
 python oraculos_v2.py --repo . --salida mis_oraculos.json
 
 # Las tablas, generadas DESDE el resultado y nunca a mano
@@ -115,8 +116,14 @@ sobrescrituras.
 ## Lo que no está en el zip
 
 Ni `.env`, ni bases de datos, ni historial de git: se exporta con
-`git archive` sobre los archivos rastreados. Las claves de `.env.example`
-están vacías.
+`git archive` sobre los archivos rastreados.
+
+Tampoco va `.env.example`: el `.gitignore` tiene un patrón `.env.*` que lo
+atrapa, así que nunca estuvo rastreado. En la entrega anterior escribí que
+sus claves «están vacías», lo que daba a entender que viajaba en el
+paquete. No viajaba. Lo dejo así a propósito en vez de añadir una
+excepción a una regla que ignora archivos de entorno: es una plantilla de
+despliegue y no hace falta para auditar nada.
 
 Y el aviso de seguridad de la vez anterior sigue vigente: el repositorio
 contiene, en commits anteriores al 2026-10-19, una cadena con la forma
