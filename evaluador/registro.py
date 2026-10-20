@@ -74,6 +74,10 @@ def _commit() -> str:
         return "?"
 
 
+class RegistroYaExiste(RuntimeError):
+    """Ya hay un registro en esa ruta. No se pisa."""
+
+
 def crear(
     *,
     nombre: str,
@@ -119,17 +123,40 @@ def crear(
         "hash_codigo": _hash_codigo(rutas_codigo),
         "dependencias": _version_dependencias(),
         "_aviso": (
-            "Este registro se escribe ANTES de calcular los resultados. Si la "
-            "familia, la métrica o el umbral cambian después, cambia el hash "
-            "y queda a la vista."
+            "Este registro se escribe ANTES de calcular los resultados, y su "
+            "hash demuestra INTEGRIDAD: si la familia, la métrica o el umbral "
+            "cambian después, el hash cambia y queda a la vista."
+        ),
+        "_lo_que_NO_demuestra": (
+            "La FECHA. El archivo es local y lo escribió quien lo va a usar, "
+            "así que un hash propio no prueba que se escribiera antes de ver "
+            "los resultados: quien lo creó puede rehacer ambas cosas. Una "
+            "fecha de preregistro solo la acredita un tercero. Lo más "
+            "cercano que hay aquí es el commit anotado arriba: una vez "
+            "empujado, la fecha de recepción la registra GitHub, que no es "
+            "parte de este repositorio. Mientras no esté empujado, esto es "
+            "una declaración de intenciones, no un preregistro."
         ),
     }
     crudo = json.dumps(registro, sort_keys=True, separators=(",", ":"))
     registro["hash_registro"] = hashlib.sha256(crudo.encode()).hexdigest()[:16]
 
     os.makedirs(os.path.dirname(salida) or ".", exist_ok=True)
-    with open(salida, "w") as f:
-        json.dump(registro, f, indent=2)
+    # Registro por ejecucion, SIN sobrescritura. El modo "x" falla si el
+    # archivo existe, y lo hace de forma atomica: comprobar y luego
+    # escribir deja una carrera por medio. Antes se abria en modo "w", asi
+    # que una segunda corrida pisaba el registro de la primera y no
+    # quedaba rastro de que la familia hubiera cambiado.
+    try:
+        with open(salida, "x") as f:
+            json.dump(registro, f, indent=2)
+    except FileExistsError:
+        raise RegistroYaExiste(
+            f"{salida} ya existe y un registro por ejecucion no se "
+            f"sobrescribe. Si esta es otra corrida, dale otro nombre de "
+            f"salida; si es la misma, el registro de la primera es el que "
+            f"vale."
+        ) from None
     return registro
 
 

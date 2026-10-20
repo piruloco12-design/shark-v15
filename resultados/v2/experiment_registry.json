@@ -1,7 +1,7 @@
 {
   "nombre": "M02/M03 solo largos con el motor corregido",
-  "creado_en": "2026-10-20T07:56:43Z",
-  "commit": "3bb3865506ff-sucio",
+  "creado_en": "2026-10-19T21:20:52Z",
+  "commit": "55379ada8100-sucio",
   "estado": "EXPLORATORIO",
   "universo_etiqueta": "EXPLORATORY_SURVIVOR_UNIVERSE",
   "familia": [
@@ -60,7 +60,6 @@
     "politica_caja": "SIN_REMUNERAR",
     "antiguedad_maxima_dias": 7,
     "politica_terminal": "MARCAR",
-    "politica_baja": "MARCAR_INCERTIDUMBRE",
     "calentamiento_sesiones": 253,
     "limites": null
   },
@@ -71,9 +70,9 @@
     "comparacion ajustado vs sin ajustar"
   ],
   "hash_codigo": {
-    "libro.py": "119ab2d5eea8402b",
-    "mensual.py": "dc651260e11ec66b",
-    "metricas.py": "97b429ee479858ff",
+    "libro.py": "8e8c884c251e5b8f",
+    "mensual.py": "737bff8cf16ec413",
+    "metricas.py": "e1285d65c273d244",
     "inferencia.py": "719f9017173a13a7",
     "experimento.py": "abc23e4487ed06e6"
   },
@@ -83,5 +82,5 @@
     "numpy": "2.4.6"
   },
   "_aviso": "Este registro se escribe ANTES de calcular los resultados. Si la familia, la m\u00e9trica o el umbral cambian despu\u00e9s, cambia el hash y queda a la vista.",
-  "hash_registro": "2398e570551e8dc3"
+  "hash_registro": "76cfafcc7f2347f4"
 }

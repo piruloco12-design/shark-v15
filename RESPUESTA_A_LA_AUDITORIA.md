@@ -1,3 +1,13 @@
+> **AVISO, 2026-10-20.** Documento conservado como artefacto de lo que yo
+> creía tras la PRIMERA auditoría. Cuatro afirmaciones de aquí están
+> **retiradas** por la segunda auditoría y quedan marcadas en su sitio con
+> su corrección. El estado actual está en
+> `RESPUESTA_A_LA_SEGUNDA_AUDITORIA.md`.
+>
+> Las retiradas son: el mecanismo de los 155 recortes (§3, P7), que con
+> 8 pb M01 no tenga nada que filtrar (§3, P6), la dirección del sesgo de
+> supervivencia (§3, P1) y la «resolución de 3-4%» como ley (§3, P3).
+
 # Respuesta a la auditoría del 2026-10-19
 
 **Para:** Astra
@@ -73,6 +83,12 @@ subida, y desvanecimiento lento), sobre el panel real: en los **seis**
 escenarios el diferencial sube a favor de M03, de +0,07 a +2,07 puntos. El
 universo de supervivientes favorecía a **comprar y mantener**, no a M03.
 
+> **RETIRADO (2026-10-20).** Las seis salidas se conservan, la conclusión
+> sobre la dirección no. Los escenarios son supuestos que yo declaré, así
+> que **no identifican el signo real** del sesgo: no son una estimación ni
+> una cota de la magnitud verdadera. Para eso sigue haciendo falta la
+> lista real de desaparecidos.
+
 El mecanismo no es que el momentum escape a tiempo: es la concentración. Un
 comprar y mantener equiponderado está obligado a tener 1/N de cada activo,
 muertos incluidos. M03 tiene 5 de N.
@@ -113,6 +129,15 @@ distingue una ventaja real de la suerte**. El efecto que yo reclamaba está
 en la primera fila. Ninguna corrección del motor mejora eso: es la
 resolución del aparato.
 
+> **RETIRADO como ley (2026-10-20).** La tabla se conserva; la cifra
+> redonda no. Son **40 simulaciones por efecto**: el 12% es 5/40
+> (intervalo de Wilson 5,5–26,1%) y el 60% es 24/40 (44,6–73,7%). Los
+> falsos positivos son 15/200 = 7,5% (4,6–12,0%), compatibles con el 5%
+> nominal. Y la curva **no** incluye la corrección de Holm, así que
+> sobreestima la potencia del procedimiento que de verdad se aplica. La
+> idea de fondo aguanta —el aparato no resuelve efectos pequeños— pero no
+> con un umbral de dos decimales.
+
 **P4 — preservar B1.** Conservado como referencia reproducible, sin capital.
 `efectivo_disponible` en el cálculo de tamaño es **opcional a propósito**:
 sin él, el tamaño es byte a byte el de siempre. La variante al contado lleva
@@ -137,11 +162,28 @@ aparece un umbral entre 5 y 10 unidades.
 Con la tarifa que asume el backtester (8 pb por pata, sin mínimo), **M01 no
 tiene nada que filtrar**. No está mal implementado: no hay decisión.
 
+> **RETIRADO (2026-10-20).** Falso, y el oráculo O08 de la segunda
+> auditoría lo demuestra: mismo modelo, precio 100, 10 unidades, ida y
+> vuelta 1,60; con stop a 0,5 el margen es −1,10 y **rechaza**, con stop a
+> 4 es +2,40 y **acepta**. Mi prueba mantuvo la distancia del stop fija en
+> 2,0 y solo movió el tamaño. El tamaño sí se cancela con costes
+> proporcionales; la distancia no. Probé la única variable que no
+> discrimina y concluí que no había decisión.
+
 **P7 — M04.** Implementado el control básico. El tope de grupo cuesta 3,66
 puntos de CAGR y reduce la caída máxima en 10,8. Caso I29, informado como
 las dos cosas. Y el diagnóstico que vale más que el CAGR: recorta **155 de
 168 decisiones**, o sea que M03 estaba casi siempre con sus cinco posiciones
 dentro del mismo grupo. No eran cinco fuentes de retorno.
+
+> **RETIRADO (2026-10-20).** El recuento de 155 es correcto; el mecanismo
+> que deduje de él es falso. Medido sobre `decisions.csv`, el grupo mayor
+> tuvo 5 posiciones en **40 de 168** decisiones, 4 en 54, 3 en 60, 2 en 13
+> y 1 en 1. Las cinco coinciden de grupo el **23,81%** de las veces. Las
+> 155 son los recortes, y con cinco posiciones iguales un grupo pasa del
+> 40% con solo **tres** dentro. Salté del recorte al mecanismo teniendo el
+> CSV delante. Sigue siendo verdad que la cartera está concentrada; es
+> falso que fueran casi siempre las cinco en un grupo.
 
 Evitada la trampa que señalaste: el sobrante no se reescala al 100%.
 

@@ -62,7 +62,34 @@ from evaluador.mensual import (
     SinDatosSuficientes,
 )
 
-SALIDA = os.getenv("SALIDA_EXP", "resultados/v2")
+# v3, NO v2. El plan es explicito: "No sobrescribas resultados/v2/ ni su
+# registro. Genera resultados/v3/ con otro identificador, panel exacto,
+# hashes completos y explicacion de diferencias." Las cifras de v2 quedan
+# superadas por los cambios 1 a 4, y una correccion no recupera un
+# holdout ya observado: siguen ahi, identificadas y no pisadas.
+SALIDA = os.getenv("SALIDA_EXP", "resultados/v3")
+
+
+RUN_ID = "sin_identificar"
+
+
+def _identificador_corrida() -> str:
+    """Identidad de ESTA corrida: instante UTC y commit.
+
+    El registro no se sobrescribe, asi que cada corrida necesita el suyo.
+    Antes todas escribian en experiment_registry.json y la segunda pisaba
+    a la primera: si la familia o el umbral cambiaban entre corridas, no
+    quedaba rastro.
+    """
+    import subprocess
+    sello = time.strftime("%Y%m%dT%H%M%SZ", time.gmtime())
+    try:
+        commit = subprocess.run(
+            ["git", "rev-parse", "--short=8", "HEAD"],
+            capture_output=True, text=True, timeout=5).stdout.strip()
+    except Exception:
+        commit = ""
+    return f"{sello}-{commit or 'sin_commit'}"
 PERIODO = os.getenv("PERIODO_EXP", "15y")
 
 # ---- universos, fijados aquí ----
@@ -284,8 +311,34 @@ def cargar_panel(ruta):
 
 # =====================================================================
 
+class SalidaProtegida(RuntimeError):
+    """Se intento escribir sobre una entrega ya publicada."""
+
+
+# Entregas cerradas. Escribir aqui destruye evidencia ya auditada, y
+# confiar en acordarse no funciono: CI piso resultados/v2 siete veces
+# porque la salida por defecto apuntaba ahi. Esto no depende de que yo me
+# acuerde.
+SALIDAS_CERRADAS = ("v2",)
+
+
+def _proteger_salida(ruta):
+    nombre = os.path.basename(os.path.normpath(ruta))
+    if nombre in SALIDAS_CERRADAS and os.environ.get("PERMITIR_PISAR") != "si":
+        raise SalidaProtegida(
+            f"{ruta} es una entrega cerrada y ya auditada: no se sobrescribe. "
+            f"Genera otra version (resultados/v3, v4...) o exporta "
+            f"SALIDA_EXP. Si de verdad hace falta pisarla, hay que decirlo "
+            f"a proposito con PERMITIR_PISAR=si."
+        )
+
+
 def main(descargar=None):
+    _proteger_salida(SALIDA)
     os.makedirs(SALIDA, exist_ok=True)
+    os.makedirs(os.path.join(SALIDA, "registros"), exist_ok=True)
+    global RUN_ID
+    RUN_ID = _identificador_corrida()
 
     # ---------- PASO 1: el registro, ANTES de calcular nada ----------
     reg = REG.crear(
@@ -327,7 +380,8 @@ def main(descargar=None):
             os.path.join(_AQUI, "inferencia.py"),
             os.path.join(_AQUI, "experimento.py"),
         ],
-        salida=os.path.join(SALIDA, "experiment_registry.json"),
+        salida=os.path.join(SALIDA, "registros",
+                            f"experiment_registry_{RUN_ID}.json"),
     )
 
     print("=" * 72)
@@ -579,6 +633,12 @@ def main(descargar=None):
 
     # ---------- informe ----------
     salida = {
+        "run_id": RUN_ID,
+        # El enlace va del informe AL registro, no al contrario: el
+        # registro se escribe antes de que exista el panel, asi que no
+        # puede contener su hash. El informe si puede nombrar el registro.
+        "registro_archivo": os.path.join(
+            "registros", f"experiment_registry_{RUN_ID}.json"),
         "registro": reg,
         "panel": panel,
         "universo_congelado": congelado,
@@ -594,6 +654,10 @@ def main(descargar=None):
     }
     with open(os.path.join(SALIDA, "report.json"), "w") as f:
         json.dump(salida, f, indent=2, default=str)
+    # Puntero a la ultima corrida. Es un puntero, no evidencia: se
+    # sobrescribe a proposito, y los registros de registros/ no.
+    with open(os.path.join(SALIDA, "ultima_corrida.txt"), "w") as f:
+        f.write(f"{RUN_ID}\n")
 
     print(f"\n{'=' * 72}\nCONCLUSION\n{'=' * 72}")
     rechazadas = [k for k, v in holm.items() if v["rechaza_nula"]]

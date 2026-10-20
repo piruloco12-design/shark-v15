@@ -801,9 +801,73 @@ check("V18", "mismo coste proporcional, distinta distancia: decisiones distintas
       f"stop a 4 permite={_ancho.get('permite')} (exigido True)")
 
 # =====================================================================
+print("\n=== V24: reejecucion reproducible ===")
+# =====================================================================
+# Reejecutar con los MISMOS artefactos tiene que dar las mismas
+# decisiones, los mismos fills, el mismo libro y las mismas metricas. Si
+# no, no hay experimento: hay una anecdota.
+_serie24 = diaria(90, cierres={30: 112.0, 55: 95.0, 70: 130.0},
+                  aperturas={31: 108.0, 56: 97.0})
+_fd24 = [_serie24.index[20], _serie24.index[40], _serie24.index[60]]
+_pol24 = politicas_simples(coste_rel=0.0008, permitir_fraccionado=False,
+                           lote=1.0, dias_liquidacion=1)
+
+def _corrida24():
+    ev = EvaluadorMensual({"A": _serie24}, _pol24, fechas_decision=_fd24)
+    r = ev.correr(LuegoLaMitad())
+    libro = r["_libro"]
+    fills = [(m.momento, m.tipo, m.instrumento, m.cantidad_solicitada,
+              m.cantidad_ejecutada, m.precio_ejecucion,
+              round(m.costes.get("comision", 0.0), 10))
+             for m in libro.movimientos]
+    decisiones = [(d.fecha_decision, tuple(sorted(d.pesos_deseados.items())),
+                   tuple(sorted(d.scores.items())))
+                  for d in r["_decisiones"]]
+    return {
+        "nav": r["_nav"],
+        "fills": fills,
+        "decisiones": decisiones,
+        "estado": libro.estado(),
+        "cagr": r.get("cagr"),
+        "retorno_total": r.get("retorno_total"),
+        "comisiones": r.get("comisiones_moneda"),
+    }
+
+_a24, _b24 = _corrida24(), _corrida24()
+_nav_igual = (len(_a24["nav"]) == len(_b24["nav"])
+              and bool((_a24["nav"].index == _b24["nav"].index).all())
+              and float(np.abs(_a24["nav"].values - _b24["nav"].values).max()) == 0.0)
+check("V24", "reejecucion: NAV identico al bit, sin tolerancia",
+      _nav_igual,
+      f"-> maxima diferencia "
+      f"{float(np.abs(_a24['nav'].values - _b24['nav'].values).max()) if len(_a24['nav']) == len(_b24['nav']) else 'longitudes distintas'}")
+
+check("V24b", "reejecucion: mismas decisiones y mismos fills",
+      _a24["decisiones"] == _b24["decisiones"]
+      and _a24["fills"] == _b24["fills"],
+      f"-> decisiones iguales={_a24['decisiones'] == _b24['decisiones']}, "
+      f"fills iguales={_a24['fills'] == _b24['fills']} "
+      f"({len(_a24['fills'])} vs {len(_b24['fills'])} apuntes)")
+
+check("V24c", "reejecucion: mismo libro final y mismas metricas",
+      _a24["estado"] == _b24["estado"]
+      and _a24["cagr"] == _b24["cagr"]
+      and _a24["retorno_total"] == _b24["retorno_total"]
+      and _a24["comisiones"] == _b24["comisiones"],
+      f"-> CAGR {_a24['cagr']} vs {_b24['cagr']}, comisiones "
+      f"{_a24['comisiones']} vs {_b24['comisiones']}")
+
+# Y que la corrida haya hecho algo: una reproducibilidad de cero
+# operaciones no demuestra nada.
+check("V24d", "la corrida comparada SI opera (si no, no prueba nada)",
+      len(_a24["fills"]) >= 4 and len(_a24["decisiones"]) == 3,
+      f"-> {len(_a24['fills'])} apuntes y {len(_a24['decisiones'])} "
+      f"decisiones; con cero operaciones dos corridas vacias coinciden "
+      f"trivialmente")
+
+# =====================================================================
 print("\n=== Puertas de cambios posteriores ===")
 # =====================================================================
-pendiente("V24", "reejecucion con los mismos artefactos", 5)
 
 print("\n" + "=" * 70)
 print(f"PUERTAS: {len(PASA)} pasan, {len(FALLA)} FALLAN, "

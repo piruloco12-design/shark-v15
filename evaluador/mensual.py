@@ -627,6 +627,13 @@ class EvaluadorMensual:
                             f"{t}:{c[0]}" for t, c in sorted(calidad_marca.items())
                             if libro.cantidad(t) > 0 and c[0] != "CIERRE") or "CIERRE",
                         "no_evaluable": fecha in no_evaluables,
+                        # Concentracion desde los PESOS REALES de esta
+                        # fecha, por instrumento y por grupo. Antes solo
+                        # existia la del ultimo dia, y una media de la
+                        # exposicion se "reconstruia" de ahi, que no es
+                        # una media de nada.
+                        "peso_maximo": _peso_maximo(libro, nav),
+                        "peso_grupo_mayor": _peso_grupo_mayor(libro, nav),
                     }
                 except Exception as e:
                     nav_diario[fecha] = float("nan")
@@ -790,7 +797,24 @@ class EvaluadorMensual:
             if nominal > 0 else None,
             "coste_por_intencion_moneda": round(comisiones / len(ejecutadas), 6)
             if ejecutadas else None,
-            "rotacion_anual_nominal": round(
+            # ROTACION, con su convencion dicha. El nominal suma AMBAS
+            # patas: cada compra y cada venta por su propio nominal, y la
+            # entrada inicial cuenta. El denominador es el patrimonio
+            # MEDIO gestionado, no el capital inicial.
+            #
+            # La cifra anterior dividia todo el nominal por el capital
+            # INICIAL, lo que mezcla dos cosas: en una cartera que
+            # multiplica por seis su patrimonio, el nominal negociado del
+            # ultimo ano se compara con el capital del primer dia. Asi
+            # salian 14,477 donde la rotacion sobre patrimonio es 5,297.
+            # Se conserva la vieja con un nombre que dice lo que es, para
+            # que no se confundan al comparar con cifras publicadas antes.
+            "rotacion_convencion": ("nominal de ambas patas, entrada inicial "
+                                    "incluida, sobre patrimonio medio"),
+            "rotacion_anual_sobre_patrimonio_medio": round(
+                nominal / res["anos"] / float(nav_diario.mean()), 3)
+            if res["anos"] > 0 and float(nav_diario.mean()) > 0 else None,
+            "rotacion_anual_nominal_sobre_capital_inicial": round(
                 nominal / res["anos"] / self.pol.capital_inicial, 3)
             if res["anos"] > 0 else None,
             "concentracion_final": libro.concentracion(),
@@ -805,6 +829,37 @@ class EvaluadorMensual:
         return res
 
 
+def _peso_maximo(libro, nav) -> float:
+    """Peso del instrumento mas grande sobre el patrimonio, hoy."""
+    if not (nav > 0):
+        return float("nan")
+    mayor = 0.0
+    for iid, pos in libro.posiciones.items():
+        if pos.cantidad <= 0:
+            continue
+        mult = getattr(libro.instrumentos.get(iid), "multiplicador", 1.0)
+        mayor = max(mayor, pos.cantidad * pos.precio_valoracion * mult)
+    return mayor / nav
+
+
+def _peso_grupo_mayor(libro, nav) -> float:
+    """Peso del grupo mas grande sobre el patrimonio, hoy."""
+    if not (nav > 0):
+        return float("nan")
+    try:
+        from limites_cartera import GRUPOS_UNIVERSO as _G
+    except Exception:
+        _G = {}
+    por_grupo: dict = {}
+    for iid, pos in libro.posiciones.items():
+        if pos.cantidad <= 0:
+            continue
+        mult = getattr(libro.instrumentos.get(iid), "multiplicador", 1.0)
+        g = _G.get(iid, iid)
+        por_grupo[g] = por_grupo.get(g, 0.0) + pos.cantidad * pos.precio_valoracion * mult
+    return (max(por_grupo.values()) / nav) if por_grupo else 0.0
+
+
 def exposicion_media(resultado) -> dict:
     """Parte del NAV que estuvo invertida, después del calentamiento.
 
@@ -815,12 +870,29 @@ def exposicion_media(resultado) -> dict:
     libro = resultado["_libro"]
     nav = resultado["_nav"]
     meses = resultado["_nav_mensual"]
-    return {
+    salida = {
         "meses_evaluados": len(meses),
         "observaciones_diarias": len(nav),
         "posiciones_al_final": len(libro.posiciones),
         "peso_invertido_al_final": round(
             sum(libro.pesos().values()), 4),
-        "_nota": ("el peso invertido es el del último día; para la media hay "
-                  "que recorrer el libro día a día, que es trabajo pendiente"),
     }
+    # Ya NO es trabajo pendiente: la trayectoria diaria existe, asi que la
+    # media se calcula recorriendola en vez de reconstruirla del ultimo
+    # dia, que es lo que hacia la nota anterior de este diccionario.
+    ld = resultado.get("_ledger_diario")
+    if ld is not None and len(ld) and "expuesto" in ld:
+        exp = pd.to_numeric(ld["expuesto"], errors="coerce").dropna()
+        pmax = pd.to_numeric(ld.get("peso_maximo"), errors="coerce").dropna() \
+            if "peso_maximo" in ld else pd.Series(dtype="float64")
+        pgrp = pd.to_numeric(ld.get("peso_grupo_mayor"), errors="coerce").dropna() \
+            if "peso_grupo_mayor" in ld else pd.Series(dtype="float64")
+        salida.update({
+            "exposicion_media_real": round(float(exp.mean()), 6) if len(exp) else None,
+            "exposicion_mediana": round(float(exp.median()), 6) if len(exp) else None,
+            "dias_con_trayectoria": int(len(exp)),
+            "peso_maximo_medio": round(float(pmax.mean()), 6) if len(pmax) else None,
+            "peso_grupo_mayor_medio": round(float(pgrp.mean()), 6) if len(pgrp) else None,
+            "peso_grupo_mayor_maximo": round(float(pgrp.max()), 6) if len(pgrp) else None,
+        })
+    return salida

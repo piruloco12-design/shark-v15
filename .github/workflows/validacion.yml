@@ -360,11 +360,11 @@ jobs:
             echo
           } >> resultados/ultimo.md
 
-      - name: Medicion v2 con el motor corregido
+      - name: Medicion v3 con el motor corregido
         if: always()
         run: |
           set -o pipefail
-          python evaluador/experimento.py 2>&1 | tee resultados/medicion_v2.txt
+          python evaluador/experimento.py 2>&1 | tee resultados/medicion_v3.txt
           {
             echo '## Medicion v2 (motor corregido)'
             echo
