@@ -306,6 +306,55 @@ cuyo efecto agregado sobre **estas** cifras está en el cuarto decimal. Las
 dos cosas son verdad a la vez. Lo que no se puede decir es que los
 arreglos «mejoraron el resultado».
 
+
+## La tarifa decide el resultado, y lo decide en contra
+
+Medido sobre el panel real guardado (`resultados/v2/prices_snapshot.csv`,
+120.640 filas, sin red), capital 1.000, fraccionado permitido. Diferencial
+de CAGR frente a comprar y mantener del mismo universo, en puntos
+porcentuales anuales:
+
+| Tarifa | Multiactivo M03 | Renta variable M03 | Comisiones M03 (RV) |
+|---|---|---|---|
+| sin costes | **+1,8990** | **+0,4847** | 0,00 |
+| 8 pb, sin mínimo *(escenario declarado)* | **+1,3335** | **+0,0105** | 162,03 |
+| 8 pb + mínimo 0,50 | **−1,0690** | **−1,7535** | 594,60 |
+| 8 pb + mínimo 1,00 | **−4,1352** | **−3,7001** | 985,37 |
+| 8 pb + mínimo 2,00 | **−21,4850** | **−8,5542** | 1.629,03 |
+
+Y en CAGR absoluto, multiactivo M03: 10,3799% con la tarifa declarada,
+7,7657% con mínimo de 0,50, 4,4944% con 1,00 y **−13,2675%** con 2,00. M02
+es peor en todos los tramos: −28,21% anual ya con mínimo de 0,50.
+
+El mecanismo no tiene misterio. Comprar y mantener emite **14** órdenes en
+catorce años y apenas se entera: pasa de 13,7509% a 13,5299% con mínimo de
+2,00. M03 emite **967**. Con 1.000 de capital y cinco posiciones, cada
+posición son ~200, así que un mínimo de 1,00 por orden son 50 pb por pata
+sobre esa posición, no 8. Seis veces el supuesto. A 967 órdenes, las
+comisiones solas superan el capital inicial.
+
+Tres cosas que se siguen de esto, y ninguna es agradable:
+
+1. **La ventaja medida de M03 es un artefacto del supuesto de tarifa.**
+   Desaparece con un mínimo de medio euro por orden, que es menos de lo
+   que cobra cualquier broker minorista por una orden de 200 en bolsa
+   americana. No es que la ventaja sea pequeña: es que cambia de signo.
+2. **La frecuencia es el problema, no la señal.** El rebalanceo mensual de
+   cinco posiciones sobre 1.000 de capital genera ~1.000 órdenes en catorce
+   años. Cualquier coste que no escale con el nominal es letal a ese
+   tamaño. Esto acota el diseño antes de discutir si el momentum predice
+   algo.
+3. **Tu aviso sobre M01 pasa al centro.** Dijiste que con coste puramente
+   proporcional el filtro no discrimina y que donde discrimina es con un
+   coste que no escala. Con mínimo por orden, M01 deja de ser un módulo sin
+   decisión y se convierte en la restricción que decide qué órdenes tienen
+   sentido emitir.
+
+El escenario de 8 pb sin mínimo se conserva porque es el que se declaró y
+con el que se publicaron las cifras anteriores, pero ya no puede
+presentarse como el caso base sin decir que es el más favorable de los
+medidos.
+
 ---
 
 ## 9. Los dos oráculos que siguen en rojo

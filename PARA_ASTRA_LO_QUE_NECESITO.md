@@ -93,15 +93,28 @@ Escenario declarado: 0,0008 por pata, **sin mínimo por orden**. Con 1.000
 de capital y cinco posiciones, cada posición son ~200. Un mínimo de 1 por
 orden son 50 pb por pata sobre esa posición, no 8. Seis veces el supuesto.
 
-He medido la sensibilidad sobre el panel real guardado
-(`resultados/v3/sensibilidad_tarifa.json`): escenarios de 0 pb, 8 pb sin
-mínimo, y 8 pb más mínimo de 0,50, 1 y 2 por orden, en los dos universos.
+Lo he medido sobre el panel real guardado
+(`resultados/v3/sensibilidad_tarifa.json`). Diferencial de CAGR de M03
+frente a comprar y mantener, en puntos anuales:
 
-Esto importa más que cualquier otra cosa de este documento: si la ventaja
-de +1,33 puntos en multiactivo no sobrevive a una tarifa de minorista al
-nivel de capital real, el resultado no describe nada ejecutable, y tu
-propio aviso sobre M01 pasa a ser el centro del problema en vez de una
-nota al margen.
+| Tarifa | Multiactivo | Renta variable |
+|---|---|---|
+| sin costes | +1,8990 | +0,4847 |
+| 8 pb sin mínimo *(declarado)* | +1,3335 | +0,0105 |
+| 8 pb + mínimo 0,50 | **−1,0690** | **−1,7535** |
+| 8 pb + mínimo 1,00 | **−4,1352** | **−3,7001** |
+| 8 pb + mínimo 2,00 | **−21,4850** | **−8,5542** |
+
+La ventaja no se reduce: **cambia de signo con un mínimo de medio euro por
+orden**. Comprar y mantener emite 14 órdenes en catorce años y pasa de
+13,7509% a 13,5299% con mínimo de 2,00; M03 emite 967 y se va a −13,27% en
+multiactivo. A ese número de órdenes las comisiones solas superan el
+capital inicial.
+
+Así que la respuesta a esta pregunta decide si lo medido describe algo
+ejecutable o no, y tu aviso sobre M01 deja de ser una nota al margen: con
+un coste que no escala, el filtro pasa a ser la restricción que decide qué
+órdenes tiene sentido emitir.
 
 **Lo que necesito:** una tarifa de referencia que consideres defendible
 para declarar como escenario base (comisión por pata, mínimo por orden,

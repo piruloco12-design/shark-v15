@@ -63,10 +63,18 @@
           "nav_final": 3268.819364
         },
         "M03_momentum_12_1": {
-          "error": "LibroInvalido: efectivo negativo (-0.10067512128374462)"
+          "cagr": 0.077657,
+          "comisiones": 610.736001,
+          "intenciones": 1050,
+          "rechazadas": 55,
+          "nav_final": 2847.193291
         },
         "M02_tendencia": {
-          "error": "LibroInvalido: efectivo negativo (-0.023705591565598705)"
+          "cagr": -0.28212,
+          "comisiones": 1440.743451,
+          "intenciones": 3509,
+          "rechazadas": 671,
+          "nav_final": 9.685155
         }
       },
       "renta_variable": {
@@ -78,10 +86,18 @@
           "nav_final": 6024.316707
         },
         "M03_momentum_12_1": {
-          "error": "LibroInvalido: efectivo negativo (-0.48738426376676613)"
+          "cagr": 0.119427,
+          "comisiones": 594.603485,
+          "intenciones": 967,
+          "rechazadas": 53,
+          "nav_final": 4847.004133
         },
         "M02_tendencia": {
-          "error": "LibroInvalido: efectivo negativo (-0.2635882305510721)"
+          "cagr": 0.085065,
+          "comisiones": 978.424577,
+          "intenciones": 2000,
+          "rechazadas": 200,
+          "nav_final": 3133.567869
         }
       }
     },
@@ -97,10 +113,18 @@
           "nav_final": 3183.677624
         },
         "M03_momentum_12_1": {
-          "error": "LibroInvalido: efectivo negativo (-0.2149108295659874)"
+          "cagr": 0.044944,
+          "comisiones": 1026.459357,
+          "intenciones": 1050,
+          "rechazadas": 113,
+          "nav_final": 1849.774619
         },
         "M02_tendencia": {
-          "error": "LibroInvalido: efectivo negativo (-0.08246228869356886)"
+          "cagr": -0.325961,
+          "comisiones": 1254.378267,
+          "intenciones": 3587,
+          "rechazadas": 2341,
+          "nav_final": 4.010845
         }
       },
       "renta_variable": {
@@ -112,10 +136,18 @@
           "nav_final": 5983.626677
         },
         "M03_momentum_12_1": {
-          "error": "LibroInvalido: efectivo negativo (-0.3059140508551128)"
+          "cagr": 0.09941,
+          "comisiones": 985.36976,
+          "intenciones": 967,
+          "rechazadas": 98,
+          "nav_final": 3765.649879
         },
         "M02_tendencia": {
-          "error": "LibroInvalido: efectivo negativo (-0.24824504199284003)"
+          "cagr": 0.020419,
+          "comisiones": 1695.83552,
+          "intenciones": 2000,
+          "rechazadas": 353,
+          "nav_final": 1326.836964
         }
       }
     },
@@ -131,10 +163,18 @@
           "nav_final": 3018.802834
         },
         "M03_momentum_12_1": {
-          "error": "LibroInvalido: efectivo negativo (-1.1931028959388674)"
+          "cagr": -0.132675,
+          "comisiones": 1719.127032,
+          "intenciones": 1050,
+          "rechazadas": 214,
+          "nav_final": 136.502359
         },
         "M02_tendencia": {
-          "error": "LibroInvalido: efectivo negativo (-1.9454120092428016)"
+          "cagr": -0.318299,
+          "comisiones": 1184.249746,
+          "intenciones": 3541,
+          "rechazadas": 2951,
+          "nav_final": 4.697924
         }
       },
       "renta_variable": {
@@ -146,10 +186,18 @@
           "nav_final": 5902.246621
         },
         "M03_momentum_12_1": {
-          "error": "LibroInvalido: efectivo negativo (-1.8457148142452293)"
+          "cagr": 0.049757,
+          "comisiones": 1629.034465,
+          "intenciones": 967,
+          "rechazadas": 193,
+          "nav_final": 1972.617278
         },
         "M02_tendencia": {
-          "error": "LibroInvalido: efectivo negativo (-0.2175590586927756)"
+          "cagr": -0.355994,
+          "comisiones": 1787.609722,
+          "intenciones": 1967,
+          "rechazadas": 1080,
+          "nav_final": 2.119799
         }
       }
     },
