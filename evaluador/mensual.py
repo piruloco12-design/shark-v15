@@ -76,8 +76,45 @@ class ConfiguracionInvalida(ValueError):
 # supuesto OPTIMISTA y declarado. LIQUIDAR: se vende todo al ultimo cierre
 # pagando comisiones, asi que el NAV final incluye el coste de salir.
 POLITICAS_TERMINALES = ("MARCAR", "LIQUIDAR")
+# Que hacer con una posicion cuyo precio se queda obsoleto sin que exista
+# un evento de baja declarado.
+#   MARCAR_INCERTIDUMBRE: se valora a la ultima marca, el dia se cuenta
+#       como NO EVALUABLE y el resultado lo dice. No se inventa ni una
+#       perdida total ni una venta al ultimo cierre.
+#   EXIGIR_EVENTO: el motor se niega a dar un numero. Modo de
+#       investigacion: si no hay evidencia del evento, no hay medicion.
+POLITICAS_BAJA = ("MARCAR_INCERTIDUMBRE", "EXIGIR_EVENTO")
 POLITICAS_CAJA = ("SIN_REMUNERAR",)
 MONEDAS_SOPORTADAS = ("USD",)
+
+
+@dataclass(frozen=True)
+class EventoCorporativo:
+    """Un hecho declarado, con su fuente. No se deduce de los precios.
+
+    `LIQUIDACION` exige las cuatro cosas que el plan pide para una baja:
+    importe por unidad (el cobro), fecha del evento, fecha de cobro y
+    politica de reinversion. Que una serie se termine NO es un evento.
+    """
+
+    tipo: str                       # LIQUIDACION | DIVIDENDO | SPLIT
+    instrumento: str
+    fecha: object
+    importe_por_unidad: float = 0.0
+    fecha_cobro: object = None
+    ratio: float = 1.0
+    politica_reinversion: str = "EFECTIVO"
+    fuente: str = ""
+    event_id: str = ""
+
+    def __post_init__(self):
+        if self.tipo not in ("LIQUIDACION", "DIVIDENDO", "SPLIT"):
+            raise ConfiguracionInvalida(
+                f"tipo de evento no soportado: {self.tipo!r}")
+        if not self.fuente:
+            raise ConfiguracionInvalida(
+                f"el evento {self.tipo} de {self.instrumento} no declara "
+                f"FUENTE. Un hecho sin procedencia no es evidencia.")
 
 
 @dataclass(frozen=True)
@@ -99,6 +136,7 @@ class Politicas:
     # Al final: marcar a mercado (no liquidar) salvo que se diga lo
     # contrario. Fijado antes de ver resultados.
     politica_terminal: str = "MARCAR"
+    politica_baja: str = "MARCAR_INCERTIDUMBRE"
     calentamiento_sesiones: int = 253
     # M04 basico. None = sin limites, que es como se midio la base. Con
     # limites, la estrategia lleva otro identificador: es otra variante,
@@ -117,6 +155,11 @@ class Politicas:
                 f"politica_caja={self.politica_caja!r} no esta implementada. "
                 f"Implementadas: {POLITICAS_CAJA}. Remunerar la caja exige "
                 f"comprar el instrumento, con sus costes."
+            )
+        if self.politica_baja not in POLITICAS_BAJA:
+            raise ConfiguracionInvalida(
+                f"politica_baja={self.politica_baja!r} no esta implementada. "
+                f"Implementadas: {POLITICAS_BAJA}."
             )
         if self.moneda_cuenta not in MONEDAS_SOPORTADAS:
             raise ConfiguracionInvalida(
@@ -269,10 +312,17 @@ class EvaluadorMensual:
     """Corre una estrategia mensual sobre un libro de efectivo real."""
 
     def __init__(self, series: dict, politicas: Politicas,
-                 fechas_decision=None):
+                 fechas_decision=None, eventos=None):
         if not series:
             raise SinDatosSuficientes("sin series")
         self.pol = politicas
+        # Eventos corporativos DECLARADOS, agrupados por fecha. No se
+        # deducen de los precios: una serie que se termina no es un evento.
+        self.eventos: dict = {}
+        for ev in (eventos or []):
+            f = pd.Timestamp(ev.fecha)
+            f = f.tz_localize("UTC") if f.tz is None else f.tz_convert("UTC")
+            self.eventos.setdefault(f.normalize(), []).append(ev)
         self.series = {t: self._normalizar(df) for t, df in series.items()}
 
         # Calendario de precios: la unión de todas las fechas. Cada
@@ -387,7 +437,26 @@ class EvaluadorMensual:
         ya_decidio_una_vez = False
         fechas_decision = set(self.fechas_decision)
 
+        no_evaluables: set = set()
+
         for fecha in self.fechas:
+            # --- 1) ACCIONES CORPORATIVAS declaradas, una sola vez ---
+            # Van antes de liquidar: el orden lo fija el plan. La
+            # idempotencia la garantiza el event_id del libro.
+            for ev in self.eventos.get(fecha, []):
+                eid = ev.event_id or f"{ev.tipo}-{ev.instrumento}-{fecha.date()}"
+                if ev.tipo == "LIQUIDACION":
+                    libro.liquidar_instrumento(
+                        ev.instrumento, ev.importe_por_unidad, fecha,
+                        ev.fecha_cobro, event_id=eid,
+                        politica_reinversion=ev.politica_reinversion,
+                        fuente=ev.fuente)
+                elif ev.tipo == "DIVIDENDO":
+                    libro.dividendo(ev.instrumento, ev.importe_por_unidad,
+                                    fecha, ev.fecha_cobro, event_id=eid)
+                elif ev.tipo == "SPLIT":
+                    libro.split(ev.instrumento, ev.ratio, fecha)
+
             # --- 2) liquidaciones pendientes ---
             libro.liquidar_pendientes(fecha)
 
@@ -502,10 +571,27 @@ class EvaluadorMensual:
                     edad = int((fecha - fecha_marca).days)
                     calidad_marca[t] = ("ARRASTRE", edad)
                     if edad > self.pol.antiguedad_maxima_dias:
+                        # Posicion viva sin precio admisible y SIN evento de
+                        # baja declarado. No se inventa ni la perdida total
+                        # ni la venta al ultimo cierre: se valora a la
+                        # ultima marca y el dia queda marcado NO EVALUABLE,
+                        # que es lo que el plan pide. Si no hay evidencia
+                        # del evento, no hay medicion limpia.
+                        calidad_marca[t] = ("NO_EVALUABLE", edad)
+                        no_evaluables.add(fecha)
                         incidencias.append({
                             "fecha": str(fecha), "instrumento": t,
-                            "motivo": f"marca de {edad} dias de antiguedad",
+                            "motivo": f"marca de {edad} dias sin evento de "
+                                      f"baja declarado: dia no evaluable",
                         })
+                        if self.pol.politica_baja == "EXIGIR_EVENTO":
+                            raise SinDatosSuficientes(
+                                f"{t} lleva {edad} dias sin precio admisible "
+                                f"y no hay evento de baja declarado. Con "
+                                f"politica_baja=EXIGIR_EVENTO no se emite un "
+                                f"NAV: hace falta el evento, su importe por "
+                                f"unidad, su fecha y su fuente."
+                            )
                 libro.valorar(t, precio_marca, fecha_marca)
 
             # --- 5) decisión mensual ---
@@ -540,6 +626,7 @@ class EvaluadorMensual:
                         "calidad": ";".join(
                             f"{t}:{c[0]}" for t, c in sorted(calidad_marca.items())
                             if libro.cantidad(t) > 0 and c[0] != "CIERRE") or "CIERRE",
+                        "no_evaluable": fecha in no_evaluables,
                     }
                 except Exception as e:
                     nav_diario[fecha] = float("nan")
@@ -596,6 +683,14 @@ class EvaluadorMensual:
         res = self._resultado(estrategia, libro, decisiones, serie_nav)
         res["_ledger_diario"] = pd.DataFrame(libro_diario).T.sort_index()
         res["incidencias_valoracion"] = incidencias
+        evaluados = [f for f in nav_diario if f >= self.inicio_evaluacion]
+        dias_no_eval = sum(1 for f in evaluados if f in no_evaluables)
+        res["dias_no_evaluables"] = dias_no_eval
+        # Una cifra con dias no evaluables dentro no es una medicion limpia,
+        # y el resultado lo dice en vez de dejarlo en una incidencia que
+        # nadie lee.
+        res["nav_fiable"] = bool(dias_no_eval == 0)
+        res["eventos_aplicados"] = sum(len(v) for v in self.eventos.values())
         return res
 
     def _decidir(self, estrategia, fecha, libro, ultimo_precio) -> Decision:

@@ -1,0 +1,25 @@
+{
+  "A_sin_evento_marcar_incertidumbre": {
+    "cantidad_MUERTO": 4.83870967,
+    "nav_final": 865.5451,
+    "nav_fiable": false,
+    "dias_no_evaluables": 55,
+    "incidencias": 55
+  },
+  "B_sin_evento_exigir_evento": {
+    "emitio_nav": false,
+    "motivo": "MUERTO lleva 10 dias sin precio admisible y no hay evento de baja declarado. Con politica_baja=EXIGIR_EVENTO no se emite un NAV: hace falta "
+  },
+  "C_con_evento_declarado": {
+    "cantidad_MUERTO": 0.0,
+    "nav_final": 865.5451,
+    "nav_fiable": true,
+    "dias_no_evaluables": 0,
+    "eventos_aplicados": 1
+  },
+  "D_evento_con_cobro_cero": {
+    "cantidad_MUERTO": 0.0,
+    "nav_final": 623.6096,
+    "nav_fiable": true
+  }
+}

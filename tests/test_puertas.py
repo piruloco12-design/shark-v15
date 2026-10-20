@@ -85,7 +85,8 @@ def diaria(n, cierres=None, aperturas=None, inicio="2021-01-04"):
 
 
 from libro import LibroContado, Instrumento, OperacionNoEjecutable, LibroInvalido
-from evaluador.mensual import EvaluadorMensual, Politicas
+from evaluador.mensual import (EvaluadorMensual, Politicas,
+                               SinDatosSuficientes)
 from evaluador.metricas import por_ano_natural
 
 
@@ -103,6 +104,14 @@ class TodoEnA:
 
     def __call__(self, vista, elegibles, libro):
         return {"A": 1.0}, {}, {}
+
+
+class _AmbosActivos:
+    id = "PUERTA_AMBOS"
+    solo_primera_decision = True
+
+    def __call__(self, vista, elegibles, libro):
+        return {"VIVO": 0.5, "MUERTO": 0.5}, {}, {}
 
 
 class LuegoLaMitad:
@@ -595,15 +604,108 @@ check("V12b", "un snapshot caducado se detecta por calendario, no por reloj",
       bool(_hace_falta), f"-> hace_falta={_hace_falta}, motivo: {_motivo}")
 
 # =====================================================================
+print("\n=== V19, V20, V21: bajas declaradas y calidad visible ===")
+# =====================================================================
+# Plan: "Una liquidacion declarada necesita evento, precio/cobro, fecha y
+# politica de reinversion. Sin esa informacion, marca incertidumbre; no
+# inventes perdida total ni venta al ultimo cierre."
+
+# V19: fondo liquidado con cobro diferido.
+Lq = LibroContado(1000.0)
+Lq.comprar("FONDO", 5, 100.0, momento=T0)     # caja 500, posicion 500
+Lq.valorar("FONDO", 100.0, T0)
+nav_pre = Lq.nav()
+mv = Lq.liquidar_instrumento("FONDO", 90.0, T0,
+                             T0 + pd.Timedelta(days=5),
+                             event_id="liq-1", fuente="hecho relevante CNMV")
+nav_evento = Lq.nav()
+q_tras = Lq.cantidad("FONDO")
+der = Lq.derechos
+Lq.liquidar_pendientes(T0 + pd.Timedelta(days=5))
+nav_cobro = Lq.nav()
+# 5 unidades a 90 = 450 de derecho. El NAV baja 50, que es la perdida
+# DECLARADA por el evento, no una inventada.
+check("V19", "fondo liquidado: unidades fuera, derecho dentro, y se cobra",
+      q_tras <= 0 and abs(der - 450.0) < 1e-9
+      and abs(nav_evento - 950.0) < 1e-9 and abs(nav_cobro - 950.0) < 1e-9
+      and abs(Lq.efectivo - 950.0) < 1e-9,
+      f"-> NAV antes {nav_pre}, tras el evento {nav_evento} (exigido 950.0), "
+      f"tras cobrar {nav_cobro}, unidades {q_tras}, derecho {der} "
+      f"(exigido 450.0), caja final {Lq.efectivo}")
+
+# Y la idempotencia del evento: repetirlo no cobra dos veces.
+Lq.liquidar_instrumento("FONDO", 90.0, T0, T0 + pd.Timedelta(days=5),
+                        event_id="liq-1", fuente="hecho relevante CNMV")
+check("V19b", "repetir el evento de liquidacion no cobra dos veces",
+      abs(Lq.nav() - 950.0) < 1e-9 and abs(Lq.efectivo - 950.0) < 1e-9,
+      f"-> NAV {Lq.nav()}, caja {Lq.efectivo} (exigido 950.0)")
+
+# Una politica de reinversion no implementada se rechaza en vez de
+# ejecutarse como si existiera.
+Lq2 = LibroContado(1000.0)
+Lq2.comprar("F2", 5, 100.0, momento=T0)
+try:
+    Lq2.liquidar_instrumento("F2", 90.0, T0, politica_reinversion="REINVERTIR",
+                             fuente="prospecto")
+    rechazo_pol = False
+except OperacionNoEjecutable:
+    rechazo_pol = True
+check("V19c", "politica de reinversion no implementada: error explicito",
+      rechazo_pol and Lq2.cantidad("F2") == 5,
+      f"-> rechazada={rechazo_pol}, unidades {Lq2.cantidad('F2')} (exigido 5)")
+
+# V20: falta la descarga de un activo congelado.
+import universo_congelado as UC
+with tempfile.TemporaryDirectory() as _tmpu:
+    _ruta = str(Path(_tmpu) / "universo.json")
+    _tickers20 = [f"T{i:02d}" for i in range(12)]
+    UC.congelar(_tickers20, "prueba de puertas", ruta=_ruta)
+    _antes = UC.cargar(_ruta)
+    # Falta la descarga de uno: T11 no devuelve datos en esta corrida.
+    _est = UC.comprobar(set(_tickers20[:-1]), ruta=_ruta,
+                        fecha_comprobacion="2026-10-20")
+    _despues = UC.cargar(_ruta)
+    _sigue = "T11" in _despues["instrumentos"]
+    _denominador = len(_despues["instrumentos"]) == len(_antes["instrumentos"])
+check("V20", "falta la descarga de un congelado: se marca, no se borra",
+      _sigue and _denominador,
+      f"-> T11 sigue en el universo={_sigue}, denominador intacto="
+      f"{_denominador} ({len(_despues['instrumentos'])} vs "
+      f"{len(_antes['instrumentos'])})")
+
+# V21: precio ausente -> calidad visible, la fecha NO se elimina.
+_idxv = pd.bdate_range("2024-01-01", periods=70, tz="UTC")
+_viva = diaria(70, inicio="2024-01-01")
+_muerta = _viva.iloc[:10].copy()
+_pol21 = politicas_simples()
+_ev21 = EvaluadorMensual({"VIVO": _viva, "MUERTO": _muerta}, _pol21,
+                         fechas_decision=[_viva.index[1]])
+_r21 = _ev21.correr(TodoEnA.__call__.__self__ if False else _AmbosActivos())
+check("V21", "precio ausente: calidad visible y el NAV se declara no fiable",
+      _r21.get("nav_fiable") is False and _r21.get("dias_no_evaluables", 0) > 0
+      and len(_r21["incidencias_valoracion"]) > 0,
+      f"-> nav_fiable={_r21.get('nav_fiable')}, dias no evaluables="
+      f"{_r21.get('dias_no_evaluables')}, incidencias="
+      f"{len(_r21.get('incidencias_valoracion', []))}")
+
+# Y con EXIGIR_EVENTO el motor se niega a dar un numero.
+try:
+    EvaluadorMensual({"VIVO": _viva, "MUERTO": _muerta},
+                     politicas_simples(politica_baja="EXIGIR_EVENTO"),
+                     fechas_decision=[_viva.index[1]]).correr(_AmbosActivos())
+    _nego = False
+except SinDatosSuficientes:
+    _nego = True
+check("V21b", "con EXIGIR_EVENTO no se emite NAV sin evidencia del evento",
+      _nego, "-> emitio un NAV con una posicion sin precio ni evento")
+
+# =====================================================================
 print("\n=== Puertas de cambios posteriores ===")
 # =====================================================================
 pendiente("V15", "bootstrap n=10 bloque=5 sin truncar", 4)
 pendiente("V16", "dos cortes, 25 decisiones futuras unicas", 4)
 pendiente("V17", "pronostico bruto perfecto con costes de 0,2 R", 4)
 pendiente("V18", "mismo coste proporcional, distinta distancia/precio", 4)
-pendiente("V19", "fondo liquidado con cobro diferido", 3)
-pendiente("V20", "falta la descarga de un activo congelado", 3)
-pendiente("V21", "precio ausente o NAV invalido: calidad visible", 1)
 pendiente("V24", "reejecucion con los mismos artefactos", 5)
 
 print("\n" + "=" * 70)

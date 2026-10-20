@@ -620,6 +620,63 @@ class LibroContado:
             self._eventos_aplicados[event_id] = mov
         return bruto
 
+    def liquidar_instrumento(self, iid, importe_por_unidad, momento=None,
+                             momento_cobro=None, *, event_id=None,
+                             politica_reinversion="EFECTIVO", fuente="",
+                             version_datos=""):
+        """Liquidacion DECLARADA: las unidades salen y entra un derecho.
+
+        Esto no es una venta al ultimo cierre ni una perdida total
+        inventada. Exige el importe por unidad que de verdad se cobra, su
+        fecha y la politica de reinversion, porque son las cuatro cosas
+        que el plan pide para una baja: evento, precio/cobro, fecha y
+        politica. Si no se tienen, NO se llama a esta funcion: se marca
+        incertidumbre y se exige evidencia del evento.
+
+        Que una serie deje de cotizar no es evidencia de nada: puede ser
+        una liquidacion con reparto, una suspension temporal o un fallo
+        del proveedor, y las tres se parecen desde fuera.
+        """
+        repetido = self._ya_aplicado(event_id)
+        if repetido is not None:
+            return repetido
+        inst = self._instrumento(iid)
+        self._exigir_moneda(inst)
+        if politica_reinversion != "EFECTIVO":
+            raise OperacionNoEjecutable(
+                f"politica_reinversion={politica_reinversion!r} no esta "
+                f"implementada. Implementada: 'EFECTIVO'."
+            )
+        q = self.cantidad(iid)
+        if q <= 0:
+            return None
+        importe = _no_negativo(importe_por_unidad, "importe_por_unidad")
+        bruto = q * importe * inst.multiplicador
+
+        self.posiciones.pop(iid, None)
+        if momento_cobro is None or momento is None or momento_cobro <= momento:
+            self._efectivo += bruto
+        else:
+            self._reconocer_derecho(
+                tipo="LIQUIDACION_FONDO", instrumento=iid, importe=bruto,
+                moneda=inst.moneda, fecha_reconocimiento=momento,
+                fecha_exigible=momento_cobro, fuente=fuente or "liquidacion",
+                version_datos=version_datos)
+
+        self.comprobar_invariantes()
+        mov = Movimiento(
+            momento=momento, tipo="LIQUIDACION_FONDO", instrumento=iid,
+            cantidad_solicitada=q, cantidad_ejecutada=q,
+            precio_ejecucion=importe,
+            costes={"bruto": bruto,
+                    "politica_reinversion": politica_reinversion},
+            motivo=fuente, efectivo_despues=self._efectivo,
+            nav_despues=self.nav())
+        self.movimientos.append(mov)
+        if event_id is not None:
+            self._eventos_aplicados[event_id] = mov
+        return mov
+
     def split(self, iid, ratio, momento=None):
         """Multiplica la cantidad y divide el precio. Ni gana ni pierde."""
         ratio = _positivo(ratio, "ratio")
