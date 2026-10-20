@@ -467,6 +467,45 @@ check("V23c", "el core llama al dimensionado declarando efectivo y coste",
       f"-> la llamada del core no pasa efectivo ni coste; el parametro "
       f"existia y nadie lo usaba")
 
+print("\n=== CF1, CF2: comision minima por orden (hallazgo propio) ===")
+# =====================================================================
+# No esta en la tabla del plan: salio al medir la sensibilidad a la
+# tarifa sobre el panel real. Con comision minima por orden el libro se
+# iba a EFECTIVO NEGATIVO y abortaba la corrida entera.
+
+# CF1: una venta cuyo importe no cubre la comision fija se rechaza.
+# Fraccionado: es el regimen del experimento (permitir_fraccionado=True,
+# lote=0.0) y el unico en el que una venta puede quedar por debajo de la
+# comision fija. Con lote 1,0 vender 0,3 redondea a cero y la prueba
+# pasaria sin tocar el fallo.
+Cf = LibroContado(1000.0, permitir_fraccionado=True)
+Cf.comprar("A", 10, 2.0, momento=T0, coste_rel=0.0008, coste_fijo=0.0)
+caja_antes = Cf.efectivo
+mv_cf = Cf.vender("A", 0.3, 2.0, momento=T0, coste_rel=0.0008, coste_fijo=2.0)
+check("CF1", "venta cuyo importe no cubre la comision fija: rechazada",
+      mv_cf.cantidad_ejecutada <= 1e-12
+      and abs(Cf.efectivo - caja_antes) < 1e-12
+      and abs(Cf.cantidad("A") - 10.0) < 1e-9
+      and "antieconomica" in (mv_cf.rechazo or ""),
+      f"-> ejecutada {mv_cf.cantidad_ejecutada}, caja {Cf.efectivo} "
+      f"(antes {caja_antes}), motivo {mv_cf.rechazo!r}")
+
+# CF2: y el efectivo NUNCA se va a negativo con comision fija. Antes se
+# iba, y la invariante lo cazaba abortando la corrida sin decir de donde.
+Cf2 = LibroContado(100.0, permitir_fraccionado=True)
+Cf2.comprar("B", 20, 1.0, momento=T0, coste_rel=0.0008, coste_fijo=1.0)
+for _ in range(25):
+    Cf2.vender("B", 0.5, 1.0, momento=T0, coste_rel=0.0008, coste_fijo=1.0)
+try:
+    Cf2.comprobar_invariantes()
+    invariantes_ok = Cf2.efectivo >= -1e-9
+    det_cf2 = f"-> efectivo {Cf2.efectivo}, cantidad {Cf2.cantidad('B')}"
+except LibroInvalido as e:
+    invariantes_ok = False
+    det_cf2 = f"-> {e}"
+check("CF2", "25 ventas pequenas con comision fija no dejan caja negativa",
+      invariantes_ok, det_cf2)
+
 # =====================================================================
 print("\n=== V12, V13, V14: datos y snapshots ===")
 # =====================================================================

@@ -476,12 +476,26 @@ def main(descargar=None):
             resultados[f"{nombre_u}/{clave}"] = r
             artefactos[f"{nombre_u}/{clave}"] = guardar_artefactos(
                 f"{nombre_u}.{clave}", r, SALIDA)
-            sh = r["sharpe_diferencial"]
-            print(f"  {clave:26} {r['cagr']*100:7.2f}% "
-                  f"{(sh if sh is not None else float('nan')):7.2f} "
-                  f"{r['max_drawdown_diario']*100:7.1f}% "
-                  f"{(r['rotacion_anual_nominal'] or 0):7.2f} "
-                  f"{r['intenciones']:7}")
+            # El resumen por pantalla NO puede tirar una corrida ya
+            # terminada. Esto murio con KeyError sobre
+            # 'rotacion_anual_nominal' DESPUES de descargar 31 activos y 15
+            # anos, por un `print`. Renombre la clave en el cambio 5 y no
+            # busque quien la leia; el coste de ese descuido fue una
+            # corrida completa de CI. Ahora se lee con .get y si falta algo
+            # se dice en la linea en vez de abortar el experimento.
+            try:
+                sh = r.get("sharpe_diferencial")
+                rot = r.get("rotacion_anual_sobre_patrimonio_medio")
+                if rot is None:
+                    rot = r.get("rotacion_anual_nominal_sobre_capital_inicial")
+                print(f"  {clave:26} {r['cagr']*100:7.2f}% "
+                      f"{(sh if sh is not None else float('nan')):7.2f} "
+                      f"{r['max_drawdown_diario']*100:7.1f}% "
+                      f"{(rot if rot is not None else float('nan')):7.2f} "
+                      f"{r.get('intenciones', 0):7}")
+            except Exception as e:
+                print(f"  {clave:26} calculado, pero el resumen por "
+                      f"pantalla fallo: {type(e).__name__}: {str(e)[:50]}")
 
     # ---------- PASO 5: inferencia, al final ----------
     print(f"\n{'=' * 72}\nINFERENCIA (al final, sobre la familia declarada)"

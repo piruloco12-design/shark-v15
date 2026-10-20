@@ -1,0 +1,43 @@
+panel: 31 activos, 3770 sesiones
+
+=== declarado_8pb_sin_minimo: 8.0 pb por pata + 0.00 fijo ===
+  multiactivo     comprar_y_mantener     CAGR  9.0464%  dif       —  comis      0.80  rech    0/31
+  multiactivo     M03_momentum_12_1      CAGR 10.3799%  dif +1.3335  comis    140.34  rech   13/1050
+  multiactivo     M02_tendencia          CAGR  6.5085%  dif -2.5379  comis     69.30  rech    4/3515
+  renta_variable  comprar_y_mantener     CAGR 13.7509%  dif       —  comis      0.80  rech    0/14
+  renta_variable  M03_momentum_12_1      CAGR 13.7614%  dif +0.0105  comis    162.03  rech   10/967
+  renta_variable  M02_tendencia          CAGR 12.7983%  dif -0.9526  comis    116.74  rech    1/2000
+
+=== 8pb_mas_minimo_0_50: 8.0 pb por pata + 0.50 fijo ===
+  multiactivo     comprar_y_mantener     CAGR  8.8347%  dif       —  comis     16.29  rech    0/31
+  multiactivo     M03_momentum_12_1      LibroInvalido: efectivo negativo (-0.10067512128374462)
+  multiactivo     M02_tendencia          LibroInvalido: efectivo negativo (-0.023705591565598705)
+  renta_variable  comprar_y_mantener     CAGR 13.6962%  dif       —  comis      7.79  rech    0/14
+  renta_variable  M03_momentum_12_1      LibroInvalido: efectivo negativo (-0.48738426376676613)
+  renta_variable  M02_tendencia          LibroInvalido: efectivo negativo (-0.2635882305510721)
+
+=== 8pb_mas_minimo_1: 8.0 pb por pata + 1.00 fijo ===
+  multiactivo     comprar_y_mantener     CAGR  8.6296%  dif       —  comis     30.78  rech    1/31
+  multiactivo     M03_momentum_12_1      LibroInvalido: efectivo negativo (-0.2149108295659874)
+  multiactivo     M02_tendencia          LibroInvalido: efectivo negativo (-0.08246228869356886)
+  renta_variable  comprar_y_mantener     CAGR 13.6411%  dif       —  comis     14.79  rech    0/14
+  renta_variable  M03_momentum_12_1      LibroInvalido: efectivo negativo (-0.3059140508551128)
+  renta_variable  M02_tendencia          LibroInvalido: efectivo negativo (-0.24824504199284003)
+
+=== 8pb_mas_minimo_2: 8.0 pb por pata + 2.00 fijo ===
+  multiactivo     comprar_y_mantener     CAGR  8.2175%  dif       —  comis     60.75  rech    1/31
+  multiactivo     M03_momentum_12_1      LibroInvalido: efectivo negativo (-1.1931028959388674)
+  multiactivo     M02_tendencia          LibroInvalido: efectivo negativo (-1.9454120092428016)
+  renta_variable  comprar_y_mantener     CAGR 13.5299%  dif       —  comis     28.78  rech    0/14
+  renta_variable  M03_momentum_12_1      LibroInvalido: efectivo negativo (-1.8457148142452293)
+  renta_variable  M02_tendencia          LibroInvalido: efectivo negativo (-0.2175590586927756)
+
+=== sin_coste: 0.0 pb por pata + 0.00 fijo ===
+  multiactivo     comprar_y_mantener     CAGR  9.0572%  dif       —  comis      0.00  rech    0/31
+  multiactivo     M03_momentum_12_1      CAGR 10.9562%  dif +1.8990  comis      0.00  rech   13/1050
+  multiactivo     M02_tendencia          CAGR  6.8541%  dif -2.2031  comis      0.00  rech    4/3515
+  renta_variable  comprar_y_mantener     CAGR 13.7571%  dif       —  comis      0.00  rech    0/14
+  renta_variable  M03_momentum_12_1      CAGR 14.2418%  dif +0.4847  comis      0.00  rech    6/967
+  renta_variable  M02_tendencia          CAGR 13.1535%  dif -0.6036  comis      0.00  rech    1/2000
+
+guardado resultados/v3/sensibilidad_tarifa.json

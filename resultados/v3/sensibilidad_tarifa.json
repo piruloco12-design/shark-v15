@@ -1,0 +1,207 @@
+{
+  "panel": "/home/claude/shark-v15/resultados/v2/prices_snapshot.csv",
+  "escenarios": {
+    "declarado_8pb_sin_minimo": {
+      "coste_rel": 0.0008,
+      "coste_fijo": 0.0,
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.090464,
+          "comisiones": 0.799361,
+          "intenciones": 31,
+          "rechazadas": 0,
+          "nav_final": 3358.918714
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.103799,
+          "comisiones": 140.340447,
+          "intenciones": 1050,
+          "rechazadas": 13,
+          "nav_final": 3981.511874
+        },
+        "M02_tendencia": {
+          "cagr": 0.065085,
+          "comisiones": 69.298393,
+          "intenciones": 3515,
+          "rechazadas": 4,
+          "nav_final": 2416.110587
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.137509,
+          "comisiones": 0.799361,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 6065.006735
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.137614,
+          "comisiones": 162.027295,
+          "intenciones": 967,
+          "rechazadas": 10,
+          "nav_final": 6072.872918
+        },
+        "M02_tendencia": {
+          "cagr": 0.127983,
+          "comisiones": 116.737085,
+          "intenciones": 2000,
+          "rechazadas": 1,
+          "nav_final": 5391.798231
+        }
+      }
+    },
+    "8pb_mas_minimo_0_50": {
+      "coste_rel": 0.0008,
+      "coste_fijo": 0.5,
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.088347,
+          "comisiones": 16.28697,
+          "intenciones": 31,
+          "rechazadas": 0,
+          "nav_final": 3268.819364
+        },
+        "M03_momentum_12_1": {
+          "error": "LibroInvalido: efectivo negativo (-0.10067512128374462)"
+        },
+        "M02_tendencia": {
+          "error": "LibroInvalido: efectivo negativo (-0.023705591565598705)"
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.136962,
+          "comisiones": 7.793765,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 6024.316707
+        },
+        "M03_momentum_12_1": {
+          "error": "LibroInvalido: efectivo negativo (-0.48738426376676613)"
+        },
+        "M02_tendencia": {
+          "error": "LibroInvalido: efectivo negativo (-0.2635882305510721)"
+        }
+      }
+    },
+    "8pb_mas_minimo_1": {
+      "coste_rel": 0.0008,
+      "coste_fijo": 1.0,
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.086296,
+          "comisiones": 30.775238,
+          "intenciones": 31,
+          "rechazadas": 1,
+          "nav_final": 3183.677624
+        },
+        "M03_momentum_12_1": {
+          "error": "LibroInvalido: efectivo negativo (-0.2149108295659874)"
+        },
+        "M02_tendencia": {
+          "error": "LibroInvalido: efectivo negativo (-0.08246228869356886)"
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.136411,
+          "comisiones": 14.788169,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 5983.626677
+        },
+        "M03_momentum_12_1": {
+          "error": "LibroInvalido: efectivo negativo (-0.3059140508551128)"
+        },
+        "M02_tendencia": {
+          "error": "LibroInvalido: efectivo negativo (-0.24824504199284003)"
+        }
+      }
+    },
+    "8pb_mas_minimo_2": {
+      "coste_rel": 0.0008,
+      "coste_fijo": 2.0,
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.082175,
+          "comisiones": 60.751399,
+          "intenciones": 31,
+          "rechazadas": 1,
+          "nav_final": 3018.802834
+        },
+        "M03_momentum_12_1": {
+          "error": "LibroInvalido: efectivo negativo (-1.1931028959388674)"
+        },
+        "M02_tendencia": {
+          "error": "LibroInvalido: efectivo negativo (-1.9454120092428016)"
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.135299,
+          "comisiones": 28.776978,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 5902.246621
+        },
+        "M03_momentum_12_1": {
+          "error": "LibroInvalido: efectivo negativo (-1.8457148142452293)"
+        },
+        "M02_tendencia": {
+          "error": "LibroInvalido: efectivo negativo (-0.2175590586927756)"
+        }
+      }
+    },
+    "sin_coste": {
+      "coste_rel": 0.0,
+      "coste_fijo": 0.0,
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.090572,
+          "comisiones": 0.0,
+          "intenciones": 31,
+          "rechazadas": 0,
+          "nav_final": 3363.569003
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.109562,
+          "comisiones": 0.0,
+          "intenciones": 1050,
+          "rechazadas": 13,
+          "nav_final": 4282.436104
+        },
+        "M02_tendencia": {
+          "cagr": 0.068541,
+          "comisiones": 0.0,
+          "intenciones": 3515,
+          "rechazadas": 4,
+          "nav_final": 2528.147551
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.137571,
+          "comisiones": 0.0,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 6069.657024
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.142418,
+          "comisiones": 0.0,
+          "intenciones": 967,
+          "rechazadas": 6,
+          "nav_final": 6441.641222
+        },
+        "M02_tendencia": {
+          "cagr": 0.131535,
+          "comisiones": 0.0,
+          "intenciones": 2000,
+          "rechazadas": 1,
+          "nav_final": 5634.239832
+        }
+      }
+    }
+  }
+}

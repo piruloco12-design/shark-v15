@@ -530,6 +530,30 @@ class LibroContado:
             + _no_negativo(coste_fijo, "coste_fijo")
         neto = nominal - comision
 
+        # Venta ANTIECONOMICA: la comision se come el importe. Con comision
+        # minima por orden pasa de verdad: vender 0,3 unidades a 2,00 son
+        # 0,60 de nominal, y un minimo de 2,00 deja un neto de -1,40. La
+        # version anterior lo sumaba a la caja tal cual, asi que el
+        # efectivo bajaba y podia irse a negativo; lo cazaba la invariante
+        # de no-margen DESPUES, abortando la corrida entera con
+        # "efectivo negativo" y sin decir de donde venia.
+        #
+        # En un broker esa orden no se cursa: pagar mas comision que el
+        # importe de la venta destruye valor sin cerrar nada util. Se
+        # rechaza con su motivo, que es informacion, y la posicion se queda
+        # como estaba. Si una estrategia necesita salir de esa posicion,
+        # tendra que hacerlo cuando el importe cubra el coste, y eso es una
+        # restriccion real de las cuentas pequenas, no un detalle tecnico.
+        if neto <= 0:
+            mov = self.rechazar(
+                iid, solicitada, precio, momento, tipo="VENTA", motivo=motivo,
+                rechazo=(f"venta antieconomica: nominal {nominal:.4f} no "
+                         f"cubre la comision {comision:.4f} (fijo "
+                         f"{coste_fijo:.4f})"),
+                precio_decision=precio_decision,
+                momento_decision=momento_decision)
+            return mov
+
         pos = self.posiciones[iid]
         resto = pos.cantidad - ejecutada
         if resto <= CENTIMO:
