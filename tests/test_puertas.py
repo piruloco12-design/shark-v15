@@ -25,6 +25,7 @@ declarala. No la sustituyas por una afirmacion de implementacion completa."
 
 Uso:  python tests/test_puertas.py
 """
+import io
 import os
 import sys
 import types
@@ -397,6 +398,67 @@ check("V22", "SELL con cero unidades: senal registrada, orden rechazada, ningun 
       f"registro={quedo_registro}, motivo de rechazo={motivo}")
 
 # =====================================================================
+print("\n=== V23: el ejecutor del CORE responde a comisiones y capital ===")
+# =====================================================================
+# Plan: "Cambian comisiones o capital -> Cambian PnL neto/capacidad en
+# ejecutor del core". Hoy paper_broker hace pnl = (salida-entrada)*size,
+# bruto, y capital += pnl: las comisiones no tocan el capital del bot.
+
+try:
+    from paper_broker import contabilizar_cierre
+    r0 = contabilizar_cierre("BUY", entry=100.0, exit_price=110.0, size=10.0,
+                             capital_antes=1000.0, coste_rel=0.0, coste_fijo=0.0)
+    r1 = contabilizar_cierre("BUY", entry=100.0, exit_price=110.0, size=10.0,
+                             capital_antes=1000.0, coste_rel=0.0008,
+                             coste_fijo=0.0)
+    # Bruto 100. Comisiones = (1000 + 1100) * 0,0008 = 1,68. Neto 98,32.
+    ok_pnl = (abs(r0["neto"] - 100.0) < 1e-9
+              and abs(r1["neto"] - 98.32) < 1e-9
+              and abs(r1["capital_despues"] - 1098.32) < 1e-9)
+    det_pnl = (f"-> sin coste neto {r0['neto']}, con 8 pb neto {r1['neto']} "
+               f"(exigido 98.32) y capital {r1['capital_despues']} "
+               f"(exigido 1098.32)")
+except ImportError as e:
+    ok_pnl = False
+    det_pnl = f"-> el core no tiene contabilidad de cierre con comisiones: {e}"
+except Exception as e:
+    ok_pnl = False
+    det_pnl = f"-> {type(e).__name__}: {e}"
+check("V23", "las comisiones mueven el PnL neto y el capital del core",
+      ok_pnl, det_pnl)
+
+# La capacidad tiene que responder al efectivo, no solo al capital
+# configurado.
+from risk_management import calculate_trade_levels
+_i = pd.date_range("2026-01-02 14:30", periods=300, freq="30min", tz="UTC")
+_c = pd.Series([100.0] * 300, index=_i)
+df_cap = pd.DataFrame({"Open": _c, "High": _c + 0.05, "Low": _c - 0.05,
+                       "Close": _c, "Volume": 1e6}, index=_i)
+df_cap["atr"] = 0.10
+s_rico = calculate_trade_levels(df=df_cap, signal="BUY", capital=1000,
+                                risk_per_trade=0.005,
+                                efectivo_disponible=1000.0, coste_rel=0.0008)
+s_pobre = calculate_trade_levels(df=df_cap, signal="BUY", capital=1000,
+                                 risk_per_trade=0.005,
+                                 efectivo_disponible=100.0, coste_rel=0.0008)
+nom_r = float(s_rico["position_size"]) * float(s_rico["entry"])
+nom_p = float(s_pobre["position_size"]) * float(s_pobre["entry"])
+check("V23b", "la capacidad responde al efectivo disponible",
+      nom_p < nom_r and nom_p <= 100.0 + 1e-6,
+      f"-> nominal con 1000 de efectivo {nom_r:.2f}, con 100 {nom_p:.2f} "
+      f"(tiene que caber en 100)")
+
+# Y el cableado: la funcion existia y NADIE la llamaba con efectivo. Esto
+# comprueba la llamada real en el core, no la firma.
+_src_le = io.open(os.path.join(REPO, "live_engine.py"), encoding="utf-8").read()
+_i0 = _src_le.find("calculate_trade_levels(")
+_llamada = _src_le[_i0:_i0 + 420] if _i0 >= 0 else ""
+check("V23c", "el core llama al dimensionado declarando efectivo y coste",
+      "efectivo_disponible" in _llamada and "coste_rel" in _llamada,
+      f"-> la llamada del core no pasa efectivo ni coste; el parametro "
+      f"existia y nadie lo usaba")
+
+# =====================================================================
 print("\n=== Puertas de cambios posteriores ===")
 # =====================================================================
 pendiente("V12", "snapshot caducado con el proceso en marcha", 3)
@@ -409,7 +471,6 @@ pendiente("V18", "mismo coste proporcional, distinta distancia/precio", 4)
 pendiente("V19", "fondo liquidado con cobro diferido", 3)
 pendiente("V20", "falta la descarga de un activo congelado", 3)
 pendiente("V21", "precio ausente o NAV invalido: calidad visible", 1)
-pendiente("V23", "cambian comisiones o capital en el ejecutor del core", 2)
 pendiente("V24", "reejecucion con los mismos artefactos", 5)
 
 print("\n" + "=" * 70)

@@ -1,7 +1,7 @@
 import math
 from datetime import datetime
 
-from config import MENSAJE_BROKER_AL_ABRIR
+from config import MENSAJE_BROKER_AL_ABRIR, COSTE_POR_PATA, COSTE_FIJO_POR_ORDEN
 
 # Deslizamiento adverso que se aplica SOLO cuando un hueco atraviesa el
 # stop. Es un ESCENARIO declarado, no una medición: no hay fills reales
@@ -152,6 +152,62 @@ def open_trade(ticker, signal, regime, trade_setup):
     return capital
 
 
+def comision(nominal, coste_rel=None, coste_fijo=None):
+    """Comision de UNA pata sobre un nominal."""
+    if coste_rel is None:
+        coste_rel = COSTE_POR_PATA
+    if coste_fijo is None:
+        coste_fijo = COSTE_FIJO_POR_ORDEN
+    return abs(_safe_float(nominal)) * max(0.0, coste_rel) + max(0.0, coste_fijo)
+
+
+def contabilizar_cierre(signal, entry, exit_price, size, capital_antes,
+                        coste_rel=None, coste_fijo=None):
+    """PnL NETO de un trade cerrado, con las dos patas cobradas.
+
+    Lo que habia antes, en el bucle de cierre:
+
+        pnl = (exit_price - entry) * size      # bruto
+        capital += pnl
+
+    El capital del paper trading crecia con el PnL bruto. Las comisiones
+    no lo tocaban en ningun punto, asi que cambiar la tarifa no cambiaba
+    nada y el resultado del bot estaba sistematicamente por encima de lo
+    que daria la misma operacion pagada.
+
+    Se cobran las DOS patas en el cierre, igual que el backtester, porque
+    el capital solo se actualiza al cerrar. Entrada y salida van separadas
+    en el desglose para que se vea de donde sale cada euro.
+    """
+    entry = _safe_float(entry)
+    exit_price = _safe_float(exit_price)
+    size = _safe_float(size)
+    capital_antes = _safe_float(capital_antes)
+
+    if signal == "BUY":
+        bruto = (exit_price - entry) * size
+    else:
+        bruto = (entry - exit_price) * size
+
+    nominal_entrada = abs(entry * size)
+    nominal_salida = abs(exit_price * size)
+    com_entrada = comision(nominal_entrada, coste_rel, coste_fijo)
+    com_salida = comision(nominal_salida, coste_rel, coste_fijo)
+    comisiones = com_entrada + com_salida
+    neto = bruto - comisiones
+
+    return {
+        "bruto": bruto,
+        "nominal_entrada": nominal_entrada,
+        "nominal_salida": nominal_salida,
+        "comision_entrada": com_entrada,
+        "comision_salida": com_salida,
+        "comisiones": comisiones,
+        "neto": neto,
+        "capital_despues": capital_antes + neto,
+    }
+
+
 def _decidir_cierre(signal, stop_loss, take_profit, price, high, low,
                     open_=None, deslizamiento=0.0):
     """
@@ -297,16 +353,17 @@ def check_and_close_trades(latest_prices, rangos_barra=None):
             if not should_close:
                 continue
 
-            if signal == "BUY":
-                pnl = (exit_price - entry) * size
-            else:
-                pnl = (entry - exit_price) * size
+            # PnL NETO: las dos patas cobradas. Antes era bruto y el
+            # capital del bot subia sin pagar la ejecucion.
+            cont = contabilizar_cierre(signal, entry, exit_price, size,
+                                       capital)
+            pnl = cont["neto"]
 
             if not _es_finito(pnl):
                 print(f"PAPER BROKER | PnL no finito en {ticker}, se omite cierre")
                 continue
 
-            capital += pnl
+            capital = cont["capital_despues"]
             cerrados += 1
 
             close_paper_trade(
@@ -321,7 +378,8 @@ def check_and_close_trades(latest_prices, rangos_barra=None):
                 f"{ticker} | {signal} | "
                 f"Motivo: {close_reason} | "
                 f"Exit: {exit_price:.4f} | "
-                f"PnL: {pnl:.2f} | "
+                f"PnL neto: {pnl:.2f} | "
+                f"comisiones: {cont['comisiones']:.2f} | "
                 f"Capital: {capital:.2f}"
             )
 

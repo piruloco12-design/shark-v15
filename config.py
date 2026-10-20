@@ -41,6 +41,16 @@ RISK_PER_TRADE = float(os.getenv("RISK_PER_TRADE", "0.005"))
 
 MAX_OPEN_TRADES = int(os.getenv("MAX_OPEN_TRADES", "2"))
 
+# --- COSTE DE EJECUCION DEL CORE ---
+# El core NO tenia ninguna constante de coste: el capital del paper
+# trading crecia con el PnL BRUTO y las comisiones no lo tocaban en
+# ningun punto. El 0,0008 por pata es el mismo escenario declarado que
+# usan el backtester y el evaluador mensual, para que las tres rutas
+# hablen del mismo coste y no de tres distintos.
+# Es un ESCENARIO declarado, no una tarifa verificada con un broker.
+COSTE_POR_PATA = float(os.getenv("COSTE_POR_PATA", "0.0008"))
+COSTE_FIJO_POR_ORDEN = float(os.getenv("COSTE_FIJO_POR_ORDEN", "0.0"))
+
 # Múltiplos de ATR para stop y objetivo. Estaban fijos dentro de
 # risk_management.py; aquí se pueden barrer para comprobar si el
 # resultado es un pico (sobreajuste) o una meseta (quizá real).

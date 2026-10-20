@@ -12,6 +12,7 @@ from config import (
     STARTUP_MESSAGE_ENABLED,
     VERBOSE_LOGS,
     SAVE_ALL_SIGNALS,
+    COSTE_POR_PATA,
 )
 
 from data_feed import get_data
@@ -20,8 +21,24 @@ from market_regime import detect_market_regime
 from signals import check_signal
 from opportunity_scanner import scan_smart_opportunity
 from risk_management import calculate_trade_levels
+
+
+def _safe_float_local(valor, defecto):
+    """El capital de la cuenta, o el configurado si no se puede leer.
+
+    Si la lectura falla no se bloquea el ciclo, pero tampoco se finge un
+    efectivo infinito: se cae al capital declarado, que es el supuesto de
+    partida.
+    """
+    try:
+        v = float(valor)
+    except (TypeError, ValueError):
+        return float(defecto)
+    if v != v or v in (float("inf"), float("-inf")) or v <= 0:
+        return float(defecto)
+    return v
 from final_decision_engine import evaluate_final_decision
-from storage import init_db, save_signal
+from storage import init_db, save_signal, get_paper_capital
 
 from ai_filter import evaluate_signal_quality
 
@@ -497,11 +514,25 @@ def run_live_cycle():
                 continue
 
             # --- TRADE SETUP ---
+            # EFECTIVO Y COSTE DECLARADOS. El parametro existia desde la
+            # auditoria anterior y NADIE lo llamaba: el dimensionado no
+            # miraba si el nominal cabia en la cuenta ni cobraba la
+            # ejecucion. Con capital 1.000, precio 100 y ATR 0,10 abria
+            # nominal 2.500.
+            #
+            # `capital` sigue siendo el configurado a proposito: es la base
+            # de RIESGO de B1 y cambiarla seria cambiar la estrategia. El
+            # plan es explicito: "No cambies senales al reparar
+            # contabilidad". El efectivo de la cuenta es una restriccion
+            # contable y va por su propio parametro.
+            _efectivo = _safe_float_local(get_paper_capital(), CAPITAL)
             trade_setup = calculate_trade_levels(
                 df=df,
                 signal=signal,
                 capital=CAPITAL,
                 risk_per_trade=RISK_PER_TRADE,
+                efectivo_disponible=_efectivo,
+                coste_rel=COSTE_POR_PATA,
             )
 
             # --- GUARDAR SEÑAL EN DB ---

@@ -198,10 +198,37 @@ check("capital intacto si no cerro nada", storage.get_paper_capital() == capital
 n = paper_broker.check_and_close_trades({"TEST": 101.0}, {"TEST": {"high": 103.0, "low": 100.0}})
 check("target tocado -> cierra 1", n == 1 and paper_broker.get_open_trade_count() == 0)
 
-esperado = capital_antes + (102.5 - 100.0) * 2.5
+# El esperado se reexpresa EN TERMINOS DEL CONTRATO, no se ajusta al
+# resultado. Lo que esta prueba vigila es que la salida sea el nivel del
+# TARGET (102,5) y no el Close de la vela (101,0), y eso sigue intacto.
+# Lo que cambio es que el capital ya no crece con el PnL bruto: el core
+# cobra las dos patas, que es el arreglo de la puerta V23.
+#
+#   bruto      = (102,5 - 100,0) * 2,5                    = 6,250
+#   comisiones = (100,0*2,5 + 102,5*2,5) * 0,0008         = 0,405
+#   neto       = 5,845
+#
+# Por el Close el bruto serian 2,50 en vez de 6,25, asi que la prueba
+# sigue distinguiendo exactamente lo que fue escrita para distinguir: la
+# diferencia entre las dos salidas (3,75) es nueve veces la comision.
+from config import COSTE_POR_PATA as _CPP
+_bruto_target = (102.5 - 100.0) * 2.5
+_comisiones = (100.0 * 2.5 + 102.5 * 2.5) * _CPP
+esperado = capital_antes + _bruto_target - _comisiones
+_esperado_si_usara_close = (capital_antes + (101.0 - 100.0) * 2.5
+                            - (100.0 * 2.5 + 101.0 * 2.5) * _CPP)
 real = storage.get_paper_capital()
 check("PnL calculado EN el nivel del target, no en el Close",
       abs(real - esperado) < 1e-6, f"-> esperado {esperado:.4f}, real {real:.4f}")
+
+check("y el valor NO es el que daria salir al Close",
+      abs(real - _esperado_si_usara_close) > 1.0,
+      f"-> real {real:.4f}, por el Close serian {_esperado_si_usara_close:.4f}")
+
+check("el capital del core paga las dos patas",
+      abs((capital_antes + _bruto_target) - real - _comisiones) < 1e-9,
+      f"-> bruto habria dado {capital_antes + _bruto_target:.4f}, real "
+      f"{real:.4f}, comisiones {_comisiones:.4f}")
 
 
 print("\n=== 5) data_feed: recorte a horario regular ===")
