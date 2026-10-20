@@ -416,7 +416,15 @@ def run_live_cycle():
 
     # Comprobacion barata: una consulta a la base de datos. Solo descarga
     # si el snapshot ha caducado, que es una vez al mes.
-    if INSTITUCIONAL_DISPONIBLE and _INST_SERIES_TR is None:
+    #
+    # El `and _INST_SERIES_TR is None` que habia aqui hacia que el
+    # comentario de arriba fuera falso: no comprobaba la caducidad, sino si
+    # la CACHE estaba vacia. Una vez cargado el snapshot, el bot lo
+    # arrastraba caducado hasta que alguien lo reiniciara, y M02/M03
+    # seguian opinando con un ranking viejo sin decirlo. La comprobacion
+    # barata ya esta DENTRO de _refrescar_snapshot_institucional, que
+    # pregunta a hace_falta_actualizar() antes de descargar nada.
+    if INSTITUCIONAL_DISPONIBLE:
         _refrescar_snapshot_institucional()
 
     # -------------------------------------------------

@@ -459,11 +459,144 @@ check("V23c", "el core llama al dimensionado declarando efectivo y coste",
       f"existia y nadie lo usaba")
 
 # =====================================================================
+print("\n=== V12, V13, V14: datos y snapshots ===")
+# =====================================================================
+import tempfile
+from pathlib import Path
+from institucional import snapshot as SNAP
+
+_idx300 = pd.bdate_range("2025-01-01", periods=300, tz="UTC")
+_c300 = pd.Series(np.linspace(100.0, 160.0, 300), index=_idx300)
+_df300 = pd.DataFrame({"Open": _c300, "High": _c300 * 1.01,
+                       "Low": _c300 * 0.99, "Close": _c300,
+                       "Volume": 1e6}, index=_idx300)
+
+# V13 / oraculo O11. La ultima vela diaria aun no ha cerrado: su dia no ha
+# acabado. Eso NO justifica tirar las 299 maduras.
+try:
+    snap13 = SNAP.construir(["A", "B"],
+                            descargar=lambda _: (_df300.copy(), "fixture"),
+                            ahora=_idx300[-1])
+    filas = min(len(df) for df in snap13["series"].values())
+    obs = pd.Timestamp(snap13["observation_time"], unit="s", tz="UTC")
+    ok13 = filas == 299 and obs == _idx300[-2]
+    det13 = (f"-> filas usadas {filas} (exigido 299), observacion "
+             f"{obs.date()} (exigido {_idx300[-2].date()})")
+except Exception as e:
+    ok13 = False
+    det13 = (f"-> {type(e).__name__}: {str(e)[:90]}. Rechaza el snapshot "
+             f"entero por una vela abierta y tira 299 filas maduras")
+check("V13", "299 velas maduras mas una abierta: se usa la vista madura",
+      ok13, det13)
+
+# Y la referencia de efectivo tiene que recortarse igual que los activos:
+# si conserva velas posteriores, la senal mira el futuro por ese lado.
+try:
+    ef = snap13.get("efectivo")
+    ok13b = ef is None or len(ef) == 0 or ef.index[-1] <= obs
+    det13b = (f"-> ultima vela del efectivo "
+              f"{(ef.index[-1].date() if ef is not None and len(ef) else None)}, "
+              f"observacion {obs.date()}")
+except Exception as e:
+    ok13b = False
+    det13b = f"-> {type(e).__name__}: {e}"
+check("V13b", "la referencia de efectivo se recorta a la misma observacion",
+      ok13b, det13b)
+
+# V14 / oraculo O12. Un snapshot RECUPERADO 20 dias despues del corte no
+# demuestra que revision se conocia entonces.
+_db_vieja = SNAP.DATABASE_NAME
+with tempfile.TemporaryDirectory() as _tmp:
+    SNAP.DATABASE_NAME = str(Path(_tmp) / "snapshots.sqlite")
+    try:
+        _obs = _idx300[-1]
+        _rec = _obs + pd.Timedelta(days=20)
+        _snap14 = SNAP.construir(["A", "B"],
+                                 descargar=lambda _: (_df300.copy(), "fixture"),
+                                 ahora=_rec)
+        SNAP.guardar(_snap14)
+        _corte = _obs + pd.Timedelta(days=2)
+        _cargado = SNAP.cargar_ultimo(_corte)
+        ok14 = _cargado is None
+        det14 = (f"-> devuelto={_cargado is not None} para una decision del "
+                 f"{_corte.date()} con recuperacion del {_rec.date()}: "
+                 f"se filtraba por disponibilidad y no por recuperacion")
+    except Exception as e:
+        ok14 = False
+        det14 = f"-> {type(e).__name__}: {str(e)[:90]}"
+    finally:
+        SNAP.DATABASE_NAME = _db_vieja
+check("V14", "un snapshot recuperado tras el corte no se da como captura anterior",
+      ok14, det14)
+
+# V14b: y la ruta estricta NO puede ser vacua. Un filtro que rechaza TODO
+# no es estricto, esta roto. La primera version de este filtro comparaba
+# la columna `creado_en` (TEXT ISO) con un entero: en SQLite eso no da
+# error, da siempre falso, asi que no habria devuelto un snapshot jamas y
+# M02/M03 habrian vuelto a NO_DATA permanente en produccion sin avisar.
+_db_vieja3 = SNAP.DATABASE_NAME
+with tempfile.TemporaryDirectory() as _tmp3:
+    SNAP.DATABASE_NAME = str(Path(_tmp3) / "snapshots.sqlite")
+    try:
+        _obs_b = _idx300[-1]
+        _rec_b = _obs_b + pd.Timedelta(days=1)
+        _snap14b = SNAP.construir(["A", "B"],
+                                  descargar=lambda _: (_df300.copy(), "fixture"),
+                                  ahora=_rec_b)
+        # Captura declarada como creada el dia de su recuperacion.
+        _snap14b["creado_en"] = SNAP._creado_texto(int(_rec_b.timestamp()))
+        SNAP.guardar(_snap14b)
+        _corte_b = _obs_b + pd.Timedelta(days=10)
+        _ok_b = SNAP.cargar_ultimo(_corte_b)
+        ok14b = _ok_b is not None
+        det14b = (f"-> la ruta estricta devolvio {_ok_b is not None} para un "
+                  f"snapshot recuperado y creado el {_rec_b.date()} con corte "
+                  f"el {_corte_b.date()}: si sale None, el filtro rechaza todo")
+    except Exception as e:
+        ok14b = False
+        det14b = f"-> {type(e).__name__}: {str(e)[:90]}"
+    finally:
+        SNAP.DATABASE_NAME = _db_vieja3
+check("V14b", "la ruta estricta SI devuelve una captura anterior al corte",
+      ok14b, det14b)
+
+# V12 / oraculo O15. Caducidad comprobada tambien con la cache llena.
+_src_lc = io.open(os.path.join(REPO, "live_engine.py"), encoding="utf-8").read()
+_i_ciclo = _src_lc.find("def run_live_cycle")
+# Solo CODIGO: un comentario que explique el fallo no es el fallo. La
+# primera version de esta puerta buscaba el texto en bruto y la hacia
+# fallar el comentario que documentaba el arreglo.
+_codigo = [l.split("#", 1)[0] for l in
+           _src_lc[_i_ciclo:_i_ciclo + 1600].splitlines()]
+_trozo = "\n".join(_codigo)
+check("V12", "el ciclo comprueba la caducidad aunque la cache este llena",
+      "_INST_SERIES_TR is None" not in _trozo
+      and "_refrescar_snapshot_institucional()" in _trozo,
+      "-> el refresco esta condicionado a que la cache este VACIA: una vez "
+      "cargado, el snapshot no se renueva hasta reiniciar el bot")
+
+_hace_falta, _motivo = (True, "")
+try:
+    _db_vieja2 = SNAP.DATABASE_NAME
+    with tempfile.TemporaryDirectory() as _tmp2:
+        SNAP.DATABASE_NAME = str(Path(_tmp2) / "s.sqlite")
+        try:
+            _s = SNAP.construir(["A"],
+                                descargar=lambda _: (_df300.copy(), "fixture"),
+                                ahora=_idx300[-1] + pd.Timedelta(days=1))
+            SNAP.guardar(_s)
+            _lejos = _idx300[-1] + pd.Timedelta(days=400)
+            _hace_falta, _motivo = SNAP.hace_falta_actualizar(_lejos)
+        finally:
+            SNAP.DATABASE_NAME = _db_vieja2
+except Exception as e:
+    _motivo = f"{type(e).__name__}: {e}"
+check("V12b", "un snapshot caducado se detecta por calendario, no por reloj",
+      bool(_hace_falta), f"-> hace_falta={_hace_falta}, motivo: {_motivo}")
+
+# =====================================================================
 print("\n=== Puertas de cambios posteriores ===")
 # =====================================================================
-pendiente("V12", "snapshot caducado con el proceso en marcha", 3)
-pendiente("V13", "299 velas maduras mas una abierta", 3)
-pendiente("V14", "recuperacion posterior al corte historico", 3)
 pendiente("V15", "bootstrap n=10 bloque=5 sin truncar", 4)
 pendiente("V16", "dos cortes, 25 decisiones futuras unicas", 4)
 pendiente("V17", "pronostico bruto perfecto con costes de 0,2 R", 4)

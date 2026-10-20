@@ -1,0 +1,224 @@
+{
+  "O01_venta_pendiente_NAV": {
+    "observado": {
+      "antes": 1000.0,
+      "despues_venta": 1000.0,
+      "caja_utilizable": 500.0,
+      "tras_liquidar": 1000.0
+    },
+    "requerido": {
+      "nav_constante": 1000,
+      "caja_utilizable_antes_cobro": 500
+    },
+    "contrato_cumplido": true,
+    "nota": ""
+  },
+  "O02_dividendo_pago_doble": {
+    "observado": {
+      "nav_derecho": 1000.0,
+      "nav_pagado": 1000.0,
+      "derechos_pendientes": 0
+    },
+    "requerido": {
+      "nav_derecho": 1000,
+      "nav_pagado": 1000,
+      "derechos_pendientes": 0
+    },
+    "contrato_cumplido": true,
+    "nota": ""
+  },
+  "O03_NAV_cierre_usa_apertura": {
+    "observado": {
+      "nav_fecha_fill": 1100.0,
+      "nav_siguiente": 1100.0
+    },
+    "requerido": {
+      "nav_fecha_fill": 1100,
+      "nav_siguiente": 1100
+    },
+    "contrato_cumplido": true,
+    "nota": ""
+  },
+  "O04_retorno_anual_omite_enero": {
+    "observado": {
+      "2023": {
+        "retorno": 0.0,
+        "factor": 1.0,
+        "completo": false,
+        "observaciones": 1,
+        "nav_base": 100.0,
+        "nav_final": 100.0,
+        "cobertura": "PARCIAL"
+      },
+      "2024": {
+        "retorno": 0.1,
+        "factor": 1.1,
+        "completo": true,
+        "observaciones": 2,
+        "nav_base": 100.0,
+        "nav_final": 110.0,
+        "cobertura": "COMPLETO"
+      }
+    },
+    "requerido": {
+      "retorno_2024": 0.1
+    },
+    "contrato_cumplido": true,
+    "nota": ""
+  },
+  "O05_moneda_distinta_sin_FX": {
+    "observado": {
+      "bloqueada": true,
+      "efectivo_USD": 1000.0,
+      "nav_USD": 1000.0
+    },
+    "requerido": "Rechazar hasta disponer de FX explícito; no se puede inferir la paridad.",
+    "contrato_cumplido": true,
+    "nota": ""
+  },
+  "O06_no_reducir_ignorado": {
+    "observado": {
+      "rechazada": true,
+      "cantidad": 0.0
+    },
+    "requerido": {
+      "rechazada": true,
+      "cantidad": 0
+    },
+    "contrato_cumplido": true,
+    "nota": ""
+  },
+  "O07_terminal_ignorada": {
+    "observado": {
+      "politica": "LIQUIDAR",
+      "posiciones_finales": {}
+    },
+    "requerido": "Rechazar política no implementada, o liquidar y cobrar el coste terminal.",
+    "contrato_cumplido": true,
+    "nota": ""
+  },
+  "O08_M01_filtra_con_coste_proporcional": {
+    "observado": {
+      "stop_distancia_05": {
+        "estado": "READY",
+        "permite": false,
+        "ganancia_bruta_estimable": 0.5,
+        "margen_conservador": -1.1,
+        "coste_ida_vuelta": 1.6,
+        "reserva_exigida": 0.0,
+        "modelo_id": "ejemplo_sintetico",
+        "mu_R": 0.1,
+        "L_R": 0.1,
+        "_aviso": "un margen positivo NO es una cota de beneficio por operacion ni una probabilidad de ganar"
+      },
+      "stop_distancia_4": {
+        "estado": "READY",
+        "permite": true,
+        "ganancia_bruta_estimable": 4.0,
+        "margen_conservador": 2.4,
+        "coste_ida_vuelta": 1.6,
+        "reserva_exigida": 0.0,
+        "modelo_id": "ejemplo_sintetico",
+        "mu_R": 0.1,
+        "L_R": 0.1,
+        "_aviso": "un margen positivo NO es una cota de beneficio por operacion ni una probabilidad de ganar"
+      }
+    },
+    "requerido": "La puerta puede rechazar un candidato y admitir otro aunque no haya coste fijo.",
+    "contrato_cumplido": true,
+    "nota": "Contraejemplo a la conclusión de todo-o-nada global; no prueba ventaja predictiva."
+  },
+  "O09_M01_bootstrap_recortado": {
+    "observado": {
+      "n_original": 10,
+      "longitud_min": 2,
+      "frecuencia_muestra_corta": 0.64,
+      "media_original": 4.5,
+      "media_bootstrap_exacta": 5.62392857142857,
+      "media_bootstrap_funcion": 5.621350099206349
+    },
+    "requerido": "Cada réplica debe tener n=10; usar bloques circulares/estacionarios con pesos documentados.",
+    "contrato_cumplido": false,
+    "nota": ""
+  },
+  "O10_M01_walk_forward_solapado": {
+    "observado": {
+      "n_por_tramo": [
+        25,
+        15
+      ],
+      "total_evaluaciones": 40,
+      "operaciones_unicas": 25,
+      "errores": [
+        -0.2,
+        -0.2
+      ]
+    },
+    "requerido": {
+      "n_por_tramo": [
+        10,
+        15
+      ],
+      "errores_pronostico_bruto": [
+        0,
+        0
+      ],
+      "coste_R": 0.2
+    },
+    "contrato_cumplido": false,
+    "nota": "Predicción bruta=1 R, bruto realizado=1 R, neto=0,8 R. Restar neto-bruto inventa error predictivo de -0,2 R."
+  },
+  "O11_snapshot_descarta_historia_por_ultima_fila_abierta": {
+    "observado": {
+      "rechazado_completo": false,
+      "motivo": "",
+      "filas_maduras": 299
+    },
+    "requerido": "Recortar por disponibilidad y utilizar las 299 filas cerradas, si cumplen el mínimo.",
+    "contrato_cumplido": true,
+    "nota": ""
+  },
+  "O12_snapshot_recuperado_despues_del_corte": {
+    "observado": {
+      "devuelto": false,
+      "decision": "2026-02-26 00:00:00+00:00",
+      "retrieved_at": "2026-03-16 00:00:00+00:00"
+    },
+    "requerido": "Un snapshot recuperado después del corte no demuestra qué revisión se conocía entonces.",
+    "contrato_cumplido": true,
+    "nota": ""
+  },
+  "O13_baja_sin_liquidacion_explicita": {
+    "observado": {
+      "posiciones_finales": {
+        "MUERTO": 5.0,
+        "VIVO": 5.0
+      },
+      "cash": 0.0,
+      "nav": 750.0,
+      "edad_precio_dias": 84
+    },
+    "requerido": "Para un fondo DECLARADO liquidado hacen falta evento, baja de cantidades y derecho/cobro; terminar el CSV no lo simula.",
+    "contrato_cumplido": false,
+    "nota": "Si solo falta una cotización no se debe inventar la liquidación: debe degradarse la calidad y exigir evidencia del evento."
+  },
+  "O14_M04_tope_no_controla_fill": {
+    "observado": {
+      "peso_deseado": 0.4,
+      "peso_real": 0.4,
+      "cantidad": 2.0
+    },
+    "requerido": "Si se declara tope duro 40%, no aceptar una compra que deja 80%. Recalcular con el precio ejecutable.",
+    "contrato_cumplido": true,
+    "nota": ""
+  },
+  "O15_ciclo_no_refresca_cache_existente": {
+    "observado": {
+      "llamadas_con_cache": 1,
+      "llamadas_sin_cache": 1
+    },
+    "requerido": "Comprobar caducidad también con caché no vacía; no depende de reiniciar el bot.",
+    "contrato_cumplido": true,
+    "nota": ""
+  }
+}

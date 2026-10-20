@@ -414,16 +414,31 @@ try:
     SNAP.guardar(_snap)
 
     # F6: pedirlo con una decision ANTERIOR a los datos no devuelve nada.
+    #
+    # Y una distincion que esta prueba no hacia y la segunda auditoria
+    # exige: este snapshot se CONSTRUYE ahora diciendo "como si fuera el 15
+    # de enero", asi que su `creado_en` es la hora real, posterior al corte.
+    # Bajo la regla estricta eso no es una captura de ese momento, es un
+    # REPLAY REVISADO: los datos son anteriores al corte, pero la revision
+    # de esos datos no se conocia entonces. Por la ruta estricta no se
+    # devuelve; por la ruta de replay se devuelve MARCADO como tal.
     _antes = SNAP.cargar_ultimo(pd.Timestamp("2025-01-01", tz="UTC"))
-    _despues = SNAP.cargar_ultimo(_ahora)
+    _estricto = SNAP.cargar_ultimo(_ahora)
+    _despues = SNAP.cargar_ultimo(_ahora, permitir_replay_revisado=True)
     check("F6", "cargar_ultimo no devuelve un snapshot posterior a la decision",
           _antes is None and _despues is not None,
           f"-> con decision anterior devolvio {_antes is not None}, "
           f"con decision posterior {_despues is not None}")
+    check("F6b", "un snapshot creado despues del corte no pasa por captura PIT",
+          _estricto is None and bool(_despues.get("replay_revisado")),
+          f"-> ruta estricta devolvio {_estricto is not None}, replay "
+          f"marcado={_despues.get('replay_revisado')}")
 
     # F7: consultarlo dos veces en fechas distintas NO mueve la vigencia.
-    _v1 = SNAP.cargar_ultimo(pd.Timestamp("2026-01-20", tz="UTC"))["valid_until"]
-    _v2 = SNAP.cargar_ultimo(pd.Timestamp("2026-02-05", tz="UTC"))["valid_until"]
+    _v1 = SNAP.cargar_ultimo(pd.Timestamp("2026-01-20", tz="UTC"),
+                             permitir_replay_revisado=True)["valid_until"]
+    _v2 = SNAP.cargar_ultimo(pd.Timestamp("2026-02-05", tz="UTC"),
+                             permitir_replay_revisado=True)["valid_until"]
     check("F7", "la vigencia sale del calendario del snapshot, no de la consulta",
           _v1 == _v2 == _snap["valid_until"],
           f"-> {_v1} vs {_v2} vs {_snap['valid_until']}")
