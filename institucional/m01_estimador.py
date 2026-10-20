@@ -131,14 +131,70 @@ class ModeloR:
         }
 
 
+METODO_REMUESTREO = "bloques circulares de longitud fija"
+
+
+def _indices_bloques_circulares(n, bloque, rng):
+    """Indices de UNA replica: bloques circulares, exactamente n.
+
+    El pseudocodigo del plan, literal:
+
+        mientras longitud(indices) < n:
+            inicio = uniforme_entero(0, n-1)
+            anadir [(inicio+j) mod n para j=0..bloque-1]
+        muestra = valores[indices[:n]]
+
+    El `mod n` es lo que faltaba. La version anterior hacia
+    `v[i:i + bloque]`, y numpy TRUNCA al final del array: un bloque que
+    empieza en 7 con bloque 5 devolvia [7,8,9] en vez de envolver a
+    [7,8,9,0,1]. Se perdian los valores del principio, la replica salia
+    con menos de n valores y la media subia. Medido sobre 0..9 con
+    bloque 5: la media remuestreada daba 5,62 cuando la verdadera es 4,50.
+    Una cota inferior calculada sobre medias sesgadas al alza es una cota
+    que no acota.
+    """
+    n = int(n)
+    bloque = max(1, min(int(bloque), n))
+    idx = []
+    while len(idx) < n:
+        inicio = int(rng.integers(0, n))
+        idx.extend((inicio + j) % n for j in range(bloque))
+    return idx[:n]
+
+
+def medias_remuestreadas(valores, *, bloque=5, remuestras=2000,
+                         semilla=90210):
+    """Las medias de cada replica. Expuesta para poder comprobarla.
+
+    El sesgo del remuestreo anterior no se veia desde fuera: la funcion
+    solo devolvia un percentil. Devolver las medias permite comprobar que
+    el remuestreo esta centrado en la media verdadera, que es la
+    propiedad que importa y la que estaba rota.
+    """
+    v = np.asarray(valores, dtype="float64")
+    n = len(v)
+    rng = np.random.default_rng(semilla)
+    medias = np.empty(int(remuestras), dtype="float64")
+    for r in range(int(remuestras)):
+        idx = _indices_bloques_circulares(n, bloque, rng)
+        medias[r] = v[np.asarray(idx, dtype="int64")].mean()
+    return medias
+
+
 def _cota_inferior_bloques(valores, *, confianza=0.90, bloque=5,
                            remuestras=2000, semilla=90210) -> float:
-    """Cota inferior de la media, remuestreando BLOQUES consecutivos.
+    """Cota inferior de la media, remuestreando BLOQUES circulares.
 
     Las operaciones de un sistema de tendencia se agrupan: varias seguidas
     caen en la misma racha. Remuestrearlas una a una supondría
     independencia y daría una cota demasiado optimista. Se remuestrean
-    bloques de operaciones consecutivas.
+    bloques de operaciones consecutivas, y de forma CIRCULAR para que cada
+    operación tenga la misma probabilidad de entrar.
+
+    Aviso que el plan exige y que no se puede omitir: este algoritmo no
+    garantiza cobertura válida en cualquier régimen. La cobertura hay que
+    medirla para el proceso temporal que toque, y aquí no está medida para
+    el proceso real de las operaciones de Shark.
     """
     v = np.asarray(valores, dtype="float64")
     n = len(v)
@@ -146,15 +202,8 @@ def _cota_inferior_bloques(valores, *, confianza=0.90, bloque=5,
         raise DatosInsuficientes(
             f"solo {n} operaciones utilizables: con esta muestra la cota no "
             f"significa nada")
-    rng = np.random.default_rng(semilla)
-    bloque = max(1, min(int(bloque), n))
-    n_bloques = int(math.ceil(n / bloque))
-    medias = np.empty(remuestras, dtype="float64")
-    for r in range(remuestras):
-        inicios = rng.integers(0, n, size=n_bloques)
-        trozos = [v[i:i + bloque] for i in inicios]
-        muestra = np.concatenate(trozos)[:n]
-        medias[r] = muestra.mean()
+    medias = medias_remuestreadas(v, bloque=bloque, remuestras=remuestras,
+                                  semilla=semilla)
     return float(np.percentile(medias, (1.0 - confianza) * 100))
 
 
@@ -260,15 +309,53 @@ def decidir(cantidad, distancia_stop, modelo: ModeloR | None,
 # =====================================================================
 
 def walk_forward(operaciones, cortes, *, estrategia="", direccion="",
-                 confianza=0.90, bloque=5) -> dict:
-    """Ajusta antes de cada corte y evalúa SOLO lo posterior.
+                 confianza=0.90, bloque=5, corte_final=None,
+                 minimo_por_tramo=5) -> dict:
+    """Ajusta antes de cada corte y evalúa su ventana, SIN solapar.
 
-    Devuelve, por corte, el modelo entrenado y el R neto realizado de las
-    operaciones que se abrieron después. Es lo que permite ver si el
-    estimador tenía algo que decir o solo describía el pasado.
+    Lo que hacía antes: cada corte evaluaba todas las operaciones abiertas
+    después, HASTA EL FINAL. Con dos cortes y 25 operaciones futuras, el
+    primer tramo veía las 25 y el segundo 15: 40 evaluaciones sobre 25
+    operaciones. Eso es promediar prefijos del mismo futuro y presentarlos
+    como pruebas independientes.
+
+    Ahora cada operación cae en UNA ventana [corte_i, corte_i+1), por su
+    fecha de APERTURA, y se sigue hasta madurar aunque cierre fuera de la
+    ventana. El último tramo acaba en un corte final explícito, y las
+    etiquetas que no han madurado a esa fecha se cuentan como PENDIENTES
+    en vez de colarse en la media.
+
+    Y los errores: antes se restaba un realizado NETO de un pronóstico
+    BRUTO, lo que fabrica un error del tamaño del coste. Con un pronóstico
+    bruto perfecto y un coste de 0,2 R, el error salía -0,2 R y parecía
+    del modelo. Ahora bruto se compara con bruto, neto con neto, y el
+    coste va en su propia columna.
     """
-    salida = {"version": VERSION, "tramos": [], "incidencias": []}
-    for corte in cortes:
+    salida = {"version": VERSION, "tramos": [], "incidencias": [],
+              "metodo_remuestreo": METODO_REMUESTREO}
+    # Sin convertir a pandas: este modulo trabaja con lo que le pasen y
+    # solo exige que sea comparable. Convertir aqui introduciria lios de
+    # zona horaria entre naive y tz-aware que no son de este problema.
+    cortes = sorted(cortes)
+
+    if corte_final is None:
+        cerradas = [op.cerrada_en for op in operaciones
+                    if op.cerrada_en is not None]
+        corte_final = max(cerradas) if cerradas else None
+        salida["corte_final_derivado"] = True
+        salida["incidencias"].append({
+            "corte": "final",
+            "motivo": "no se declaró un corte final: se deriva del último "
+                      "cierre. El plan pide declararlo explícitamente."})
+    else:
+        salida["corte_final_derivado"] = False
+    salida["corte_final"] = str(corte_final)
+
+    limites = list(cortes) + [corte_final]
+    vistas = set()
+    pendientes_total = 0
+
+    for i, corte in enumerate(cortes):
         try:
             modelo = ajustar(operaciones, corte=corte, estrategia=estrategia,
                              direccion=direccion, confianza=confianza,
@@ -278,40 +365,85 @@ def walk_forward(operaciones, cortes, *, estrategia="", direccion="",
                                           "motivo": str(e)[:160]})
             continue
 
-        # Posteriores: abiertas DESPUES del corte. Si se tomaran las
-        # abiertas antes y cerradas despues, el tramo de evaluacion
-        # contendria operaciones que el entrenamiento ya vio empezar.
-        posteriores = [op for op in operaciones
-                       if op.abierta_en is not None and op.abierta_en >= corte
-                       and op.utilizable
-                       and (not estrategia or op.estrategia == estrategia)
-                       and (not direccion or op.direccion == direccion)]
-        if len(posteriores) < 5:
+        # VENTANA propia: [corte_i, corte_i+1). Cada operacion cae en una
+        # sola, por su fecha de apertura. Si se tomaran las abiertas antes
+        # y cerradas despues, el tramo contendria operaciones que el
+        # entrenamiento ya vio empezar.
+        fin = limites[i + 1]
+        ventana = [op for op in operaciones
+                   if op.abierta_en is not None
+                   and corte <= op.abierta_en < fin
+                   and op.utilizable
+                   and (not estrategia or op.estrategia == estrategia)
+                   and (not direccion or op.direccion == direccion)]
+
+        # Se siguen hasta madurar aunque cierren fuera de la ventana. Lo
+        # que NO ha cerrado al corte final es etiqueta pendiente: no entra
+        # en la media, y se cuenta.
+        maduras, pendientes = [], 0
+        for op in ventana:
+            if op.cerrada_en is None or op.cerrada_en > corte_final:
+                pendientes += 1
+            else:
+                maduras.append(op)
+        pendientes_total += pendientes
+
+        if len(maduras) < minimo_por_tramo:
             salida["incidencias"].append({
                 "corte": str(corte),
-                "motivo": f"solo {len(posteriores)} operaciones posteriores"})
+                "motivo": f"solo {len(maduras)} operaciones maduras en "
+                          f"[{corte}, {fin})"})
             continue
 
-        R_post = [op.R_neto for op in posteriores]
+        vistas.update(op.id for op in maduras)
+        R_bruto = [op.R_bruto for op in maduras]
+        R_neto = [op.R_neto for op in maduras]
+        coste_R = float(np.mean(np.asarray(R_bruto) - np.asarray(R_neto)))
+        # El pronostico del modelo es BRUTO. El pronostico NETO es ese
+        # bruto menos el coste previsto, y se compara con el neto
+        # realizado. Magnitudes homogeneas a cada lado.
+        pronostico_neto = modelo.mu_R - coste_R
         salida["tramos"].append({
             "corte": str(corte),
+            "ventana": [str(corte), str(fin)],
             "modelo": modelo.a_dict(),
-            "n_posteriores": len(posteriores),
-            "R_neto_medio_posterior": round(float(np.mean(R_post)), 6),
-            "R_neto_mediana_posterior": round(float(np.median(R_post)), 6),
+            "n_posteriores": len(maduras),
+            "etiquetas_pendientes": pendientes,
+            "R_bruto_medio_posterior": round(float(np.mean(R_bruto)), 6),
+            "R_neto_medio_posterior": round(float(np.mean(R_neto)), 6),
+            "R_neto_mediana_posterior": round(float(np.median(R_neto)), 6),
+            "coste_R_medio": round(coste_R, 6),
+            "pronostico_bruto": round(modelo.mu_R, 6),
+            "pronostico_neto": round(pronostico_neto, 6),
+            "error_pronostico_bruto": round(
+                float(np.mean(R_bruto)) - modelo.mu_R, 6),
+            "error_pronostico_neto": round(
+                float(np.mean(R_neto)) - pronostico_neto, 6),
+            # Clave conservada para el arnes de la auditoria, que la lee
+            # por nombre. Ahora vale el error BRUTO contra BRUTO, que es
+            # lo que su expectativa pide. La version contaminada
+            # (realizado neto menos pronostico bruto) ya no existe: no se
+            # conserva un numero equivocado por compatibilidad.
             "error_del_pronostico": round(
-                float(np.mean(R_post)) - modelo.mu_R, 6),
+                float(np.mean(R_bruto)) - modelo.mu_R, 6),
         })
 
+    salida["operaciones_unicas"] = len(vistas)
+    salida["etiquetas_pendientes"] = pendientes_total
     if salida["tramos"]:
-        errores = [t["error_del_pronostico"] for t in salida["tramos"]]
+        errores = [t["error_pronostico_bruto"] for t in salida["tramos"]]
+        errores_netos = [t["error_pronostico_neto"] for t in salida["tramos"]]
         realizados = [t["R_neto_medio_posterior"] for t in salida["tramos"]]
         predichos = [t["modelo"]["mu_R"] for t in salida["tramos"]]
         salida["resumen"] = {
             "tramos_evaluados": len(errores),
-            "error_medio": round(float(np.mean(errores)), 6),
+            "operaciones_unicas": len(vistas),
+            "error_medio_bruto": round(float(np.mean(errores)), 6),
             "error_absoluto_medio": round(
                 float(np.mean(np.abs(errores))), 6),
+            "error_medio_neto": round(float(np.mean(errores_netos)), 6),
+            "coste_R_medio": round(float(np.mean(
+                [t["coste_R_medio"] for t in salida["tramos"]])), 6),
             "R_predicho_medio": round(float(np.mean(predichos)), 6),
             "R_realizado_medio": round(float(np.mean(realizados)), 6),
             "_lectura": (

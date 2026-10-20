@@ -700,12 +700,109 @@ check("V21b", "con EXIGIR_EVENTO no se emite NAV sin evidencia del evento",
       _nego, "-> emitio un NAV con una posicion sin precio ni evento")
 
 # =====================================================================
+print("\n=== V15, V16, V17, V18: M01 ===")
+# =====================================================================
+from institucional import m01_estimador as M01
+
+# V15 / oraculo O09. Bloques CIRCULARES: diez valores por replica y sin
+# sesgo. `v[i:i+bloque]` trunca al final del array, asi que un bloque que
+# empieza en 7 da [7,8,9] en vez de envolver a [7,8,9,0,1]: se pierden los
+# valores bajos y la media sube.
+_v10 = list(range(10))
+try:
+    _medias = M01.medias_remuestreadas(_v10, bloque=5, remuestras=20000,
+                                       semilla=90210)
+    _long_ok = getattr(M01, "LONGITUD_ULTIMA_MUESTRA", None)
+    ok15 = (len(_medias) == 20000
+            and abs(float(np.mean(_medias)) - 4.5) < 0.05)
+    det15 = (f"-> media de las medias {float(np.mean(_medias)):.4f}, "
+             f"exigida 4.5 (la media verdadera). Con bloques truncados "
+             f"sale ~5.62")
+except AttributeError as e:
+    ok15 = False
+    det15 = f"-> no hay remuestreo expuesto para comprobarlo: {e}"
+check("V15", "bootstrap n=10 bloque=5: bloques circulares y sin sesgo",
+      ok15, det15)
+
+try:
+    _idxs = [M01._indices_bloques_circulares(10, 5,
+             np.random.default_rng(i)) for i in range(50)]
+    ok15b = all(len(x) == 10 for x in _idxs)
+    det15b = f"-> longitudes {sorted(set(len(x) for x in _idxs))}, exigida [10]"
+except AttributeError as e:
+    ok15b = False
+    det15b = f"-> no existe el generador circular: {e}"
+check("V15b", "cada replica tiene exactamente n valores, no menos",
+      ok15b, det15b)
+
+# V16 y V17. 12 operaciones de entrenamiento, 10 en la primera ventana y
+# 15 en la segunda. Pronostico bruto PERFECTO y coste de 0,2 R.
+def _op(i, cuando, bruto_R=1.0, coste_R=0.2):
+    riesgo = 10 * 2.0            # cantidad 10, entrada 100, stop 98
+    return M01.Operacion(
+        id=f"op{i:03d}", abierta_en=cuando,
+        cerrada_en=cuando + pd.Timedelta(days=1),
+        cantidad=10.0, precio_entrada=100.0, stop_inicial=98.0,
+        pnl_bruto=bruto_R * riesgo, costes_totales=coste_R * riesgo,
+        estrategia="B1", direccion="BUY")
+
+_t0 = pd.Timestamp("2025-01-01", tz="UTC")
+_ops = []
+for i in range(12):                                    # entrenamiento
+    _ops.append(_op(i, _t0 + pd.Timedelta(days=i)))
+_c1 = _t0 + pd.Timedelta(days=40)
+_c2 = _t0 + pd.Timedelta(days=80)
+_cf = _t0 + pd.Timedelta(days=140)
+for i in range(10):                                    # ventana 1
+    _ops.append(_op(100 + i, _c1 + pd.Timedelta(days=i)))
+for i in range(15):                                    # ventana 2
+    _ops.append(_op(200 + i, _c2 + pd.Timedelta(days=i)))
+
+try:
+    _wf = M01.walk_forward(_ops, [_c1, _c2], estrategia="B1",
+                           corte_final=_cf)
+    _n = [t.get("n_posteriores") for t in _wf["tramos"]]
+    _unicas = _wf.get("operaciones_unicas")
+    ok16 = _n == [10, 15] and _unicas == 25
+    det16 = (f"-> n por tramo {_n} (exigido [10, 15]), operaciones unicas "
+             f"{_unicas} (exigido 25). Si el primer tramo tiene 25, cada "
+             f"corte evalua hasta el final y los tramos se solapan")
+except TypeError as e:
+    _wf = None
+    ok16 = False
+    det16 = f"-> walk_forward no acepta un corte final explicito: {e}"
+check("V16", "dos cortes y 25 decisiones: asignacion 10+15 sin duplicados",
+      ok16, det16)
+
+if _wf is not None and _wf.get("tramos"):
+    _eb = [t.get("error_pronostico_bruto") for t in _wf["tramos"]]
+    _cr = [t.get("coste_R_medio") for t in _wf["tramos"]]
+    ok17 = (all(e is not None and abs(e) < 1e-9 for e in _eb)
+            and all(c is not None and abs(c - 0.2) < 1e-9 for c in _cr))
+    det17 = (f"-> errores brutos {_eb} (exigido 0 en los dos), coste_R "
+             f"{_cr} (exigido 0,2). Restar un realizado NETO de un "
+             f"pronostico BRUTO inventa un error de -0,2 R")
+else:
+    ok17 = False
+    det17 = "-> sin tramos que medir"
+check("V17", "pronostico bruto perfecto: error bruto cero y coste aparte",
+      ok17, det17)
+
+# V18 / oraculo O08. El contraejemplo a mi propia conclusion de que con
+# 8 pb M01 no tiene nada que filtrar: la CANTIDAD se cancela con costes
+# proporcionales, la DISTANCIA del stop no.
+_mod = M01.ModeloR("sintetico_v18", 0.1, 0.1, 100, 0, _t0, _t0, "USD",
+                   "ejemplo", "BUY", "cota fijada para algebra")
+_fino = M01.decidir(10, 0.5, _mod, 1.6)
+_ancho = M01.decidir(10, 4.0, _mod, 1.6)
+check("V18", "mismo coste proporcional, distinta distancia: decisiones distintas",
+      _fino.get("permite") is False and _ancho.get("permite") is True,
+      f"-> stop a 0,5 permite={_fino.get('permite')} (exigido False), "
+      f"stop a 4 permite={_ancho.get('permite')} (exigido True)")
+
+# =====================================================================
 print("\n=== Puertas de cambios posteriores ===")
 # =====================================================================
-pendiente("V15", "bootstrap n=10 bloque=5 sin truncar", 4)
-pendiente("V16", "dos cortes, 25 decisiones futuras unicas", 4)
-pendiente("V17", "pronostico bruto perfecto con costes de 0,2 R", 4)
-pendiente("V18", "mismo coste proporcional, distinta distancia/precio", 4)
 pendiente("V24", "reejecucion con los mismos artefactos", 5)
 
 print("\n" + "=" * 70)

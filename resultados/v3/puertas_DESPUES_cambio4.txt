@@ -1,0 +1,63 @@
+
+=== V01-V02: el NAV de cierre no se mezcla con precios de fill ===
+  PASA       [V01] compra 10 a 100; cierre del mismo dia a 110 -> NAV 1.100
+  PASA       [V02] venta parcial: TODAS las unidades restantes se valoran al cierre
+
+=== V03-V05: derechos de cobro tipados e idempotencia ===
+  PASA       [V03] venta diferida de 5 a 100: NAV conservado y 500 no gastables
+  PASA       [V03b] al liquidar: baja el derecho y sube la caja, NAV intacto
+  PASA       [V04] dividendo 2 devengado y pagado despues: el NAV no gana otros 2
+  PASA       [V05] repetir un fill con el mismo event_id no duplica ejecucion
+  PASA       [V05b] repetir un pago con el mismo event_id no duplica caja ni derechos
+
+=== V06: retornos anuales reconciliados ===
+  PASA       [V06] 100 en diciembre y 110 la primera sesion de enero -> +10% en 2021
+  PASA       [V06b] el producto de los factores anuales reproduce NAV_final/NAV_inicial
+  PASA       [V06d] la identidad de factores aguanta tambien con años parciales
+  PASA       [V06c] un año con una sola observacion se informa, no se borra
+
+=== V08-V09: capacidades no implementadas se rechazan ===
+  PASA       [V08] instrumento EUR en cuenta USD sin FX: rechazo antes de tocar el libro
+  PASA       [V09] politica terminal no implementada: error explicito de configuracion
+
+=== V07, V10, V11, V22: admision de ordenes ===
+  PASA       [V07] compra impagable con reduccion desactivada: rechazo completo
+  PASA       [V10] objetivo 40% y apertura al doble: la admision no acepta el 80%
+  PASA       [V11] dos ordenes por el mismo saldo: reserva atomica y liberacion individual
+  PASA       [V22] SELL con cero unidades: senal registrada, orden rechazada, ningun corto
+
+=== V23: el ejecutor del CORE responde a comisiones y capital ===
+  PASA       [V23] las comisiones mueven el PnL neto y el capital del core
+  PASA       [V23b] la capacidad responde al efectivo disponible
+  PASA       [V23c] el core llama al dimensionado declarando efectivo y coste
+
+=== V12, V13, V14: datos y snapshots ===
+  PASA       [V13] 299 velas maduras mas una abierta: se usa la vista madura
+  PASA       [V13b] la referencia de efectivo se recorta a la misma observacion
+  PASA       [V14] un snapshot recuperado tras el corte no se da como captura anterior
+  PASA       [V14b] la ruta estricta SI devuelve una captura anterior al corte
+  PASA       [V12] el ciclo comprueba la caducidad aunque la cache este llena
+  PASA       [V12b] un snapshot caducado se detecta por calendario, no por reloj
+
+=== V19, V20, V21: bajas declaradas y calidad visible ===
+  PASA       [V19] fondo liquidado: unidades fuera, derecho dentro, y se cobra
+  PASA       [V19b] repetir el evento de liquidacion no cobra dos veces
+  PASA       [V19c] politica de reinversion no implementada: error explicito
+  PASA       [V20] falta la descarga de un congelado: se marca, no se borra
+  PASA       [V21] precio ausente: calidad visible y el NAV se declara no fiable
+  PASA       [V21b] con EXIGIR_EVENTO no se emite NAV sin evidencia del evento
+
+=== V15, V16, V17, V18: M01 ===
+  PASA       [V15] bootstrap n=10 bloque=5: bloques circulares y sin sesgo
+  PASA       [V15b] cada replica tiene exactamente n valores, no menos
+  PASA       [V16] dos cortes y 25 decisiones: asignacion 10+15 sin duplicados
+  PASA       [V17] pronostico bruto perfecto: error bruto cero y coste aparte
+  PASA       [V18] mismo coste proporcional, distinta distancia: decisiones distintas
+
+=== Puertas de cambios posteriores ===
+  PENDIENTE  [V24] reejecucion con los mismos artefactos  (cambio 5)
+
+======================================================================
+PUERTAS: 37 pasan, 0 FALLAN, 1 pendientes de su cambio
+======================================================================
+======================================================================
