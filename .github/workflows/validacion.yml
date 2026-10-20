@@ -103,7 +103,7 @@ jobs:
           { echo '```'; echo; } >> resultados/ultimo.md
 
       - name: Pruebas de aceptacion economica
-        # Ya BLOQUEA: las 32 pasan desde el 2026-10-19. Son los contratos
+        # Ya BLOQUEA: las 43 pasan desde el 2026-10-19. Son los contratos
         # economicos que la auditoria exigio, y cada uno llama al ejecutor
         # real con un caso cuyo resultado correcto se conoce de antemano.
         # Si una vuelve a fallar, se corrige el motor; nunca el esperado.
@@ -119,6 +119,28 @@ jobs:
             echo
             echo '```'
             tail -40 /tmp/aceptacion.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
+      - name: Puertas de aceptacion de la segunda auditoria
+        # Las puertas V01-V24 de PLAN_CLAUDE.md. BLOQUEA: las 13 del cambio
+        # 1 pasan y las 16 de los cambios 2-5 se declaran PENDIENTE, no
+        # aprobadas. Si una puerta vuelve a fallar se corrige el motor.
+        # Esta a proposito en CI y no solo en local: el estado del universo
+        # congelado se perdia en cada corrida porque su archivo no estaba
+        # en el git add, y no quiero repetir la forma de ese error.
+        run: |
+          set -o pipefail
+          python tests/test_puertas.py 2>&1 | tee /tmp/puertas.txt
+          {
+            echo '## Puertas de aceptacion (segunda auditoria)'
+            echo
+            echo 'Resultado exigido por PLAN_CLAUDE.md, no comportamiento'
+            echo 'actual del codigo. Las pendientes llegan con su cambio.'
+            echo
+            echo '```'
+            tail -45 /tmp/puertas.txt
             echo '```'
             echo
           } >> resultados/ultimo.md

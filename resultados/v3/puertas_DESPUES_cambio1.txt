@@ -1,0 +1,44 @@
+
+=== V01-V02: el NAV de cierre no se mezcla con precios de fill ===
+  PASA       [V01] compra 10 a 100; cierre del mismo dia a 110 -> NAV 1.100
+  PASA       [V02] venta parcial: TODAS las unidades restantes se valoran al cierre
+
+=== V03-V05: derechos de cobro tipados e idempotencia ===
+  PASA       [V03] venta diferida de 5 a 100: NAV conservado y 500 no gastables
+  PASA       [V03b] al liquidar: baja el derecho y sube la caja, NAV intacto
+  PASA       [V04] dividendo 2 devengado y pagado despues: el NAV no gana otros 2
+  PASA       [V05] repetir un fill con el mismo event_id no duplica ejecucion
+  PASA       [V05b] repetir un pago con el mismo event_id no duplica caja ni derechos
+
+=== V06: retornos anuales reconciliados ===
+  PASA       [V06] 100 en diciembre y 110 la primera sesion de enero -> +10% en 2021
+  PASA       [V06b] el producto de los factores anuales reproduce NAV_final/NAV_inicial
+  PASA       [V06d] la identidad de factores aguanta tambien con años parciales
+  PASA       [V06c] un año con una sola observacion se informa, no se borra
+
+=== V08-V09: capacidades no implementadas se rechazan ===
+  PASA       [V08] instrumento EUR en cuenta USD sin FX: rechazo antes de tocar el libro
+  PASA       [V09] politica terminal no implementada: error explicito de configuracion
+
+=== Puertas de cambios posteriores ===
+  PENDIENTE  [V07] compra impagable con reduccion desactivada  (cambio 2)
+  PENDIENTE  [V10] objetivo 40% y apertura al doble del cierre  (cambio 2)
+  PENDIENTE  [V11] dos ordenes compiten por saldo: reservas por order_id  (cambio 2)
+  PENDIENTE  [V12] snapshot caducado con el proceso en marcha  (cambio 3)
+  PENDIENTE  [V13] 299 velas maduras mas una abierta  (cambio 3)
+  PENDIENTE  [V14] recuperacion posterior al corte historico  (cambio 3)
+  PENDIENTE  [V15] bootstrap n=10 bloque=5 sin truncar  (cambio 4)
+  PENDIENTE  [V16] dos cortes, 25 decisiones futuras unicas  (cambio 4)
+  PENDIENTE  [V17] pronostico bruto perfecto con costes de 0,2 R  (cambio 4)
+  PENDIENTE  [V18] mismo coste proporcional, distinta distancia/precio  (cambio 4)
+  PENDIENTE  [V19] fondo liquidado con cobro diferido  (cambio 3)
+  PENDIENTE  [V20] falta la descarga de un activo congelado  (cambio 3)
+  PENDIENTE  [V21] precio ausente o NAV invalido: calidad visible  (cambio 1)
+  PENDIENTE  [V22] SELL con cero unidades al contado  (cambio 2)
+  PENDIENTE  [V23] cambian comisiones o capital en el ejecutor del core  (cambio 2)
+  PENDIENTE  [V24] reejecucion con los mismos artefactos  (cambio 5)
+
+======================================================================
+PUERTAS: 13 pasan, 0 FALLAN, 16 pendientes de su cambio
+======================================================================
+======================================================================

@@ -60,6 +60,26 @@ class SinDatosSuficientes(RuntimeError):
     """No hay material para medir. No es un resultado de cero."""
 
 
+class ConfiguracionInvalida(ValueError):
+    """Se pidio una capacidad que nadie ha implementado.
+
+    El plan lo exige explicito: una politica no soportada tiene que dar un
+    error de configuracion, no ejecutarse en silencio como si estuviera
+    implementada. Antes `politica_terminal` era un campo que NADIE leia:
+    se podia declarar cualquier cosa y la corrida salia igual, lo que hace
+    que el campo documente una capacidad inexistente.
+    """
+
+
+# Lo que esta implementado de verdad, y nada mas.
+# MARCAR: se valora al ultimo cierre y no se paga la salida, que es un
+# supuesto OPTIMISTA y declarado. LIQUIDAR: se vende todo al ultimo cierre
+# pagando comisiones, asi que el NAV final incluye el coste de salir.
+POLITICAS_TERMINALES = ("MARCAR", "LIQUIDAR")
+POLITICAS_CAJA = ("SIN_REMUNERAR",)
+MONEDAS_SOPORTADAS = ("USD",)
+
+
 @dataclass(frozen=True)
 class Politicas:
     """Todo lo que hay que congelar ANTES de ver un resultado."""
@@ -84,6 +104,26 @@ class Politicas:
     # limites, la estrategia lleva otro identificador: es otra variante,
     # no un parametro afinado.
     limites: object = None
+
+    def __post_init__(self):
+        if self.politica_terminal not in POLITICAS_TERMINALES:
+            raise ConfiguracionInvalida(
+                f"politica_terminal={self.politica_terminal!r} no esta "
+                f"implementada. Implementadas: {POLITICAS_TERMINALES}. "
+                f"No se ejecuta una politica que nadie aplica."
+            )
+        if self.politica_caja not in POLITICAS_CAJA:
+            raise ConfiguracionInvalida(
+                f"politica_caja={self.politica_caja!r} no esta implementada. "
+                f"Implementadas: {POLITICAS_CAJA}. Remunerar la caja exige "
+                f"comprar el instrumento, con sus costes."
+            )
+        if self.moneda_cuenta not in MONEDAS_SOPORTADAS:
+            raise ConfiguracionInvalida(
+                f"moneda_cuenta={self.moneda_cuenta!r}: no hay FX "
+                f"implementado y no se asume paridad 1:1. "
+                f"Soportadas: {MONEDAS_SOPORTADAS}."
+            )
 
     def a_dict(self):
         d = {}
@@ -289,6 +329,14 @@ class EvaluadorMensual:
             salida.append(fechas_mes[-1])
         return [f for f in salida if f >= self.inicio_evaluacion]
 
+    def _precio_de(self, t, fecha, col):
+        """Precio de una columna en una fecha, o None si no es admisible."""
+        df = self.series[t]
+        if fecha not in df.index:
+            return None
+        v = float(df.at[fecha, col])
+        return v if np.isfinite(v) and v > 0 else None
+
     def _siguiente_negociable(self, instrumento, despues_de):
         """Primera fecha en la que ESE instrumento vuelve a negociar."""
         idx = self.series[instrumento].index
@@ -332,7 +380,10 @@ class EvaluadorMensual:
         decisiones: list[Decision] = []
         pendientes: list[tuple] = []        # (fecha_ejec, instrumento, lado, cantidad)
         nav_diario: dict = {}
-        ultimo_precio: dict = {}
+        ultimo_precio: dict = {}        # marca de CIERRE: t -> (precio, fecha)
+        calidad_marca: dict = {}        # t -> (origen, antiguedad_dias)
+        libro_diario: dict = {}         # trayectoria: caja, derechos, NAV...
+        incidencias: list = []
         ya_decidio_una_vez = False
         fechas_decision = set(self.fechas_decision)
 
@@ -340,16 +391,22 @@ class EvaluadorMensual:
             # --- 2) liquidaciones pendientes ---
             libro.liquidar_pendientes(fecha)
 
-            # --- 3) valorar TODO, también lo que hoy no cotiza ---
-            for t, df in self.series.items():
-                if fecha in df.index:
-                    precio = float(df.at[fecha, "Close"])
-                    if np.isfinite(precio) and precio > 0:
-                        ultimo_precio[t] = (precio, fecha)
-                if t in ultimo_precio and libro.cantidad(t) > 0:
+            # --- 2) EVENTO DE EJECUCION: vista de precios observable AHORA ---
+            # Para admitir una orden solo puede mirarse lo que existe antes
+            # de enviarla: la apertura de hoy y las marcas anteriores. Nunca
+            # el cierre, el maximo ni el minimo de la sesion en curso.
+            # La version anterior valoraba con el CIERRE de hoy antes de
+            # ejecutar, que es leer el futuro de la propia sesion.
+            for t in self.series:
+                if libro.cantidad(t) <= 0:
+                    continue
+                ap = self._precio_de(t, fecha, "Open")
+                if ap is not None:
+                    libro.valorar(t, ap, fecha)
+                elif t in ultimo_precio:
                     libro.valorar(t, ultimo_precio[t][0], ultimo_precio[t][1])
 
-            # --- 5) ejecutar lo que vencía hoy ---
+            # --- 3) ejecutar lo que vencía hoy ---
             # (va antes de decidir: una orden decidida hoy se ejecuta
             #  mañana, nunca en la misma vela que la generó)
             restantes = []
@@ -384,7 +441,40 @@ class EvaluadorMensual:
                                  motivo=estrategia.id)
             pendientes = restantes
 
-            # --- 4) decisión mensual ---
+            # --- 4) CIERRE DE SESION: marcar TODAS las posiciones ---
+            # Esta es la puerta V01/V02 y el hallazgo A01. Antes se valoraba
+            # ANTES de los fills, y el propio fill reescribia
+            # `precio_valoracion` con su precio de ejecucion: en un dia con
+            # operacion, lo comprado quedaba a la apertura y el resto al
+            # cierre. El NAV mezclaba precios de dos instantes y la ganancia
+            # del dia llegaba un dia tarde.
+            for t in self.series:
+                cierre = self._precio_de(t, fecha, "Close")
+                if cierre is not None:
+                    ultimo_precio[t] = (cierre, fecha)
+                    calidad_marca[t] = ("CIERRE", 0)
+                if libro.cantidad(t) <= 0:
+                    continue
+                if t not in ultimo_precio:
+                    # Posicion abierta sin ninguna marca admisible. No se
+                    # borra la fecha para fabricar continuidad: se marca.
+                    incidencias.append({
+                        "fecha": str(fecha), "instrumento": t,
+                        "motivo": "posicion sin precio de valoracion admisible",
+                    })
+                    continue
+                precio_marca, fecha_marca = ultimo_precio[t]
+                if cierre is None:
+                    edad = int((fecha - fecha_marca).days)
+                    calidad_marca[t] = ("ARRASTRE", edad)
+                    if edad > self.pol.antiguedad_maxima_dias:
+                        incidencias.append({
+                            "fecha": str(fecha), "instrumento": t,
+                            "motivo": f"marca de {edad} dias de antiguedad",
+                        })
+                libro.valorar(t, precio_marca, fecha_marca)
+
+            # --- 5) decisión mensual ---
             if fecha in fechas_decision:
                 salta = (getattr(estrategia, "solo_primera_decision", False)
                          and ya_decidio_una_vez)
@@ -394,17 +484,85 @@ class EvaluadorMensual:
                     pendientes.extend(d.ordenes)
                     ya_decidio_una_vez = True
 
-            # --- 6) NAV diario neto ---
+            # --- 6) guardar caja, derechos, obligaciones, reservas,
+            #        cantidades y NAV. La exposicion media exige la
+            #        trayectoria: antes se reconstruia de los pesos del
+            #        ultimo dia, que no es una media de nada.
             if fecha >= self.inicio_evaluacion:
                 try:
-                    nav_diario[fecha] = libro.nav()
+                    nav = libro.nav()
+                    valor_pos = libro.valor_posiciones()
+                    nav_diario[fecha] = nav
+                    libro_diario[fecha] = {
+                        "efectivo": libro.efectivo,
+                        "derechos": libro.derechos,
+                        "obligaciones": libro.obligaciones,
+                        "reservado": libro.reservado,
+                        "valor_posiciones": valor_pos,
+                        "nav": nav,
+                        "posiciones": sum(1 for p in libro.posiciones.values()
+                                          if p.cantidad > 0),
+                        "expuesto": (valor_pos / nav) if nav > 0 else float("nan"),
+                        "calidad": ";".join(
+                            f"{t}:{c[0]}" for t, c in sorted(calidad_marca.items())
+                            if libro.cantidad(t) > 0 and c[0] != "CIERRE") or "CIERRE",
+                    }
                 except Exception as e:
                     nav_diario[fecha] = float("nan")
+                    libro_diario[fecha] = {"nav": float("nan"),
+                                           "calidad": f"NO_EVALUABLE: {str(e)[:60]}"}
+                    incidencias.append({"fecha": str(fecha), "instrumento": "",
+                                        "motivo": f"NAV no fiable: {str(e)[:80]}"})
                     if len(decisiones):
                         decisiones[-1].nota = f"NAV no fiable: {str(e)[:60]}"
 
+        # --- politica terminal ---
+        # MARCAR deja las posiciones abiertas valoradas al ultimo cierre.
+        # LIQUIDAR las vende y COBRA el coste de salir: el NAV final deja de
+        # suponer que se sale gratis. El campo existia y nadie lo leia.
+        if self.pol.politica_terminal == "LIQUIDAR" and len(self.fechas):
+            fecha_fin = self.fechas[-1]
+            for t in sorted(list(libro.posiciones)):
+                q = libro.cantidad(t)
+                if q <= 0:
+                    continue
+                precio = ultimo_precio.get(t, (None, None))[0]
+                if precio is None:
+                    incidencias.append({
+                        "fecha": str(fecha_fin), "instrumento": t,
+                        "motivo": "politica terminal LIQUIDAR sin precio "
+                                  "admisible: la posicion queda abierta",
+                    })
+                    continue
+                libro.vender(t, q, precio, fecha_fin,
+                             coste_rel=self.pol.coste_rel,
+                             coste_fijo=self.pol.coste_fijo,
+                             motivo="POLITICA_TERMINAL_LIQUIDAR")
+            # El dinero de la venta puede quedar como DERECHO si hay dias de
+            # liquidacion. No se fuerza el cobro: inventar una fecha de
+            # liquidacion que no ha ocurrido seria fabricar un hecho. El
+            # derecho ya cuenta en el NAV, asi que el NAV no cambia por eso.
+            if fecha_fin in nav_diario:
+                nav_f = libro.nav()
+                nav_diario[fecha_fin] = nav_f
+                libro_diario[fecha_fin] = {
+                    "efectivo": libro.efectivo, "derechos": libro.derechos,
+                    "obligaciones": libro.obligaciones,
+                    "reservado": libro.reservado,
+                    "valor_posiciones": libro.valor_posiciones(),
+                    "nav": nav_f,
+                    "posiciones": sum(1 for p in libro.posiciones.values()
+                                      if p.cantidad > 0),
+                    "expuesto": (libro.valor_posiciones() / nav_f)
+                    if nav_f > 0 else float("nan"),
+                    "calidad": "TERMINAL_LIQUIDADO",
+                }
+
         serie_nav = pd.Series(nav_diario).sort_index()
-        return self._resultado(estrategia, libro, decisiones, serie_nav)
+        res = self._resultado(estrategia, libro, decisiones, serie_nav)
+        res["_ledger_diario"] = pd.DataFrame(libro_diario).T.sort_index()
+        res["incidencias_valoracion"] = incidencias
+        return res
 
     def _decidir(self, estrategia, fecha, libro, ultimo_precio) -> Decision:
         vista = self._vista(fecha)

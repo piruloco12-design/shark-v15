@@ -1,0 +1,70 @@
+
+=== V01-V02: el NAV de cierre no se mezcla con precios de fill ===
+  FALLA      [V01] compra 10 a 100; cierre del mismo dia a 110 -> NAV 1.100
+                     -> NAV del dia del fill = nan, exigido 1100.0 (la ganancia del dia no se retrasa)
+  FALLA      [V02] venta parcial: TODAS las unidades restantes se valoran al cierre
+                     -> NAV del fill parcial = nan, exigido 1050.0 (5 unidades a 110 + 500 de caja)
+
+=== V03-V05: derechos de cobro tipados e idempotencia ===
+  FALLA      [V03] venta diferida de 5 a 100: NAV conservado y 500 no gastables
+                     -> NAV antes 1000.0, NAV tras la venta 500.0 (exigido 1000.0), utilizable 0.0 (exigido 0.0)
+  PASA       [V03b] al liquidar: baja el derecho y sube la caja, NAV intacto
+  FALLA      [V04] dividendo 2 devengado y pagado despues: el NAV no gana otros 2
+                     -> NAV al devengo 1000.0, NAV tras el pago 1020.0 (exigido 1000.0 en ambos; si el segundo es 1020 el derecho se cobro sin darse de baja)
+  FALLA      [V05] repetir un fill con el mismo event_id no duplica ejecucion
+                     -> el libro no acepta event_id: LibroContado.comprar() got an unexpected keyword argument 'event_id'
+  FALLA      [V05b] repetir un pago con el mismo event_id no duplica caja ni derechos
+                     -> el dividendo no acepta event_id: LibroContado.dividendo() got an unexpected keyword argument 'event_id'
+
+=== V06: retornos anuales reconciliados ===
+  FALLA      [V06] 100 en diciembre y 110 la primera sesion de enero -> +10% en 2021
+                     -> 2021 = 0.1, exigido 0.21 (121/100-1). Si sale 0.1 se perdio el tramo 31-dic -> primera sesion de enero
+  FALLA      [V06b] el producto de los factores anuales reproduce NAV_final/NAV_inicial
+                     -> producto 1.1000000000, NAV_final/NAV_inicial 1.2100000000
+  FALLA      [V06c] un año con una sola observacion se informa, no se borra
+                     -> años informados [], exigidos 2020, 2021 y 2022 (marcados parciales, no eliminados)
+
+=== V08-V09: capacidades no implementadas se rechazan ===
+  FALLA      [V08] instrumento EUR en cuenta USD sin FX: rechazo antes de tocar el libro
+                     -> rechazado=False, caja 900.0 (exigido 1000.0), cantidad 1.0 (exigido 0)
+  FALLA      [V09] politica terminal no implementada: error explicito de configuracion
+                     -> Politicas acepto una politica terminal que nadie implementa
+
+=== Puertas de cambios posteriores ===
+  PENDIENTE  [V07] compra impagable con reduccion desactivada  (cambio 2)
+  PENDIENTE  [V10] objetivo 40% y apertura al doble del cierre  (cambio 2)
+  PENDIENTE  [V11] dos ordenes compiten por saldo: reservas por order_id  (cambio 2)
+  PENDIENTE  [V12] snapshot caducado con el proceso en marcha  (cambio 3)
+  PENDIENTE  [V13] 299 velas maduras mas una abierta  (cambio 3)
+  PENDIENTE  [V14] recuperacion posterior al corte historico  (cambio 3)
+  PENDIENTE  [V15] bootstrap n=10 bloque=5 sin truncar  (cambio 4)
+  PENDIENTE  [V16] dos cortes, 25 decisiones futuras unicas  (cambio 4)
+  PENDIENTE  [V17] pronostico bruto perfecto con costes de 0,2 R  (cambio 4)
+  PENDIENTE  [V18] mismo coste proporcional, distinta distancia/precio  (cambio 4)
+  PENDIENTE  [V19] fondo liquidado con cobro diferido  (cambio 3)
+  PENDIENTE  [V20] falta la descarga de un activo congelado  (cambio 3)
+  PENDIENTE  [V21] precio ausente o NAV invalido: calidad visible  (cambio 1)
+  PENDIENTE  [V22] SELL con cero unidades al contado  (cambio 2)
+  PENDIENTE  [V23] cambian comisiones o capital en el ejecutor del core  (cambio 2)
+  PENDIENTE  [V24] reejecucion con los mismos artefactos  (cambio 5)
+
+======================================================================
+PUERTAS: 1 pasan, 11 FALLAN, 16 pendientes de su cambio
+======================================================================
+
+Comportamiento economico que el motor todavia no cumple:
+
+  [V01] compra 10 a 100; cierre del mismo dia a 110 -> NAV 1.100
+  [V02] venta parcial: TODAS las unidades restantes se valoran al cierre
+  [V03] venta diferida de 5 a 100: NAV conservado y 500 no gastables
+  [V04] dividendo 2 devengado y pagado despues: el NAV no gana otros 2
+  [V05] repetir un fill con el mismo event_id no duplica ejecucion
+  [V05b] repetir un pago con el mismo event_id no duplica caja ni derechos
+  [V06] 100 en diciembre y 110 la primera sesion de enero -> +10% en 2021
+  [V06b] el producto de los factores anuales reproduce NAV_final/NAV_inicial
+  [V06c] un año con una sola observacion se informa, no se borra
+  [V08] instrumento EUR en cuenta USD sin FX: rechazo antes de tocar el libro
+  [V09] politica terminal no implementada: error explicito de configuracion
+
+Se arreglan corrigiendo el motor, nunca ajustando el esperado.
+======================================================================

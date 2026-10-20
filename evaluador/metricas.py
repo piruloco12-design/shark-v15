@@ -126,25 +126,75 @@ def volatilidad_anual(nav: pd.Series,
     return float(r.std(ddof=1) * math.sqrt(periodos_por_ano))
 
 
-def por_ano_natural(nav: pd.Series) -> dict:
+def por_ano_natural(nav: pd.Series, nav_inicial=None) -> dict:
     """Retorno de cada año natural, derivado del NAV neto.
 
-    No compone retornos mensuales brutos: sale del NAV, que ya lleva los
-    costes dentro. Los años parciales se marcan como tales en vez de
-    presentarse como si fueran completos.
+    Contrato del plan (cambio 1):
+
+        retorno_año[y] = NAV_ultimo_de_y / NAV_ultimo_anterior_a_y - 1
+
+    La version anterior dividia la ultima observacion del año por la
+    PRIMERA del mismo año. Eso borra el tramo que va del cierre de
+    diciembre a la primera sesion de enero, que es un retorno real y cae
+    en el año nuevo. Con 100 el 31 de diciembre y 110 la primera sesion de
+    enero, el año nuevo salia al 0% en vez del +10%.
+
+    Y descartaba entero cualquier año con menos de dos observaciones. Un
+    año no se borra: se informa marcado como parcial. Borrarlo rompe
+    tambien la identidad de factores, porque su tramo desaparece del
+    producto sin desaparecer del NAV.
     """
     s = _serie_limpia(nav)
+    if not len(s):
+        return {}
+    base = float(nav_inicial) if nav_inicial is not None else float(s.iloc[0])
+    if not np.isfinite(base) or base <= 0:
+        raise ValueError(f"NAV base no admisible: {base!r}")
     salida = {}
+    anterior = base
     for ano, trozo in s.groupby(s.index.year):
-        if len(trozo) < 2:
-            continue
+        ultimo = float(trozo.iloc[-1])
         completo = (trozo.index[0].month == 1 and trozo.index[-1].month == 12)
+        factor = ultimo / anterior
         salida[str(ano)] = {
-            "retorno": round(float(trozo.iloc[-1] / trozo.iloc[0] - 1), 6),
-            "completo": bool(completo),
-            "observaciones": len(trozo),
+            "retorno": round(factor - 1.0, 6),
+            "factor": factor,                 # sin redondear: la identidad
+            "completo": bool(completo),       # se comprueba con este
+            "observaciones": int(len(trozo)),
+            "nav_base": round(anterior, 6),
+            "nav_final": round(ultimo, 6),
+            "cobertura": "PARCIAL" if not completo else "COMPLETO",
         }
+        anterior = ultimo
     return salida
+
+
+def identidad_de_factores(nav: pd.Series, nav_inicial=None,
+                          anual=None, tolerancia=1e-9) -> dict:
+    """El producto de los factores anuales debe reproducir el NAV.
+
+    Exigido por el plan: "Exige que el producto de factores periodicos
+    coincida con NAV_final/NAV_inicial". Se comprueba dentro de la
+    libreria, no solo en una prueba, para que una futura regresion en
+    `por_ano_natural` no pase inadvertida.
+    """
+    s = _serie_limpia(nav)
+    if not len(s):
+        return {"coincide": True, "anos": 0}
+    anual = por_ano_natural(s, nav_inicial) if anual is None else anual
+    producto = 1.0
+    for ano in sorted(anual):
+        producto *= float(anual[ano]["factor"])
+    base = float(nav_inicial) if nav_inicial is not None else float(s.iloc[0])
+    objetivo = float(s.iloc[-1]) / base
+    error = abs(producto - objetivo)
+    return {
+        "producto_de_factores": producto,
+        "nav_final_sobre_inicial": objetivo,
+        "error_absoluto": error,
+        "coincide": bool(error <= tolerancia * max(1.0, abs(objetivo))),
+        "anos": len(anual),
+    }
 
 
 def resumen(nav_diario: pd.Series, *, nav_referencia=None,

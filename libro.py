@@ -120,6 +120,36 @@ class Posicion:
 
 
 @dataclass(frozen=True)
+class Derecho:
+    """Dinero reconocido que todavia no es caja.
+
+    Campos exigidos por el plan de la segunda auditoria (cambio 1). La
+    version anterior guardaba `(cuando, importe)` en una lista anonima que
+    NO sabia si su importe estaba contado en `derechos`. De ahi salian dos
+    errores opuestos con la misma raiz: la venta diferida no lo contaba y
+    el NAV perdia el dinero entre la venta y el cobro; el dividendo lo
+    contaba y nunca lo daba de baja, y el NAV lo ganaba dos veces.
+
+    Con el derecho tipado los dos son imposibles por construccion: todo
+    importe diferido es un Derecho, `derechos` es su SUMA (no un escalar
+    paralelo que pueda desincronizarse) y liquidar mueve exactamente un
+    derecho a caja.
+    """
+
+    event_id: str
+    tipo: str                       # VENTA_DIFERIDA | DIVIDENDO | LIQUIDACION_FONDO
+    instrumento: str
+    moneda: str
+    importe: float
+    fecha_reconocimiento: object = None
+    fecha_exigible: object = None
+    fecha_liquidacion: object = None
+    estado: str = "RECONOCIDO"      # RECONOCIDO | LIQUIDADO
+    fuente: str = ""
+    version_datos: str = ""
+
+
+@dataclass(frozen=True)
 class Movimiento:
     """Un apunte. El registro completo de lo que se hizo y por qué."""
 
@@ -160,9 +190,15 @@ class LibroContado:
 
         self.posiciones: dict[str, Posicion] = {}
         self.instrumentos: dict[str, Instrumento] = {}
-        self.derechos: float = 0.0        # dividendos reconocidos, no cobrados
+        # Derechos de cobro TIPADOS, indexados por event_id. `derechos` es
+        # una propiedad que los suma: no existe un escalar que mantener a
+        # mano, asi que no puede desincronizarse de la lista.
+        self._derechos: dict[str, Derecho] = {}
         self.obligaciones: float = 0.0
-        self._pendiente_liquidar: list[tuple] = []   # (momento_disponible, importe)
+        # Idempotencia: event_id -> movimiento ya aplicado. Repetir un fill
+        # o un pago con el mismo identificador no vuelve a tocar el libro.
+        self._eventos_aplicados: dict[str, object] = {}
+        self._secuencia: int = 0
 
         self.movimientos: list[Movimiento] = []
         self.nav_inicial = self._efectivo
@@ -182,6 +218,58 @@ class LibroContado:
     @property
     def reservado(self) -> float:
         return self._reservado
+
+    @property
+    def derechos(self) -> float:
+        """Suma de los derechos reconocidos y no cobrados."""
+        return sum(d.importe for d in self._derechos.values()
+                   if d.estado == "RECONOCIDO")
+
+    def derechos_pendientes(self) -> list:
+        return [d for d in self._derechos.values() if d.estado == "RECONOCIDO"]
+
+    def _nuevo_event_id(self, prefijo: str) -> str:
+        self._secuencia += 1
+        return f"{prefijo}-{self._secuencia:06d}"
+
+    def _exigir_moneda(self, inst: Instrumento):
+        """Una sola moneda mientras no exista FX. No se asume paridad 1:1."""
+        if inst.moneda != self.moneda_cuenta:
+            raise OperacionNoEjecutable(
+                f"{inst.id} cotiza en {inst.moneda} y la cuenta esta en "
+                f"{self.moneda_cuenta}. No hay conversion implementada y "
+                f"no se asume paridad 1:1: la orden se rechaza antes de "
+                f"modificar el libro."
+            )
+
+    def _ya_aplicado(self, event_id):
+        if event_id is None:
+            return None
+        return self._eventos_aplicados.get(event_id)
+
+    @staticmethod
+    def _exigible_en(momento, dias):
+        try:
+            import pandas as pd
+            return momento + pd.Timedelta(days=int(dias))
+        except Exception:
+            return None
+
+    def _reconocer_derecho(self, *, tipo, instrumento, importe, moneda,
+                           fecha_reconocimiento, fecha_exigible,
+                           fuente="", version_datos="", event_id=None):
+        """Reconoce un derecho de cobro. Entra en el NAV, no en la caja."""
+        importe = _no_negativo(importe, "importe del derecho")
+        eid = event_id or self._nuevo_event_id(tipo.lower())
+        if eid in self._derechos:
+            return self._derechos[eid]
+        d = Derecho(
+            event_id=eid, tipo=tipo, instrumento=instrumento, moneda=moneda,
+            importe=importe, fecha_reconocimiento=fecha_reconocimiento,
+            fecha_exigible=fecha_exigible, fuente=fuente,
+            version_datos=version_datos)
+        self._derechos[eid] = d
+        return d
 
     def cantidad(self, instrumento_id: str) -> float:
         return self.posiciones.get(instrumento_id, Posicion()).cantidad
@@ -241,14 +329,31 @@ class LibroContado:
             valorado_en=momento)
 
     def liquidar_pendientes(self, momento):
-        """Hace utilizable el dinero de ventas ya liquidadas."""
-        quedan = []
-        for cuando, importe in self._pendiente_liquidar:
-            if momento is None or cuando is None or cuando <= momento:
-                self._efectivo += importe
-            else:
-                quedan.append((cuando, importe))
-        self._pendiente_liquidar = quedan
+        """Mueve a caja los derechos exigibles. Baja el derecho, sube la caja.
+
+        No crea ni destruye NAV: un derecho reconocido ya contaba en el NAV.
+        Y es idempotente, que es la puerta V05: el derecho cobrado cambia de
+        estado a LIQUIDADO, asi que llamar dos veces no cobra dos veces.
+        """
+        cobrados = []
+        for eid, d in list(self._derechos.items()):
+            if d.estado != "RECONOCIDO":
+                continue
+            if (momento is not None and d.fecha_exigible is not None
+                    and d.fecha_exigible > momento):
+                continue
+            self._efectivo += d.importe
+            self._derechos[eid] = replace(d, estado="LIQUIDADO",
+                                          fecha_liquidacion=momento)
+            cobrados.append(eid)
+            self.movimientos.append(Movimiento(
+                momento=momento, tipo="LIQUIDACION", instrumento=d.instrumento,
+                costes={"importe": d.importe, "event_id": eid,
+                        "tipo_derecho": d.tipo},
+                efectivo_despues=self._efectivo, nav_despues=self.nav()))
+        if cobrados:
+            self.comprobar_invariantes()
+        return cobrados
 
     # ---- operaciones ----
 
@@ -273,7 +378,8 @@ class LibroContado:
     def comprar(self, iid, cantidad, precio, momento=None, *,
                 coste_rel=0.0, coste_fijo=0.0, precio_decision=None,
                 momento_decision=None, disponible_en=None,
-                riesgo_inicial=0.0, motivo="", reducir_si_no_cabe=True):
+                riesgo_inicial=0.0, motivo="", reducir_si_no_cabe=True,
+                event_id=None, version_datos=""):
         """Compra al contado. Nunca gasta más de lo que hay.
 
         Si la cantidad pedida no cabe y `reducir_si_no_cabe`, la reduce de
@@ -281,7 +387,11 @@ class LibroContado:
         movimiento con el motivo del rechazo: una compra rechazada es
         información, no un silencio.
         """
+        repetido = self._ya_aplicado(event_id)
+        if repetido is not None:
+            return repetido
         inst = self._instrumento(iid)
+        self._exigir_moneda(inst)
         precio = _positivo(precio, "precio")
         solicitada = _no_negativo(cantidad, "cantidad")
         coste_rel = _no_negativo(coste_rel, "coste_rel")
@@ -345,13 +455,20 @@ class LibroContado:
             else f"reducida de {pedida_en_lote} a {ejecutada} por efectivo",
         )
         self.movimientos.append(mov)
+        if event_id is not None:
+            self._eventos_aplicados[event_id] = mov
         return mov
 
     def vender(self, iid, cantidad, precio, momento=None, *,
                coste_rel=0.0, coste_fijo=0.0, precio_decision=None,
-               momento_decision=None, motivo=""):
+               momento_decision=None, motivo="", event_id=None,
+               version_datos=""):
         """Vende como máximo lo que hay. Nunca abre un corto."""
+        repetido = self._ya_aplicado(event_id)
+        if repetido is not None:
+            return repetido
         inst = self._instrumento(iid)
+        self._exigir_moneda(inst)
         precio = _positivo(precio, "precio")
         solicitada = _no_negativo(cantidad, "cantidad")
         disponible = self.cantidad(iid)
@@ -396,15 +513,19 @@ class LibroContado:
         if self.dias_liquidacion <= 0 or momento is None:
             self._efectivo += neto
         else:
-            try:
-                import pandas as pd
-                cuando = momento + pd.Timedelta(days=self.dias_liquidacion)
-            except Exception:
-                cuando = None
+            cuando = self._exigible_en(momento, self.dias_liquidacion)
             if cuando is None:
                 self._efectivo += neto
             else:
-                self._pendiente_liquidar.append((cuando, neto))
+                # El nominal neto sale de la posicion y entra en un DERECHO:
+                # no es gastable todavia, pero forma parte del NAV. Antes se
+                # guardaba en una lista que el NAV no leia, y el dinero
+                # desaparecia de la cartera entre la venta y el cobro.
+                self._reconocer_derecho(
+                    tipo="VENTA_DIFERIDA", instrumento=iid, importe=neto,
+                    moneda=inst.moneda, fecha_reconocimiento=momento,
+                    fecha_exigible=cuando, fuente="venta",
+                    version_datos=version_datos)
 
         self.comprobar_invariantes()
         mov = Movimiento(
@@ -418,6 +539,8 @@ class LibroContado:
             nav_despues=self.nav(),
         )
         self.movimientos.append(mov)
+        if event_id is not None:
+            self._eventos_aplicados[event_id] = mov
         return mov
 
     def abrir_corto(self, *a, **k):
@@ -430,7 +553,7 @@ class LibroContado:
     # ---- acciones corporativas ----
 
     def dividendo(self, iid, importe_por_unidad, momento=None,
-                  momento_pago=None):
+                  momento_pago=None, event_id=None, version_datos=""):
         """Reconoce el derecho. El efectivo llega cuando se paga.
 
         Oráculo que esto cumple: una acción pasa de 100 a 98 y genera un
@@ -438,6 +561,11 @@ class LibroContado:
         un valor de 100. Si el dividendo no se reconociera, el NAV caería
         un 2% que nadie perdió.
         """
+        repetido = self._ya_aplicado(event_id)
+        if repetido is not None:
+            return repetido.costes.get("bruto", 0.0)
+        inst = self._instrumento(iid)
+        self._exigir_moneda(inst)
         q = self.cantidad(iid)
         if q <= 0:
             return 0.0
@@ -445,13 +573,22 @@ class LibroContado:
         if momento_pago is None or momento is None or momento_pago <= momento:
             self._efectivo += bruto
         else:
-            self.derechos += bruto
-            self._pendiente_liquidar.append((momento_pago, bruto))
-            self.derechos -= 0.0   # el derecho se mantiene hasta el cobro
-        self.movimientos.append(Movimiento(
+            # Devengo y pago son eventos distintos. El derecho se da de baja
+            # EN la liquidacion, no aqui. Antes se sumaba a `derechos` y
+            # ademas a la lista de pendientes, y el cobro subia la caja sin
+            # bajar el derecho: el NAV ganaba el dividendo dos veces.
+            self._reconocer_derecho(
+                tipo="DIVIDENDO", instrumento=iid, importe=bruto,
+                moneda=inst.moneda, fecha_reconocimiento=momento,
+                fecha_exigible=momento_pago, fuente="dividendo",
+                version_datos=version_datos)
+        mov = Movimiento(
             momento=momento, tipo="DIVIDENDO", instrumento=iid,
             cantidad_ejecutada=q, costes={"bruto": bruto},
-            efectivo_despues=self._efectivo, nav_despues=self.nav()))
+            efectivo_despues=self._efectivo, nav_despues=self.nav())
+        self.movimientos.append(mov)
+        if event_id is not None:
+            self._eventos_aplicados[event_id] = mov
         return bruto
 
     def split(self, iid, ratio, momento=None):
@@ -544,5 +681,7 @@ class LibroContado:
                            for k, v in self.posiciones.items()},
             "concentracion": self.concentracion(),
             "movimientos": len(self.movimientos),
-            "pendiente_liquidar": len(self._pendiente_liquidar),
+            "derechos_pendientes": len(self.derechos_pendientes()),
+            "derechos_liquidados": sum(
+                1 for d in self._derechos.values() if d.estado == "LIQUIDADO"),
         }
