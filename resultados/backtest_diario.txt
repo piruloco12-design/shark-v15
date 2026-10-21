@@ -18,7 +18,7 @@ Descargando NVDA...
 Descargando AMZN...
   OK | yfinance | 3770 velas
 Descargando META...
-  OK | yfinance | 3625 velas
+  OK | yfinance | 3626 velas
 
 =================================================================
   FASE 1: BACKTEST COMPLETO (todo el período)
@@ -91,20 +91,20 @@ Bloqueos principales:
      1x  ADX insuficiente para sniper: 20.87 < 22.0 | Score final insuficiente para sniper: 54.29 <
 
 ============================================================
-META | FULL | Bars: 3425
+META | FULL | Bars: 3426
 ============================================================
-Capital:     1000.00 → 1075.10  (+75.10)
+Capital:     1000.00 → 1069.66  (+69.66)
 Señales:     182 generadas | 127 ALLOW | 55 BLOCK
-Trades:      126 cerrados | 61 wins | 65 losses
-Winrate:     48.4%
-Avg Trade:   0.60
+Trades:      127 cerrados | 61 wins | 66 losses
+Winrate:     48.0%
+Avg Trade:   0.55
 Avg Win:     7.13  |  Avg Loss: 5.53
-Expectancy:  0.60 por trade
-PF:          1.21
+Expectancy:  0.55 por trade
+PF:          1.19
 Max DD:      55.89 (5.6%)
 Avg Bars:    12 velas
-Regímenes:   {'BULL_TREND': 74, 'BEAR_TREND': 31, 'TREND': 21}
-Señales:     {'BUY': 93, 'SELL': 33}
+Regímenes:   {'BULL_TREND': 75, 'BEAR_TREND': 31, 'TREND': 21}
+Señales:     {'BUY': 94, 'SELL': 33}
 Bloqueos principales:
     41x  Cooldown por activo (6h)
      2x  ADX insuficiente para sniper: 20.42 < 22.0 | Score final insuficiente para sniper: 54.01 <
@@ -117,17 +117,17 @@ Bloqueos principales:
   CONSOLIDADO FULL PERIOD — 4 activos
 #################################################################
   Señales:     794 generadas | 498 ALLOW | 296 BLOCK
-  Trades:      496 cerrados | 240 wins | 256 losses
-  Winrate:     48.4%
-  Avg Trade:   0.42
+  Trades:      497 cerrados | 240 wins | 257 losses
+  Winrate:     48.3%
+  Avg Trade:   0.41
   Avg Win:     6.86  |  Avg Loss: 5.61
-  Expectancy:  0.42 por trade
-  PF:          1.15
-  PnL total:   +209.59
+  Expectancy:  0.41 por trade
+  PF:          1.14
+  PnL total:   +204.16
   Peor DD:     106.35
   -------------------------------------------------------------
-  Suma PnL trades:  +209.79   (debe cuadrar con PnL total)
-  ✅ Cuadra (dif. 0.20, son costes de trades aún abiertos)
+  Suma PnL trades:  +204.30   (debe cuadrar con PnL total)
+  ✅ Cuadra (dif. 0.14, son costes de trades aún abiertos)
 #################################################################
 
   VEREDICTO:
@@ -278,7 +278,7 @@ Bloqueos principales:
 
 --- META TRAIN ---
   ============================================================
-  META | TRAIN | Bars: 2337
+  META | TRAIN | Bars: 2338
   ============================================================
   Capital:     1000.00 → 1012.88  (+12.88)
   Señales:     119 generadas | 83 ALLOW | 36 BLOCK
@@ -303,18 +303,18 @@ Bloqueos principales:
   ============================================================
   META | TEST | Bars: 1088
   ============================================================
-  Capital:     1000.00 → 1061.42  (+61.42)
+  Capital:     1000.00 → 1056.06  (+56.06)
   Señales:     63 generadas | 44 ALLOW | 19 BLOCK
-  Trades:      43 cerrados | 23 wins | 20 losses
-  Winrate:     53.5%
-  Avg Trade:   1.43
-  Avg Win:     7.73  |  Avg Loss: 5.82
-  Expectancy:  1.43 por trade
-  PF:          1.53
+  Trades:      44 cerrados | 23 wins | 21 losses
+  Winrate:     52.3%
+  Avg Trade:   1.27
+  Avg Win:     7.73  |  Avg Loss: 5.80
+  Expectancy:  1.27 por trade
+  PF:          1.46
   Max DD:      48.16 (4.8%)
   Avg Bars:    13 velas
-  Regímenes:   {'BEAR_TREND': 10, 'BULL_TREND': 25, 'TREND': 8}
-  Señales:     {'SELL': 12, 'BUY': 31}
+  Regímenes:   {'BEAR_TREND': 10, 'BULL_TREND': 26, 'TREND': 8}
+  Señales:     {'SELL': 12, 'BUY': 32}
   Bloqueos principales:
       17x  Cooldown por activo (6h)
        1x  ADX insuficiente para sniper: 20.71 < 22.0 | Score final insuficiente para sniper: 54.19 <
@@ -346,17 +346,17 @@ Bloqueos principales:
   CONSOLIDADO TEST (OUT-OF-SAMPLE) — 4 activos
 #################################################################
   Señales:     228 generadas | 149 ALLOW | 79 BLOCK
-  Trades:      147 cerrados | 72 wins | 75 losses
-  Winrate:     49.0%
-  Avg Trade:   0.53
+  Trades:      148 cerrados | 72 wins | 76 losses
+  Winrate:     48.6%
+  Avg Trade:   0.48
   Avg Win:     6.83  |  Avg Loss: 5.53
-  Expectancy:  0.53 por trade
-  PF:          1.19
-  PnL total:   +76.99
+  Expectancy:  0.48 por trade
+  PF:          1.17
+  PnL total:   +71.63
   Peor DD:     74.11
   -------------------------------------------------------------
-  Suma PnL trades:  +77.19   (debe cuadrar con PnL total)
-  ✅ Cuadra (dif. 0.20, son costes de trades aún abiertos)
+  Suma PnL trades:  +71.77   (debe cuadrar con PnL total)
+  ✅ Cuadra (dif. 0.14, son costes de trades aún abiertos)
 #################################################################
 
   VEREDICTO:
@@ -384,7 +384,7 @@ Bloqueos principales:
 
   META:
     TRAIN: 83 trades | WR 45.8% | PF 1.05 | Exp 0.16
-    TEST:  43 trades | WR 53.5% | PF 1.53 | Exp 1.43
+    TEST:  44 trades | WR 52.3% | PF 1.46 | Exp 1.27
     ✅  Consistente entre train y test
 
 

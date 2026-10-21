@@ -1,8 +1,8 @@
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash 1d95b555d0e5cd71
-Commit: 26a43714cce4-sucio
+Registro escrito ANTES de calcular: hash 607be33aa629f44a
+Commit: 6b17b29f57cd-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -11,10 +11,14 @@ Familia declarada: 4 hipotesis
   - renta_variable/M02: M02_tendencia vs comprar_y_mantener
 
 Lo que este montaje PUEDE concluir:
-  tasa de falso positivo medida: 7,5% (nominal 5%)
-  potencia para +0,72%/ano: 12%   para +3,66%/ano: 60%
-  -> por debajo de ~3-4% anual, un 'no rechaza' solo significa
-     que la muestra no lo distingue de la suerte
+  sobre un proceso SINTETICO declarado (normales IID con factor
+  comun, 179 incrementos), NO sobre el panel real:
+    rechazo sin ventaja: 7,5% con 200 simulaciones
+      (intervalo Monte Carlo 4,6-12,0%; nominal 5%)
+    deteccion: 12% a +0,72%/ano y 60% a +3,66%/ano, con 40
+      simulaciones por punto y SIN correccion familiar
+  -> un 'no rechaza' significa indetectable con esta muestra,
+     no inexistente. NO hay una resolucion universal medida.
 
 ========================================================================
 DATOS
@@ -23,46 +27,46 @@ DATOS
   referencia de efectivo (BIL): OK
 
   Universo congelado el 2026-10-19, 32 instrumentos
-  Comprobado el 2026-10-20: 32 con datos (100.0%)
-  panel guardado: 120640 filas, 2011-10-20 -> 2026-10-19, hash 1742f1853b62d481
+  Comprobado el 2026-10-21: 32 con datos (100.0%)
+  panel guardado: 120640 filas, 2011-10-21 -> 2026-10-20, hash 359b19f617662f14
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)
 ========================================================================
-  calentamiento hasta 2012-10-22, 168 decisiones mensuales
+  calentamiento hasta 2012-10-23, 168 decisiones mensuales
 
   ESTRATEGIA                     CAGR  SHARPE  MAXDD-D   ROT/A  INTENC
   --------------------------------------------------------------------
-  comprar_y_mantener            9.05%    0.77   -27.1%    0.04      31
-  rebalanceo_equiponderado      6.67%    0.73   -23.8%    0.43    5208
-  M03_momentum_12_1            10.38%    0.65   -32.2%    6.29    1050
-  M02_tendencia                 6.51%    0.65   -25.0%    4.02    3515
+  comprar_y_mantener            9.08%    0.77   -27.1%    0.04      31
+  rebalanceo_equiponderado      6.70%    0.73   -23.8%    0.43    5208
+  M03_momentum_12_1            10.39%    0.65   -32.2%    6.29    1050
+  M02_tendencia                 6.54%    0.65   -25.0%    4.02    3515
 
 ========================================================================
 UNIVERSO: renta_variable  (14 activos)
 ========================================================================
-  calentamiento hasta 2012-10-22, 168 decisiones mensuales
+  calentamiento hasta 2012-10-23, 168 decisiones mensuales
 
   ESTRATEGIA                     CAGR  SHARPE  MAXDD-D   ROT/A  INTENC
   --------------------------------------------------------------------
-  comprar_y_mantener           13.75%    0.86   -35.0%    0.03      14
-  rebalanceo_equiponderado     13.42%    0.86   -36.5%    0.30    2352
-  M03_momentum_12_1            13.76%    0.85   -30.5%    5.13     967
-  M02_tendencia                12.80%    0.84   -32.3%    4.06    2000
+  comprar_y_mantener           13.80%    0.86   -35.0%    0.03      14
+  rebalanceo_equiponderado     13.49%    0.86   -36.5%    0.30    2352
+  M03_momentum_12_1            13.83%    0.85   -30.5%    5.13     967
+  M02_tendencia                12.85%    0.84   -32.3%    4.05    2000
 
 ========================================================================
 INFERENCIA (al final, sobre la familia declarada)
 ========================================================================
-  multiactivo/M03          CAGR +10.38% vs  +9.05%  dif +1.33 pts  p=0.2799
-  multiactivo/M02          CAGR  +6.51% vs  +9.05%  dif -2.54 pts  p=0.9158
-  renta_variable/M03       CAGR +13.76% vs +13.75%  dif +0.01 pts  p=0.5341
-  renta_variable/M02       CAGR +12.80% vs +13.75%  dif -0.95 pts  p=0.9186
+  multiactivo/M03          CAGR +10.39% vs  +9.08%  dif +1.30 pts  p=0.2817
+  multiactivo/M02          CAGR  +6.54% vs  +9.08%  dif -2.54 pts  p=0.9158
+  renta_variable/M03       CAGR +13.83% vs +13.80%  dif +0.03 pts  p=0.5285
+  renta_variable/M02       CAGR +12.85% vs +13.80%  dif -0.94 pts  p=0.9148
 
   CORRECCION DE HOLM sobre 4 hipotesis, error familiar 0.05
-    multiactivo/M03          p=0.279944  umbral=0.01250  -> no rechaza
-    renta_variable/M03       p=0.534093  umbral=0.01667  -> no rechaza
-    multiactivo/M02          p=0.915817  umbral=0.02500  -> no rechaza
-    renta_variable/M02       p=0.918616  umbral=0.05000  -> no rechaza
+    multiactivo/M03          p=0.281744  umbral=0.01250  -> no rechaza
+    renta_variable/M03       p=0.528494  umbral=0.01667  -> no rechaza
+    renta_variable/M02       p=0.914817  umbral=0.02500  -> no rechaza
+    multiactivo/M02          p=0.915817  umbral=0.05000  -> no rechaza
 
 ========================================================================
 M04 BASICO: que cuesta limitar la cartera
@@ -70,9 +74,9 @@ M04 BASICO: que cuesta limitar la cartera
 
   VARIANTE             CAGR  SHARPE  MAXDD-D  INVERT  RECORTES
   --------------------------------------------------------------
-  sin_limites        10.38%    0.65   -32.2%   1.000    0/168 
-  i25_g40             6.71%    0.61   -21.4%   0.803  155/168 
-  i25_g40_e90         6.60%    0.61   -21.4%   0.803  168/168 
+  sin_limites        10.39%    0.65   -32.2%   1.000    0/168 
+  i25_g40             6.71%    0.61   -21.4%   0.804  155/168 
+  i25_g40_e90         6.61%    0.61   -21.4%   0.804  168/168 
 
   el tope por grupo cuesta -3.67 puntos de CAGR y reduce la caida maxima en 10.8 puntos
   I29: mas control, menos dinero. Es una preferencia, no una mejora del beneficio.
@@ -85,20 +89,20 @@ SESGO DE SUPERVIVENCIA, POR ESCENARIOS DECLARADOS
   No es una correccion del sesgo: es cuanto se moveria el
   resultado SI el mundo hubiera sido como cada escenario dice.
 
-  base (solo supervivientes): diferencial +1.33 pts
+  base (solo supervivientes): diferencial +1.30 pts
 
   ESCENARIO/FORMA                   DIF   CAMBIO  %SEL.MUERTA
   ------------------------------------------------------------
-  leve/colapso                   +1.44%   +0.10         8.5%
-  moderado/colapso               +2.73%   +1.39        15.9%
-  severo/colapso                 +3.40%   +2.07        17.2%
-  leve/desvanecimiento           +1.40%   +0.07         2.0%
-  moderado/desvanecimiento       +3.25%   +1.92         2.1%
-  severo/desvanecimiento         +3.38%   +2.04         0.5%
+  leve/colapso                   +1.24%   -0.06         8.5%
+  moderado/colapso               +2.49%   +1.19        16.4%
+  severo/colapso                 +3.55%   +2.24        17.2%
+  leve/desvanecimiento           +1.47%   +0.16         2.3%
+  moderado/desvanecimiento       +3.03%   +1.73         1.8%
+  severo/desvanecimiento         +3.35%   +2.04         0.5%
 
-  cambio en el diferencial: de +0.07 a +2.07 puntos
+  cambio en el diferencial: de -0.06 a +2.24 puntos
   favorecia a la estrategia en TODOS los escenarios: False
-  favorecia a la referencia en TODOS: True
+  favorecia a la referencia en TODOS: False
 
 ========================================================================
 CONCLUSION
@@ -109,4 +113,4 @@ distingue estas estrategias de su referencia, no que no haya
 ventaja. Son dos afirmaciones distintas y solo la primera
 esta respaldada.
 
-Artefactos en resultados/v3/
+Artefactos en resultados/v3/20261021T075154Z-6b17b29f/
