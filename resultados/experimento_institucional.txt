@@ -190,11 +190,11 @@ cripto_sesgo_extremo  (2 activos)
 
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
-comprar_y_mantener       62.75%    0.85   -81.3%   94.5%    0.17  340.889
+comprar_y_mantener       62.74%    0.85   -81.3%   94.5%    0.17  340.405
 M02_tendencia            52.49%    0.83   -66.3%   70.3%    1.67  156.275
 M03_momentum_12_1        52.01%    0.81   -79.8%   69.7%    2.25  150.504
 M02_mas_M03              50.82%    0.84   -64.8%   63.4%    1.84  136.937
-M03_con_banda            50.99%    0.81   -78.7%   68.2%    2.17  138.794
+M03_con_banda            50.99%    0.81   -78.7%   68.2%    2.17  138.795
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
 
@@ -202,21 +202,21 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   corte train/test: 2021-12-19
 
   M02_tendencia
-    anual +52.49%  vs comprar y mantener +62.75%  -> NO bate
+    anual +52.49%  vs comprar y mantener +62.74%  -> NO bate
     train: +99.10% vs +122.00%  -> NO bate
-    test : +16.79% vs +23.88%  -> NO bate
+    test : +16.79% vs +23.84%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M03_momentum_12_1
-    anual +52.01%  vs comprar y mantener +62.75%  -> NO bate
+    anual +52.01%  vs comprar y mantener +62.74%  -> NO bate
     train: +103.93% vs +122.00%  -> NO bate
-    test : +14.19% vs +23.88%  -> NO bate
+    test : +14.19% vs +23.84%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M02_mas_M03
-    anual +50.82%  vs comprar y mantener +62.75%  -> NO bate
+    anual +50.82%  vs comprar y mantener +62.74%  -> NO bate
     train: +97.31% vs +122.00%  -> NO bate
-    test : +16.81% vs +23.88%  -> NO bate
+    test : +16.81% vs +23.84%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
 ======================================================================

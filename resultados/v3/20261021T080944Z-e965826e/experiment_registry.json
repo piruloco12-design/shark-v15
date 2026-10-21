@@ -1,0 +1,114 @@
+{
+  "nombre": "M02/M03 solo largos con el motor corregido",
+  "creado_en": "2026-10-21T08:09:44Z",
+  "commit": "e965826e73db-sucio",
+  "estado": "EXPLORATORIO",
+  "universo_etiqueta": "EXPLORATORY_SURVIVOR_UNIVERSE",
+  "familia": [
+    {
+      "id": "multiactivo/M03",
+      "universo": "multiactivo",
+      "estrategia": "M03_momentum_12_1",
+      "referencia": "comprar_y_mantener"
+    },
+    {
+      "id": "multiactivo/M02",
+      "universo": "multiactivo",
+      "estrategia": "M02_tendencia",
+      "referencia": "comprar_y_mantener"
+    },
+    {
+      "id": "renta_variable/M03",
+      "universo": "renta_variable",
+      "estrategia": "M03_momentum_12_1",
+      "referencia": "comprar_y_mantener"
+    },
+    {
+      "id": "renta_variable/M02",
+      "universo": "renta_variable",
+      "estrategia": "M02_tendencia",
+      "referencia": "comprar_y_mantener"
+    }
+  ],
+  "hipotesis_declaradas": 4,
+  "metrica_primaria": "media del retorno MENSUAL NETO diferencial frente a comprar y mantener del mismo universo, con cantidades fijas",
+  "hipotesis": "nula: diferencial medio <= 0. alternativa: > 0. Una cola, declarada aqui.",
+  "umbral_economico": 0.0,
+  "metodo_inferencia": "bootstrap estacionario Politis-Romano con bloques simultaneos para estrategia y referencia; p-valor con el diferencial centrado en el umbral; correccion de Holm sobre la familia declarada",
+  "parametros_inferencia": {
+    "longitud_bloque_media_meses": 12.0,
+    "remuestras": 5000,
+    "alfa_familiar": 0.05,
+    "deteccion_medida": {
+      "proceso": "sintetico declarado: incrementos mensuales normales IID, factor comun N(0,006;0,040) e idiosincrasia N(0;0,015), 179 incrementos",
+      "simulaciones_por_punto": 40,
+      "remuestras_por_contraste": 300,
+      "incluye_correccion_familiar": false,
+      "curva": {
+        "+0,72%/ano": 0.12,
+        "+1,21%/ano": 0.18,
+        "+2,43%/ano": 0.32,
+        "+3,66%/ano": 0.6,
+        "+6,17%/ano": 0.92
+      },
+      "intervalos_monte_carlo_95": {
+        "+0,72%/ano": [
+          0.055,
+          0.261
+        ],
+        "+3,66%/ano": [
+          0.446,
+          0.737
+        ]
+      }
+    },
+    "tasa_rechazo_sin_ventaja": {
+      "valor": 0.075,
+      "simulaciones": 200,
+      "remuestras": 400,
+      "intervalo_monte_carlo_95": [
+        0.046,
+        0.12
+      ],
+      "nominal": 0.05
+    },
+    "_nota_potencia": "RETIRADA la afirmacion de una resolucion universal de 3-4% anual. Estas cifras son de un proceso SINTETICO declarado, con 40 simulaciones por punto y SIN la correccion familiar aplicada; no transfieren al proceso real ni calibran la cota de M01, que es otro procedimiento sobre otro objeto. Un 'no rechaza' sigue significando indetectable con esta muestra, no inexistente."
+  },
+  "politicas": {
+    "capital_inicial": 1000.0,
+    "moneda_cuenta": "USD",
+    "coste_rel": 0.0008,
+    "coste_fijo": 0.0,
+    "coste_minimo": 0.0,
+    "dias_liquidacion": 0,
+    "permitir_fraccionado": true,
+    "lote": 0.0,
+    "politica_caja": "SIN_REMUNERAR",
+    "antiguedad_maxima_dias": 7,
+    "politica_terminal": "MARCAR",
+    "politica_baja": "MARCAR_INCERTIDUMBRE",
+    "calentamiento_sesiones": 253,
+    "limites": null
+  },
+  "variantes_ya_vistas": [
+    "18 dictamenes del experimento del 2026-10-19 con el motor defectuoso (6 bloques x 3 variantes, mas una variante con banda por bloque)",
+    "M03 con banda de rebalanceo 0,02",
+    "bloques por clase: materias_primas, bonos, divisas, cripto",
+    "comparacion ajustado vs sin ajustar"
+  ],
+  "hash_codigo": {
+    "libro.py": "2ada5043b1d2e7fc",
+    "mensual.py": "a5a594621d90ebbe",
+    "metricas.py": "97b429ee479858ff",
+    "inferencia.py": "719f9017173a13a7",
+    "experimento.py": "c0ec1355c715389a"
+  },
+  "dependencias": {
+    "python": "3.11.17",
+    "pandas": "3.0.6",
+    "numpy": "2.4.6"
+  },
+  "_aviso": "Este registro se escribe ANTES de calcular los resultados, y su hash demuestra INTEGRIDAD: si la familia, la m\u00e9trica o el umbral cambian despu\u00e9s, el hash cambia y queda a la vista.",
+  "_lo_que_NO_demuestra": "La FECHA. El archivo es local y lo escribi\u00f3 quien lo va a usar, as\u00ed que un hash propio no prueba que se escribiera antes de ver los resultados: quien lo cre\u00f3 puede rehacer ambas cosas. Una fecha de preregistro solo la acredita un tercero. Lo m\u00e1s cercano que hay aqu\u00ed es el commit anotado arriba: una vez empujado, la fecha de recepci\u00f3n la registra GitHub, que no es parte de este repositorio. Mientras no est\u00e9 empujado, esto es una declaraci\u00f3n de intenciones, no un preregistro.",
+  "hash_registro": "0d8a4c36377f14e3"
+}

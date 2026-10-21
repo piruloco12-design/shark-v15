@@ -1,7 +1,7 @@
 # Validacion SHARK V15
 
-Fecha:   2026-10-21 07:50 UTC
-Commit:  6b17b29f
+Fecha:   2026-10-21 08:06 UTC
+Commit:  e965826e
 Disparo: push
 
 ## Entorno
@@ -178,10 +178,6 @@ Resultado exigido por PLAN_CLAUDE.md, no comportamiento
 actual del codigo. Las pendientes llegan con su cambio.
 
 ```
-  PASA       [V23] las comisiones mueven el PnL neto y el capital del core
-  PASA       [V23b] la capacidad responde al efectivo disponible
-  PASA       [V23c] el core llama al dimensionado declarando efectivo y coste
-
 === CF1, CF2: comision minima por orden (hallazgo propio) ===
   PASA       [CF1] venta cuyo importe no cubre la comision fija: rechazada
   PASA       [CF2] 25 ventas pequenas con comision fija no dejan caja negativa
@@ -211,6 +207,10 @@ actual del codigo. Las pendientes llegan con su cambio.
   PASA       [V17] pronostico bruto perfecto: error bruto cero y coste aparte
   PASA       [V18] mismo coste proporcional, distinta distancia: decisiones distintas
 
+=== NE1: la inferencia RECHAZA un NAV no evaluable ===
+  PASA       [NE1] con una cartera no fiable, el contraste no se emite
+  PASA       [NE1b] una cartera que falta tambien impide contrastar
+
 === V24: reejecucion reproducible ===
   PASA       [V24] reejecucion: NAV identico al bit, sin tolerancia
   PASA       [V24b] reejecucion: mismas decisiones y mismos fills
@@ -220,7 +220,7 @@ actual del codigo. Las pendientes llegan con su cambio.
 === Puertas de cambios posteriores ===
 
 ======================================================================
-PUERTAS: 45 pasan, 0 FALLAN, 0 pendientes de su cambio
+PUERTAS: 47 pasan, 0 FALLAN, 0 pendientes de su cambio
 ======================================================================
 ======================================================================
 ```
@@ -337,15 +337,15 @@ Bloqueos principales:
 ============================================================
 NVDA | FULL | Bars: 580
 ============================================================
-Capital:     1000.00 → 960.35  (-39.65)
+Capital:     1000.00 → 962.34  (-37.66)
 Señales:     49 generadas | 18 ALLOW | 31 BLOCK
 Trades:      18 cerrados | 7 wins | 11 losses
 Winrate:     38.9%
-Avg Trade:   -2.20
-Avg Win:     6.02  |  Avg Loss: 7.44
-Expectancy:  -2.20 por trade
-PF:          0.52
-Max DD:      48.42 (4.8%)
+Avg Trade:   -2.09
+Avg Win:     6.03  |  Avg Loss: 7.26
+Expectancy:  -2.09 por trade
+PF:          0.53
+Max DD:      46.45 (4.7%)
 Avg Bars:    12 velas
 Regímenes:   {'BEAR_TREND': 7, 'TREND': 5, 'BULL_TREND': 6}
 Señales:     {'SELL': 9, 'BUY': 9}
@@ -356,15 +356,15 @@ Bloqueos principales:
 ============================================================
 AMZN | FULL | Bars: 580
 ============================================================
-Capital:     1000.00 → 1012.67  (+12.67)
+Capital:     1000.00 → 1014.86  (+14.86)
 Señales:     90 generadas | 18 ALLOW | 72 BLOCK
 Trades:      17 cerrados | 10 wins | 7 losses
 Winrate:     58.8%
-Avg Trade:   0.76
-Avg Win:     5.83  |  Avg Loss: 6.48
-Expectancy:  0.76 por trade
-PF:          1.29
-Max DD:      25.60 (2.6%)
+Avg Trade:   0.89
+Avg Win:     5.83  |  Avg Loss: 6.17
+Expectancy:  0.89 por trade
+PF:          1.35
+Max DD:      23.71 (2.4%)
 Avg Bars:    12 velas
 Regímenes:   {'BULL_TREND': 4, 'BEAR_TREND': 8, 'TREND': 5}
 Señales:     {'BUY': 6, 'SELL': 11}
@@ -375,14 +375,14 @@ Bloqueos principales:
 ============================================================
 META | FULL | Bars: 580
 ============================================================
-Capital:     1000.00 → 1018.48  (+18.48)
+Capital:     1000.00 → 1017.12  (+17.12)
 Señales:     62 generadas | 15 ALLOW | 47 BLOCK
 Trades:      15 cerrados | 9 wins | 6 losses
 Winrate:     60.0%
-Avg Trade:   1.23
-Avg Win:     5.82  |  Avg Loss: 5.65
-Expectancy:  1.23 por trade
-PF:          1.55
+Avg Trade:   1.14
+Avg Win:     5.82  |  Avg Loss: 5.87
+Expectancy:  1.14 por trade
+PF:          1.49
 Max DD:      18.90 (1.9%)
 Avg Bars:    13 velas
 Regímenes:   {'BEAR_TREND': 5, 'BULL_TREND': 10}
@@ -397,14 +397,14 @@ Bloqueos principales:
   Señales:     266 generadas | 65 ALLOW | 201 BLOCK
   Trades:      64 cerrados | 32 wins | 32 losses
   Winrate:     50.0%
-  Avg Trade:   -0.51
-  Avg Win:     5.90  |  Avg Loss: 6.91
-  Expectancy:  -0.51 por trade
-  PF:          0.85
-  PnL total:   -32.63
-  Peor DD:     48.42
+  Avg Trade:   -0.46
+  Avg Win:     5.91  |  Avg Loss: 6.83
+  Expectancy:  -0.46 por trade
+  PF:          0.86
+  PnL total:   -29.80
+  Peor DD:     46.45
   -------------------------------------------------------------
-  Suma PnL trades:  -32.33   (debe cuadrar con PnL total)
+  Suma PnL trades:  -29.51   (debe cuadrar con PnL total)
   ✅ Cuadra (dif. 0.29, son costes de trades aún abiertos)
 #################################################################
 
@@ -462,15 +462,15 @@ Bloqueos principales:
   ============================================================
   NVDA | TRAIN | Bars: 346
   ============================================================
-  Capital:     1000.00 → 959.03  (-40.97)
+  Capital:     1000.00 → 961.01  (-38.99)
   Señales:     29 generadas | 11 ALLOW | 18 BLOCK
   Trades:      10 cerrados | 3 wins | 7 losses
   Winrate:     30.0%
-  Avg Trade:   -4.06
-  Avg Win:     5.38  |  Avg Loss: 8.11
-  Expectancy:  -4.06 por trade
-  PF:          0.28
-  Max DD:      48.42 (4.8%)
+  Avg Trade:   -3.86
+  Avg Win:     5.39  |  Avg Loss: 7.83
+  Expectancy:  -3.86 por trade
+  PF:          0.30
+  Max DD:      46.45 (4.7%)
   Avg Bars:    11 velas
   Regímenes:   {'BEAR_TREND': 3, 'TREND': 2, 'BULL_TREND': 5}
   Señales:     {'SELL': 4, 'BUY': 6}
@@ -522,15 +522,15 @@ Bloqueos principales:
   ============================================================
   AMZN | TEST | Bars: 234
   ============================================================
-  Capital:     1000.00 → 977.65  (-22.35)
+  Capital:     1000.00 → 979.75  (-20.25)
   Señales:     34 generadas | 8 ALLOW | 26 BLOCK
   Trades:      7 cerrados | 2 wins | 5 losses
   Winrate:     28.6%
-  Avg Trade:   -3.15
-  Avg Win:     5.37  |  Avg Loss: 6.56
-  Expectancy:  -3.15 por trade
-  PF:          0.33
-  Max DD:      24.72 (2.5%)
+  Avg Trade:   -2.85
+  Avg Win:     5.38  |  Avg Loss: 6.14
+  Expectancy:  -2.85 por trade
+  PF:          0.35
+  Max DD:      22.89 (2.3%)
   Avg Bars:    15 velas
   Regímenes:   {'TREND': 2, 'BEAR_TREND': 2, 'BULL_TREND': 3}
   Señales:     {'SELL': 4, 'BUY': 3}
@@ -560,15 +560,15 @@ Bloqueos principales:
   ============================================================
   META | TEST | Bars: 234
   ============================================================
-  Capital:     1000.00 → 1005.87  (+5.87)
+  Capital:     1000.00 → 1004.53  (+4.53)
   Señales:     24 generadas | 5 ALLOW | 19 BLOCK
   Trades:      5 cerrados | 3 wins | 2 losses
   Winrate:     60.0%
-  Avg Trade:   1.17
-  Avg Win:     5.76  |  Avg Loss: 5.70
-  Expectancy:  1.17 por trade
-  PF:          1.51
-  Max DD:      11.28 (1.1%)
+  Avg Trade:   0.91
+  Avg Win:     5.75  |  Avg Loss: 6.36
+  Expectancy:  0.91 por trade
+  PF:          1.36
+  Max DD:      12.60 (1.3%)
   Avg Bars:    17 velas
   Regímenes:   {'BULL_TREND': 3, 'BEAR_TREND': 2}
   Señales:     {'BUY': 3, 'SELL': 2}
@@ -582,14 +582,14 @@ Bloqueos principales:
   Señales:     172 generadas | 41 ALLOW | 131 BLOCK
   Trades:      40 cerrados | 21 wins | 19 losses
   Winrate:     52.5%
-  Avg Trade:   -0.46
-  Avg Win:     5.72  |  Avg Loss: 7.29
-  Expectancy:  -0.46 por trade
-  PF:          0.87
-  PnL total:   -18.64
-  Peor DD:     48.42
+  Avg Trade:   -0.41
+  Avg Win:     5.72  |  Avg Loss: 7.18
+  Expectancy:  -0.41 por trade
+  PF:          0.88
+  PnL total:   -16.65
+  Peor DD:     46.45
   -------------------------------------------------------------
-  Suma PnL trades:  -18.26   (debe cuadrar con PnL total)
+  Suma PnL trades:  -16.28   (debe cuadrar con PnL total)
   ✅ Cuadra (dif. 0.38, son costes de trades aún abiertos)
 #################################################################
 
@@ -603,14 +603,14 @@ Bloqueos principales:
   Señales:     97 generadas | 25 ALLOW | 72 BLOCK
   Trades:      24 cerrados | 11 wins | 13 losses
   Winrate:     45.8%
-  Avg Trade:   -0.36
-  Avg Win:     6.77  |  Avg Loss: 6.39
-  Expectancy:  -0.36 por trade
+  Avg Trade:   -0.33
+  Avg Win:     6.77  |  Avg Loss: 6.33
+  Expectancy:  -0.33 por trade
   PF:          0.90
-  PnL total:   -8.87
-  Peor DD:     24.72
+  PnL total:   -8.10
+  Peor DD:     22.89
   -------------------------------------------------------------
-  Suma PnL trades:  -8.59   (debe cuadrar con PnL total)
+  Suma PnL trades:  -7.82   (debe cuadrar con PnL total)
   ✅ Cuadra (dif. 0.28, son costes de trades aún abiertos)
 #################################################################
 
@@ -628,18 +628,18 @@ Bloqueos principales:
     ⚠️  Pocos trades para comparar
 
   NVDA:
-    TRAIN: 10 trades | WR 30.0% | PF 0.28 | Exp -4.06
+    TRAIN: 10 trades | WR 30.0% | PF 0.30 | Exp -3.86
     TEST:  8 trades | WR 50.0% | PF 1.22 | Exp 0.71
     ✅  Consistente entre train y test
 
   AMZN:
     TRAIN: 10 trades | WR 80.0% | PF 4.15 | Exp 3.58
-    TEST:  7 trades | WR 28.6% | PF 0.33 | Exp -3.15
+    TEST:  7 trades | WR 28.6% | PF 0.35 | Exp -2.85
     ⚠️  Degradación significativa train→test
 
   META:
     TRAIN: 10 trades | WR 60.0% | PF 1.56 | Exp 1.25
-    TEST:  5 trades | WR 60.0% | PF 1.51 | Exp 1.17
+    TEST:  5 trades | WR 60.0% | PF 1.36 | Exp 0.91
     ⚠️  Pocos trades para comparar
 
 
@@ -1074,9 +1074,9 @@ Operaciones totales con la config actual: 64
 1) BOOTSTRAP DE LA EXPECTATIVA
 ==============================================================
 Operaciones:            64
-Expectativa observada:  -0.5052 € por operación
-Intervalo 90%:          -1.9286  a  +0.9053
-Prob. expectativa > 0:  27.9%
+Expectativa observada:  -0.4611 € por operación
+Intervalo 90%:          -1.8635  a  +0.9387
+Prob. expectativa > 0:  29.3%
 
 LECTURA: INDECISO. El cero está dentro del intervalo, así que
          esta muestra no distingue la estrategia de una moneda.
@@ -1091,25 +1091,25 @@ Operaciones:       64
 
 A) MISMAS OPERACIONES, OTRO ORDEN
    (el capital final no cambia al barajar; solo el camino)
-   Drawdown mediano:        6.77%
-   Drawdown percentil 95:   9.59%
-   Peor drawdown simulado:  14.05%
-   Capital final (fijo):    967.67 €
+   Drawdown mediano:        6.56%
+   Drawdown percentil 95:   9.34%
+   Peor drawdown simulado:  13.79%
+   Capital final (fijo):    970.49 €
 
 B) REMUESTREO: si las próximas operaciones salieran de
    esta misma distribución
-   Capital final, percentil 5:   875.06 €
-   Capital final, mediana:       969.35 €
-   Capital final, percentil 95:  1057.85 €
-   Drawdown percentil 95:        14.12%
-   Prob. terminar en pérdida:    71.9%
+   Capital final, percentil 5:   880.54 €
+   Capital final, mediana:       972.27 €
+   Capital final, percentil 95:  1059.54 €
+   Drawdown percentil 95:        13.64%
+   Prob. terminar en pérdida:    70.3%
    Prob. perder la mitad:        0.0%
 
 LECTURA: el drawdown que hay que estar dispuesto a aguantar es
-         del 9.6%, no el que salió en el histórico: el orden
+         del 9.3%, no el que salió en el histórico: el orden
          de las operaciones es azar y la racha mala no tiene por
          qué haber caído dentro del periodo de prueba.
-         El remuestreo da 72% de probabilidad de acabar
+         El remuestreo da 70% de probabilidad de acabar
          en pérdida sobre otras 64 operaciones.
 
 ==============================================================
@@ -1118,25 +1118,25 @@ LECTURA: el drawdown que hay que estar dispuesto a aguantar es
 
    SL    TP   R:R   OPS    WR%    EXPECT     PF  VEREDICTO
 --------------------------------------------------------------
-  1.5   2.0  1.33    74   41.9   -1.8342   0.57
-  1.5   2.5  1.67    71   39.4   -1.5793   0.65
-  1.5   3.0  2.00    66   37.9   -1.0650   0.77
-  1.5   3.5  2.33    63   34.9   -0.9853   0.80
-  2.0   2.0  1.00    69   50.7   -0.9785   0.71
-  2.0   2.5  1.25    64   50.0   -0.5052   0.85 <-- CONFIG ACTUAL
-  2.0   3.0  1.50    60   46.7   -0.2462   0.93
-  2.0   3.5  1.75    59   39.0   -0.8165   0.80
-  2.5   2.0  0.80    68   55.9   -0.6002   0.79
-  2.5   2.5  1.00    64   54.7   -0.1957   0.93
-  2.5   3.0  1.20    59   50.8   -0.0606   0.98
-  2.5   3.5  1.40    57   42.1   -0.6922   0.81
-  3.0   2.0  0.67    66   59.1   -0.5898   0.77
-  3.0   2.5  0.83    62   58.1   -0.2339   0.91
-  3.0   3.0  1.00    59   52.5   -0.2755   0.91
-  3.0   3.5  1.17    55   45.5   -0.6624   0.80
+  1.5   2.0  1.33    74   41.9   -1.7842   0.58
+  1.5   2.5  1.67    71   39.4   -1.5271   0.66
+  1.5   3.0  2.00    66   37.9   -1.0084   0.78
+  1.5   3.5  2.33    63   34.9   -0.9124   0.81
+  2.0   2.0  1.00    69   50.7   -0.9380   0.72
+  2.0   2.5  1.25    64   50.0   -0.4611   0.86 <-- CONFIG ACTUAL
+  2.0   3.0  1.50    60   46.7   -0.1996   0.95
+  2.0   3.5  1.75    59   39.0   -0.7586   0.81
+  2.5   2.0  0.80    68   55.9   -0.5680   0.80
+  2.5   2.5  1.00    64   54.7   -0.1610   0.94
+  2.5   3.0  1.20    59   50.8   -0.0229   0.99
+  2.5   3.5  1.40    57   42.1   -0.6616   0.82
+  3.0   2.0  0.67    66   59.1   -0.5697   0.77
+  3.0   2.5  0.83    62   58.1   -0.2123   0.92
+  3.0   3.0  1.00    59   52.5   -0.2527   0.91
+  3.0   3.5  1.17    55   45.5   -0.6471   0.80
 
 Combinaciones con expectativa positiva: 0 de 16
-Configuración actual (SL 2.0 / TP 2.5): expectativa -0.5052, PF 0.85
+Configuración actual (SL 2.0 / TP 2.5): expectativa -0.4611, PF 0.86
 Vecinos inmediatos con expectativa positiva: 0 de 8
 
 LECTURA: la configuración actual no tiene expectativa positiva
@@ -1149,17 +1149,17 @@ LECTURA: la configuración actual no tiene expectativa positiva
 Periodo cubierto:       0.2 años
 Operaciones:            64  ->  268.8 al año
 Riesgo por operación:   5.00 € (0.5% de 1000 €)
-Expectativa en riesgo:  -0.101 R por operación
+Expectativa en riesgo:  -0.092 R por operación
 
 RENTABILIDAD ANUAL SOBRE 1000 €
-  pesimista (p05)  :  -518.41 €/año  =  -51.84% anual
-  central          :  -135.79 €/año  =  -13.58% anual
-  optimista (p95)  :  +243.35 €/año  =  +24.33% anual
+  pesimista (p05)  :  -500.92 €/año  =  -50.09% anual
+  central          :  -123.94 €/año  =  -12.39% anual
+  optimista (p95)  :  +252.33 €/año  =  +25.23% anual
 
 CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
   pesimista (p05)  : imposible, la expectativa es negativa
   central          : imposible, la expectativa es negativa
-  optimista (p95)  :         49,312 €
+  optimista (p95)  :         47,556 €
 
 LECTURA: con expectativa central negativa no hay capital que
          arregle esto. El problema no es el tamaño de la cuenta.
@@ -1509,11 +1509,11 @@ cripto_sesgo_extremo  (2 activos)
 
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
-comprar_y_mantener       62.75%    0.85   -81.3%   94.5%    0.17  340.889
+comprar_y_mantener       62.74%    0.85   -81.3%   94.5%    0.17  340.405
 M02_tendencia            52.49%    0.83   -66.3%   70.3%    1.67  156.275
 M03_momentum_12_1        52.01%    0.81   -79.8%   69.7%    2.25  150.504
 M02_mas_M03              50.82%    0.84   -64.8%   63.4%    1.84  136.937
-M03_con_banda            50.99%    0.81   -78.7%   68.2%    2.17  138.794
+M03_con_banda            50.99%    0.81   -78.7%   68.2%    2.17  138.795
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
 
@@ -1521,21 +1521,21 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   corte train/test: 2021-12-19
 
   M02_tendencia
-    anual +52.49%  vs comprar y mantener +62.75%  -> NO bate
+    anual +52.49%  vs comprar y mantener +62.74%  -> NO bate
     train: +99.10% vs +122.00%  -> NO bate
-    test : +16.79% vs +23.88%  -> NO bate
+    test : +16.79% vs +23.84%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M03_momentum_12_1
-    anual +52.01%  vs comprar y mantener +62.75%  -> NO bate
+    anual +52.01%  vs comprar y mantener +62.74%  -> NO bate
     train: +103.93% vs +122.00%  -> NO bate
-    test : +14.19% vs +23.88%  -> NO bate
+    test : +14.19% vs +23.84%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M02_mas_M03
-    anual +50.82%  vs comprar y mantener +62.75%  -> NO bate
+    anual +50.82%  vs comprar y mantener +62.74%  -> NO bate
     train: +97.31% vs +122.00%  -> NO bate
-    test : +16.81% vs +23.88%  -> NO bate
+    test : +16.81% vs +23.84%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
 ======================================================================

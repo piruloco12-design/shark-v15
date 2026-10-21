@@ -18,9 +18,9 @@ Operaciones totales con la config actual: 64
 1) BOOTSTRAP DE LA EXPECTATIVA
 ==============================================================
 Operaciones:            64
-Expectativa observada:  -0.5052 € por operación
-Intervalo 90%:          -1.9286  a  +0.9053
-Prob. expectativa > 0:  27.9%
+Expectativa observada:  -0.4611 € por operación
+Intervalo 90%:          -1.8635  a  +0.9387
+Prob. expectativa > 0:  29.3%
 
 LECTURA: INDECISO. El cero está dentro del intervalo, así que
          esta muestra no distingue la estrategia de una moneda.
@@ -35,25 +35,25 @@ Operaciones:       64
 
 A) MISMAS OPERACIONES, OTRO ORDEN
    (el capital final no cambia al barajar; solo el camino)
-   Drawdown mediano:        6.77%
-   Drawdown percentil 95:   9.59%
-   Peor drawdown simulado:  14.05%
-   Capital final (fijo):    967.67 €
+   Drawdown mediano:        6.56%
+   Drawdown percentil 95:   9.34%
+   Peor drawdown simulado:  13.79%
+   Capital final (fijo):    970.49 €
 
 B) REMUESTREO: si las próximas operaciones salieran de
    esta misma distribución
-   Capital final, percentil 5:   875.06 €
-   Capital final, mediana:       969.35 €
-   Capital final, percentil 95:  1057.85 €
-   Drawdown percentil 95:        14.12%
-   Prob. terminar en pérdida:    71.9%
+   Capital final, percentil 5:   880.54 €
+   Capital final, mediana:       972.27 €
+   Capital final, percentil 95:  1059.54 €
+   Drawdown percentil 95:        13.64%
+   Prob. terminar en pérdida:    70.3%
    Prob. perder la mitad:        0.0%
 
 LECTURA: el drawdown que hay que estar dispuesto a aguantar es
-         del 9.6%, no el que salió en el histórico: el orden
+         del 9.3%, no el que salió en el histórico: el orden
          de las operaciones es azar y la racha mala no tiene por
          qué haber caído dentro del periodo de prueba.
-         El remuestreo da 72% de probabilidad de acabar
+         El remuestreo da 70% de probabilidad de acabar
          en pérdida sobre otras 64 operaciones.
 
 ==============================================================
@@ -62,25 +62,25 @@ LECTURA: el drawdown que hay que estar dispuesto a aguantar es
 
    SL    TP   R:R   OPS    WR%    EXPECT     PF  VEREDICTO
 --------------------------------------------------------------
-  1.5   2.0  1.33    74   41.9   -1.8342   0.57
-  1.5   2.5  1.67    71   39.4   -1.5793   0.65
-  1.5   3.0  2.00    66   37.9   -1.0650   0.77
-  1.5   3.5  2.33    63   34.9   -0.9853   0.80
-  2.0   2.0  1.00    69   50.7   -0.9785   0.71
-  2.0   2.5  1.25    64   50.0   -0.5052   0.85 <-- CONFIG ACTUAL
-  2.0   3.0  1.50    60   46.7   -0.2462   0.93
-  2.0   3.5  1.75    59   39.0   -0.8165   0.80
-  2.5   2.0  0.80    68   55.9   -0.6002   0.79
-  2.5   2.5  1.00    64   54.7   -0.1957   0.93
-  2.5   3.0  1.20    59   50.8   -0.0606   0.98
-  2.5   3.5  1.40    57   42.1   -0.6922   0.81
-  3.0   2.0  0.67    66   59.1   -0.5898   0.77
-  3.0   2.5  0.83    62   58.1   -0.2339   0.91
-  3.0   3.0  1.00    59   52.5   -0.2755   0.91
-  3.0   3.5  1.17    55   45.5   -0.6624   0.80
+  1.5   2.0  1.33    74   41.9   -1.7842   0.58
+  1.5   2.5  1.67    71   39.4   -1.5271   0.66
+  1.5   3.0  2.00    66   37.9   -1.0084   0.78
+  1.5   3.5  2.33    63   34.9   -0.9124   0.81
+  2.0   2.0  1.00    69   50.7   -0.9380   0.72
+  2.0   2.5  1.25    64   50.0   -0.4611   0.86 <-- CONFIG ACTUAL
+  2.0   3.0  1.50    60   46.7   -0.1996   0.95
+  2.0   3.5  1.75    59   39.0   -0.7586   0.81
+  2.5   2.0  0.80    68   55.9   -0.5680   0.80
+  2.5   2.5  1.00    64   54.7   -0.1610   0.94
+  2.5   3.0  1.20    59   50.8   -0.0229   0.99
+  2.5   3.5  1.40    57   42.1   -0.6616   0.82
+  3.0   2.0  0.67    66   59.1   -0.5697   0.77
+  3.0   2.5  0.83    62   58.1   -0.2123   0.92
+  3.0   3.0  1.00    59   52.5   -0.2527   0.91
+  3.0   3.5  1.17    55   45.5   -0.6471   0.80
 
 Combinaciones con expectativa positiva: 0 de 16
-Configuración actual (SL 2.0 / TP 2.5): expectativa -0.5052, PF 0.85
+Configuración actual (SL 2.0 / TP 2.5): expectativa -0.4611, PF 0.86
 Vecinos inmediatos con expectativa positiva: 0 de 8
 
 LECTURA: la configuración actual no tiene expectativa positiva
@@ -93,17 +93,17 @@ LECTURA: la configuración actual no tiene expectativa positiva
 Periodo cubierto:       0.2 años
 Operaciones:            64  ->  268.8 al año
 Riesgo por operación:   5.00 € (0.5% de 1000 €)
-Expectativa en riesgo:  -0.101 R por operación
+Expectativa en riesgo:  -0.092 R por operación
 
 RENTABILIDAD ANUAL SOBRE 1000 €
-  pesimista (p05)  :  -518.41 €/año  =  -51.84% anual
-  central          :  -135.79 €/año  =  -13.58% anual
-  optimista (p95)  :  +243.35 €/año  =  +24.33% anual
+  pesimista (p05)  :  -500.92 €/año  =  -50.09% anual
+  central          :  -123.94 €/año  =  -12.39% anual
+  optimista (p95)  :  +252.33 €/año  =  +25.23% anual
 
 CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
   pesimista (p05)  : imposible, la expectativa es negativa
   central          : imposible, la expectativa es negativa
-  optimista (p95)  :         49,312 €
+  optimista (p95)  :         47,556 €
 
 LECTURA: con expectativa central negativa no hay capital que
          arregle esto. El problema no es el tamaño de la cuenta.
