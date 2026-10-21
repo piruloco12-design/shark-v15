@@ -355,6 +355,42 @@ con el que se publicaron las cifras anteriores, pero ya no puede
 presentarse como el caso base sin decir que es el más favorable de los
 medidos.
 
+> **CORREGIDO el 2026-10-21, tras la tercera revisión.** Esta tabla está
+> **mal etiquetada**. Lo que `medir_sensibilidad_tarifa.py` ejecutaba era
+> `coste_rel × nominal + coste_fijo`, que es un coste fijo **aditivo**, no
+> un mínimo por orden. Un mínimo es `max(coste_minimo, coste_rel × N)`.
+> Con N=200, 8 pb y 0,50: el aditivo da **0,66** y el mínimo **0,50**.
+> Además los importes son **USD**, no euros: el panel está denominado en
+> dólares.
+>
+> Medidas ahora las dos fórmulas sobre el mismo panel
+> (`resultados/v3/sensibilidad_tarifa_v2.json`), diferencial de CAGR de
+> M03 frente a comprar y mantener, en puntos anuales:
+>
+> | Escenario por pata (USD) | Multiactivo | Renta variable |
+> |---|---:|---:|
+> | sin fricción, o comisión cero | +1,8990 | +0,4847 |
+> | 8 pb proporcional *(el declarado)* | +1,3335 | +0,0105 |
+> | 8 pb + fijo **aditivo** 0,50 | −1,0690 | −1,7535 |
+> | 8 pb con **mínimo** 0,50 | **−0,4318** | **−1,2946** |
+> | 8 pb + fijo **aditivo** 1,00 | −4,1352 | −3,7001 |
+> | 8 pb con **mínimo** 1,00 | −3,4092 | −3,1337 |
+> | 8 pb + fijo **aditivo** 2,00 | −21,4850 | −8,5542 |
+> | 8 pb con **mínimo** 2,00 | −17,8459 | −7,8653 |
+>
+> La dirección aguanta: cualquier coste por orden que no escale con el
+> nominal cambia el signo de la ventaja, con las dos fórmulas. Las
+> magnitudes no: con mínimo de 0,50 el multiactivo queda en −0,43, no en
+> −1,07.
+>
+> Y se retira la frase «menos de lo que cobra cualquier bróker minorista
+> por una orden de 200 en bolsa americana». Es **falsa**: Trading 212
+> publica comisión cero para Invest, lo que coloca el caso relevante en la
+> PRIMERA fila. Eso no significa «sin fricción»: significa que el coste se
+> muda a la horquilla y el deslizamiento, que este motor **no modela** y
+> para los que no hay datos con los que calibrar.
+
+
 ---
 
 ## 9. Los dos oráculos que siguen en rojo
@@ -374,9 +410,27 @@ unidades sin cobro **es** una pérdida total, así que el criterio y la
 prosa piden cosas distintas sobre un fixture que no declara ningún evento.
 Medido sobre vuestro fixture exacto:
 
+> **ATRIBUCIÓN CORREGIDA el 2026-10-21.** Las cifras de abajo salieron de
+> un fixture MÍO (precios interpolados, calentamiento 0), no del de la
+> auditoría. Sobre su fixture exacto los valores son 5 unidades y NAV 750
+> en A, 0 y 750 en C, 0 y **500** en D. La conclusión conceptual no
+> cambia; la atribución sí estaba mal, y los cinco contratos corregidos
+> pasan contra este árbol (`resultados/v3/oraculos_v3_corregidos.json`).
+
+Sobre el fixture de la auditoría:
+
 | | unidades | NAV final | `nav_fiable` |
 |---|---|---|---|
-| A — sin evento, MARCAR_INCERTIDUMBRE | 4,8387 | 865,5451 | **false** (55 días no evaluables) |
+| A — sin evento, MARCAR_INCERTIDUMBRE | 5 | 750 | **false** (55 días no evaluables) |
+| B — sin evento, EXIGIR_EVENTO | — | no emite NAV | — |
+| C — evento declarado, 50 por unidad | 0 | 750 | true |
+| D — evento declarado, cobro cero | 0 | **500** | true |
+
+Sobre mi fixture (precios interpolados, calentamiento 0):
+
+| | unidades | NAV final | `nav_fiable` |
+|---|---|---|---|
+| A — sin evento, MARCAR_INCERTIDUMBRE | 4,8387 | 865,5451 | **false** |
 | B — sin evento, EXIGIR_EVENTO | — | no emite NAV | — |
 | C — evento declarado, 50 por unidad | 0 | 865,5451 | true |
 | D — evento declarado, cobro cero | 0 | **623,6096** | true |

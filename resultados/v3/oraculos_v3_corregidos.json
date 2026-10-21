@@ -1,0 +1,52 @@
+{
+  "O09_corregido": {
+    "longitudes_observadas": [
+      10
+    ],
+    "media_exhaustiva_funcion_real": 4.5,
+    "inclusiones_por_indice": [
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100,
+      100
+    ],
+    "contrato_cumplido": true,
+    "alcance": "Longitud y centrado del algoritmo; no demuestra cobertura estadistica."
+  },
+  "O13_A_sin_evento": {
+    "unidades": 5.0,
+    "nav": 750.0,
+    "nav_fiable": false,
+    "dias_no_evaluables": 55,
+    "contrato_cumplido": true
+  },
+  "O13_B_estricto": {
+    "mensaje": "MUERTO lleva 10 dias sin precio admisible y no hay evento de baja declarado. Con politica_baja=EXIGIR_EVENTO no se emite un NAV: hace falta el evento, su importe por unidad, su fecha y su fuente.",
+    "contrato_cumplido": true
+  },
+  "O13_C_con_evento": {
+    "unidades": 0.0,
+    "nav": 750.0,
+    "nav_fiable": true,
+    "contrato_cumplido": true
+  },
+  "O13_D_con_evento": {
+    "unidades": 0.0,
+    "nav": 500.0,
+    "nav_fiable": true,
+    "contrato_cumplido": true
+  },
+  "venta_pequena_con_caja_suficiente": {
+    "caja_antes": 999.4,
+    "unidades_despues": 1.0,
+    "caja_despues": 999.4,
+    "caja_si_se_ejecutase": 998.0,
+    "nota": "El rechazo es una politica voluntaria del motor, no una consecuencia necesaria de no permitir margen. No se afirma que un broker concreto acepte esta orden."
+  }
+}

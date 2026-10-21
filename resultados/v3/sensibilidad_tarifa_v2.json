@@ -1,0 +1,473 @@
+{
+  "panel": "/home/claude/shark-v15/resultados/v2/prices_snapshot.csv",
+  "escenarios": {
+    "sin_friccion": {
+      "coste_rel": 0.0,
+      "coste_fijo": 0.0,
+      "coste_minimo": 0.0,
+      "formula": "max(minimo, rel*N) + fijo",
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.090572,
+          "comisiones": 0.0,
+          "intenciones": 31,
+          "rechazadas": 0,
+          "nav_final": 3363.569003
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.109562,
+          "comisiones": 0.0,
+          "intenciones": 1050,
+          "rechazadas": 13,
+          "nav_final": 4282.436104
+        },
+        "M02_tendencia": {
+          "cagr": 0.068541,
+          "comisiones": 0.0,
+          "intenciones": 3515,
+          "rechazadas": 4,
+          "nav_final": 2528.147551
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.137571,
+          "comisiones": 0.0,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 6069.657024
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.142418,
+          "comisiones": 0.0,
+          "intenciones": 967,
+          "rechazadas": 6,
+          "nav_final": 6441.641222
+        },
+        "M02_tendencia": {
+          "cagr": 0.131535,
+          "comisiones": 0.0,
+          "intenciones": 2000,
+          "rechazadas": 1,
+          "nav_final": 5634.239832
+        }
+      }
+    },
+    "8pb_proporcional_declarado": {
+      "coste_rel": 0.0008,
+      "coste_fijo": 0.0,
+      "coste_minimo": 0.0,
+      "formula": "max(minimo, rel*N) + fijo",
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.090464,
+          "comisiones": 0.799361,
+          "intenciones": 31,
+          "rechazadas": 0,
+          "nav_final": 3358.918714
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.103799,
+          "comisiones": 140.340447,
+          "intenciones": 1050,
+          "rechazadas": 13,
+          "nav_final": 3981.511874
+        },
+        "M02_tendencia": {
+          "cagr": 0.065085,
+          "comisiones": 69.298393,
+          "intenciones": 3515,
+          "rechazadas": 4,
+          "nav_final": 2416.110587
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.137509,
+          "comisiones": 0.799361,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 6065.006735
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.137614,
+          "comisiones": 162.027295,
+          "intenciones": 967,
+          "rechazadas": 10,
+          "nav_final": 6072.872918
+        },
+        "M02_tendencia": {
+          "cagr": 0.127983,
+          "comisiones": 116.737085,
+          "intenciones": 2000,
+          "rechazadas": 1,
+          "nav_final": 5391.798231
+        }
+      }
+    },
+    "8pb_mas_FIJO_ADITIVO_0_50": {
+      "coste_rel": 0.0008,
+      "coste_fijo": 0.5,
+      "coste_minimo": 0.0,
+      "formula": "max(minimo, rel*N) + fijo",
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.088347,
+          "comisiones": 16.28697,
+          "intenciones": 31,
+          "rechazadas": 0,
+          "nav_final": 3268.819364
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.077657,
+          "comisiones": 610.736001,
+          "intenciones": 1050,
+          "rechazadas": 55,
+          "nav_final": 2847.193291
+        },
+        "M02_tendencia": {
+          "cagr": -0.28212,
+          "comisiones": 1440.743451,
+          "intenciones": 3509,
+          "rechazadas": 671,
+          "nav_final": 9.685155
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.136962,
+          "comisiones": 7.793765,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 6024.316707
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.119427,
+          "comisiones": 594.603485,
+          "intenciones": 967,
+          "rechazadas": 53,
+          "nav_final": 4847.004133
+        },
+        "M02_tendencia": {
+          "cagr": 0.085065,
+          "comisiones": 978.424577,
+          "intenciones": 2000,
+          "rechazadas": 200,
+          "nav_final": 3133.567869
+        }
+      }
+    },
+    "8pb_mas_FIJO_ADITIVO_1": {
+      "coste_rel": 0.0008,
+      "coste_fijo": 1.0,
+      "coste_minimo": 0.0,
+      "formula": "max(minimo, rel*N) + fijo",
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.086296,
+          "comisiones": 30.775238,
+          "intenciones": 31,
+          "rechazadas": 1,
+          "nav_final": 3183.677624
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.044944,
+          "comisiones": 1026.459357,
+          "intenciones": 1050,
+          "rechazadas": 113,
+          "nav_final": 1849.774619
+        },
+        "M02_tendencia": {
+          "cagr": -0.325961,
+          "comisiones": 1254.378267,
+          "intenciones": 3587,
+          "rechazadas": 2341,
+          "nav_final": 4.010845
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.136411,
+          "comisiones": 14.788169,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 5983.626677
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.09941,
+          "comisiones": 985.36976,
+          "intenciones": 967,
+          "rechazadas": 98,
+          "nav_final": 3765.649879
+        },
+        "M02_tendencia": {
+          "cagr": 0.020419,
+          "comisiones": 1695.83552,
+          "intenciones": 2000,
+          "rechazadas": 353,
+          "nav_final": 1326.836964
+        }
+      }
+    },
+    "8pb_mas_FIJO_ADITIVO_2": {
+      "coste_rel": 0.0008,
+      "coste_fijo": 2.0,
+      "coste_minimo": 0.0,
+      "formula": "max(minimo, rel*N) + fijo",
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.082175,
+          "comisiones": 60.751399,
+          "intenciones": 31,
+          "rechazadas": 1,
+          "nav_final": 3018.802834
+        },
+        "M03_momentum_12_1": {
+          "cagr": -0.132675,
+          "comisiones": 1719.127032,
+          "intenciones": 1050,
+          "rechazadas": 214,
+          "nav_final": 136.502359
+        },
+        "M02_tendencia": {
+          "cagr": -0.318299,
+          "comisiones": 1184.249746,
+          "intenciones": 3541,
+          "rechazadas": 2951,
+          "nav_final": 4.697924
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.135299,
+          "comisiones": 28.776978,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 5902.246621
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.049757,
+          "comisiones": 1629.034465,
+          "intenciones": 967,
+          "rechazadas": 193,
+          "nav_final": 1972.617278
+        },
+        "M02_tendencia": {
+          "cagr": -0.355994,
+          "comisiones": 1787.609722,
+          "intenciones": 1967,
+          "rechazadas": 1080,
+          "nav_final": 2.119799
+        }
+      }
+    },
+    "8pb_con_MINIMO_0_50": {
+      "coste_rel": 0.0008,
+      "coste_fijo": 0.0,
+      "coste_minimo": 0.5,
+      "formula": "max(minimo, rel*N) + fijo",
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.088456,
+          "comisiones": 15.5,
+          "intenciones": 31,
+          "rechazadas": 0,
+          "nav_final": 3273.397573
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.084138,
+          "comisiones": 498.621942,
+          "intenciones": 1050,
+          "rechazadas": 54,
+          "nav_final": 3096.339064
+        },
+        "M02_tendencia": {
+          "cagr": -0.248611,
+          "comisiones": 1446.0,
+          "intenciones": 3505,
+          "rechazadas": 613,
+          "nav_final": 18.335718
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.137024,
+          "comisiones": 7.0,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 6028.934443
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.124078,
+          "comisiones": 474.463978,
+          "intenciones": 967,
+          "rechazadas": 48,
+          "nav_final": 5136.428904
+        },
+        "M02_tendencia": {
+          "cagr": 0.089038,
+          "comisiones": 904.41651,
+          "intenciones": 2000,
+          "rechazadas": 195,
+          "nav_final": 3297.963325
+        }
+      }
+    },
+    "8pb_con_MINIMO_1": {
+      "coste_rel": 0.0008,
+      "coste_fijo": 0.0,
+      "coste_minimo": 1.0,
+      "formula": "max(minimo, rel*N) + fijo",
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.086315,
+          "comisiones": 30.0,
+          "intenciones": 31,
+          "rechazadas": 1,
+          "nav_final": 3184.452862
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.052223,
+          "comisiones": 944.0,
+          "intenciones": 1050,
+          "rechazadas": 106,
+          "nav_final": 2038.442562
+        },
+        "M02_tendencia": {
+          "cagr": -0.304395,
+          "comisiones": 1255.0,
+          "intenciones": 3606,
+          "rechazadas": 2351,
+          "nav_final": 6.231466
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.136473,
+          "comisiones": 14.0,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 5988.211863
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.105136,
+          "comisiones": 869.192906,
+          "intenciones": 967,
+          "rechazadas": 99,
+          "nav_final": 4049.514808
+        },
+        "M02_tendencia": {
+          "cagr": 0.02629,
+          "comisiones": 1648.0,
+          "intenciones": 2000,
+          "rechazadas": 352,
+          "nav_final": 1437.709651
+        }
+      }
+    },
+    "8pb_con_MINIMO_2": {
+      "coste_rel": 0.0008,
+      "coste_fijo": 0.0,
+      "coste_minimo": 2.0,
+      "formula": "max(minimo, rel*N) + fijo",
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.082281,
+          "comisiones": 60.0,
+          "intenciones": 31,
+          "rechazadas": 1,
+          "nav_final": 3022.955841
+        },
+        "M03_momentum_12_1": {
+          "cagr": -0.096178,
+          "comisiones": 1684.0,
+          "intenciones": 1050,
+          "rechazadas": 208,
+          "nav_final": 242.985882
+        },
+        "M02_tendencia": {
+          "cagr": -0.299886,
+          "comisiones": 1178.0,
+          "intenciones": 3533,
+          "rechazadas": 2944,
+          "nav_final": 6.821003
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.135361,
+          "comisiones": 28.0,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 5906.766701
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.056708,
+          "comisiones": 1560.0,
+          "intenciones": 967,
+          "rechazadas": 187,
+          "nav_final": 2163.422168
+        },
+        "M02_tendencia": {
+          "cagr": -0.309205,
+          "comisiones": 1758.0,
+          "intenciones": 1985,
+          "rechazadas": 1106,
+          "nav_final": 5.654955
+        }
+      }
+    },
+    "comision_cero_tipo_T212_Invest": {
+      "coste_rel": 0.0,
+      "coste_fijo": 0.0,
+      "coste_minimo": 0.0,
+      "formula": "max(minimo, rel*N) + fijo",
+      "multiactivo": {
+        "comprar_y_mantener": {
+          "cagr": 0.090572,
+          "comisiones": 0.0,
+          "intenciones": 31,
+          "rechazadas": 0,
+          "nav_final": 3363.569003
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.109562,
+          "comisiones": 0.0,
+          "intenciones": 1050,
+          "rechazadas": 13,
+          "nav_final": 4282.436104
+        },
+        "M02_tendencia": {
+          "cagr": 0.068541,
+          "comisiones": 0.0,
+          "intenciones": 3515,
+          "rechazadas": 4,
+          "nav_final": 2528.147551
+        }
+      },
+      "renta_variable": {
+        "comprar_y_mantener": {
+          "cagr": 0.137571,
+          "comisiones": 0.0,
+          "intenciones": 14,
+          "rechazadas": 0,
+          "nav_final": 6069.657024
+        },
+        "M03_momentum_12_1": {
+          "cagr": 0.142418,
+          "comisiones": 0.0,
+          "intenciones": 967,
+          "rechazadas": 6,
+          "nav_final": 6441.641222
+        },
+        "M02_tendencia": {
+          "cagr": 0.131535,
+          "comisiones": 0.0,
+          "intenciones": 2000,
+          "rechazadas": 1,
+          "nav_final": 5634.239832
+        }
+      }
+    }
+  }
+}

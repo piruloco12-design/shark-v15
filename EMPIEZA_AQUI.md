@@ -50,11 +50,20 @@ a comprar y mantener:
 | 8 pb + mínimo de 0,50 por orden | **−1,0690** | **−1,7535** |
 | 8 pb + mínimo de 2,00 por orden | **−21,4850** | **−8,5542** |
 
-La ventaja no se reduce con una tarifa de minorista: **cambia de signo con
-un mínimo de medio euro por orden**. Comprar y mantener emite 14 órdenes
-en catorce años; M03 emite 967, y a ese número las comisiones solas
-superan el capital inicial. Detalle en el §«La tarifa decide el resultado»
-de la respuesta, y es la pregunta B2.
+> **CORREGIDO el 2026-10-21.** Esa tabla medía un coste fijo **aditivo**
+> (`c×N + f`), no un mínimo (`max(m, c×N)`), y los importes son **USD**.
+> Con la fórmula del mínimo a 0,50: multiactivo **−0,4318**, renta
+> variable **−1,2946**. La dirección aguanta; las magnitudes eran más
+> duras de lo medido. Y Trading 212 publica comisión **cero** en Invest,
+> así que la frase «cualquier bróker minorista cobra un mínimo» es falsa:
+> el caso relevante puede ser el de comisión cero, donde el coste se muda
+> a la horquilla, que no se modela.
+
+La dirección sí aguanta: cualquier coste por orden que no escale con el
+nominal cambia el signo de la ventaja. Comprar y mantener emite 14 órdenes
+en catorce años; M03 emite 967 en renta variable y 1.050 en multiactivo.
+Detalle en el §«La tarifa decide el resultado» de la respuesta, y es la
+pregunta B2.
 
 ## Dos cosas que encontré sin buscarlas
 

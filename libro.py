@@ -212,8 +212,16 @@ class LibroContado:
     """
 
     def __init__(self, efectivo_inicial, moneda_cuenta="USD",
-                 dias_liquidacion=0, permitir_fraccionado=False):
+                 dias_liquidacion=0, permitir_fraccionado=False,
+                 politica_venta_antieconomica="RECHAZAR"):
         self.moneda_cuenta = moneda_cuenta
+        # Politica DECLARADA, no una ley de ejecucion. Ver `vender`.
+        if politica_venta_antieconomica not in ("RECHAZAR",
+                                                "EJECUTAR_SI_HAY_CAJA"):
+            raise LibroInvalido(
+                f"politica_venta_antieconomica no soportada: "
+                f"{politica_venta_antieconomica!r}")
+        self.politica_venta_antieconomica = politica_venta_antieconomica
         self._efectivo = _no_negativo(efectivo_inicial, "efectivo_inicial")
         self._reservado = 0.0
         self.dias_liquidacion = int(dias_liquidacion)
@@ -583,21 +591,42 @@ class LibroContado:
                                       coste_minimo)
         neto = nominal - comision
 
-        # Venta ANTIECONOMICA: la comision se come el importe. Con comision
-        # minima por orden pasa de verdad: vender 0,3 unidades a 2,00 son
-        # 0,60 de nominal, y un minimo de 2,00 deja un neto de -1,40. La
-        # version anterior lo sumaba a la caja tal cual, asi que el
-        # efectivo bajaba y podia irse a negativo; lo cazaba la invariante
-        # de no-margen DESPUES, abortando la corrida entera con
-        # "efectivo negativo" y sin decir de donde venia.
+        # Venta cuyo importe no cubre su comision. Con comision minima por
+        # orden pasa de verdad: 0,3 unidades a 2,00 son 0,60 de nominal, y
+        # un minimo de 2,00 deja un neto de -1,40.
         #
-        # En un broker esa orden no se cursa: pagar mas comision que el
-        # importe de la venta destruye valor sin cerrar nada util. Se
-        # rechaza con su motivo, que es informacion, y la posicion se queda
-        # como estaba. Si una estrategia necesita salir de esa posicion,
-        # tendra que hacerlo cuando el importe cubra el coste, y eso es una
-        # restriccion real de las cuentas pequenas, no un detalle tecnico.
-        if neto <= 0:
+        # CORRECCION de lo que afirme antes. Yo lo rechazaba siempre y lo
+        # presente como consecuencia del contrato "sin margen". No lo es, y
+        # la tercera revision lo demostro: con caja 999,40, una unidad
+        # valorada en 0,60 y comision 2, ejecutar deja caja 998,00, que no
+        # es negativa. El contrato contable para T+0 es
+        #
+        #     caja_utilizable + ingreso - costes >= 0
+        #
+        # y esa venta lo cumple. Rechazarla es una POLITICA, legitima pero
+        # voluntaria: pagar mas comision que el importe destruye valor. Lo
+        # que no vale es presentarla como una ley de ejecucion.
+        #
+        # `politica_venta_antieconomica`:
+        #   RECHAZAR            no se cursa (por defecto, declarado)
+        #   EJECUTAR_SI_HAY_CAJA se cursa si la caja cubre el descubierto,
+        #                        que es lo contablemente correcto
+        #
+        # Una salida obligatoria o una reduccion de riesgo es otro caso y
+        # no debe resolverse con esta politica.
+        if neto <= 0 and self.politica_venta_antieconomica == "EJECUTAR_SI_HAY_CAJA":
+            descubierto = -neto
+            if descubierto > self.efectivo_utilizable + CENTIMO:
+                mov = self.rechazar(
+                    iid, solicitada, precio, momento, tipo="VENTA",
+                    motivo=motivo,
+                    rechazo=(f"la caja utilizable "
+                             f"{self.efectivo_utilizable:.4f} no cubre el "
+                             f"descubierto {descubierto:.4f} de esta venta"),
+                    precio_decision=precio_decision,
+                    momento_decision=momento_decision)
+                return mov
+        elif neto <= 0:
             mov = self.rechazar(
                 iid, solicitada, precio, momento, tipo="VENTA", motivo=motivo,
                 rechazo=(f"venta antieconomica: nominal {nominal:.4f} no "

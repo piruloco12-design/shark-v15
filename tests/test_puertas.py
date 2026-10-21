@@ -506,6 +506,35 @@ except LibroInvalido as e:
 check("CF2", "25 ventas pequenas con comision fija no dejan caja negativa",
       invariantes_ok, det_cf2)
 
+# CF3: y el rechazo es una POLITICA, no una ley. Correccion de lo que
+# afirme: lo presente como consecuencia del contrato sin margen, y no lo
+# es. El caso exacto de la tercera revision: caja 999,40, una unidad a
+# 0,60, comision 2. Ejecutar deja 998,00, que no es negativa. El contrato
+# contable para T+0 es caja_utilizable + ingreso - costes >= 0.
+_res = {}
+for _pol in ("RECHAZAR", "EJECUTAR_SI_HAY_CAJA"):
+    _L = LibroContado(1000.0, permitir_fraccionado=True,
+                      politica_venta_antieconomica=_pol)
+    _L.comprar("A", 1, 0.6, momento=T0)
+    _m = _L.vender("A", 1, 0.6, momento=T0, coste_fijo=2.0)
+    _res[_pol] = (_m.cantidad_ejecutada, round(_L.efectivo, 6),
+                  _L.cantidad("A"))
+check("CF3", "el rechazo de una venta antieconomica es politica declarada",
+      _res["RECHAZAR"] == (0.0, 999.4, 1.0)
+      and _res["EJECUTAR_SI_HAY_CAJA"] == (1.0, 998.0, 0.0),
+      f"-> RECHAZAR {_res['RECHAZAR']}, EJECUTAR_SI_HAY_CAJA "
+      f"{_res['EJECUTAR_SI_HAY_CAJA']}. Exigido (0, 999.4, 1) y (1, 998.0, 0)")
+
+# Y las dos formulas de coste, con el algebra de la tercera revision.
+from libro import comision_explicita
+check("CF4", "fijo aditivo y minimo por orden son formulas DISTINTAS",
+      abs(comision_explicita(200, 0.0008, 0.50, 0.0) - 0.66) < 1e-12
+      and abs(comision_explicita(200, 0.0008, 0.0, 0.50) - 0.50) < 1e-12,
+      f"-> N=200, 8 pb: aditivo "
+      f"{comision_explicita(200, 0.0008, 0.50, 0.0)} (exigido 0.66), minimo "
+      f"{comision_explicita(200, 0.0008, 0.0, 0.50)} (exigido 0.50). Medi la "
+      f"aditiva y la llame minimo")
+
 # =====================================================================
 print("\n=== V12, V13, V14: datos y snapshots ===")
 # =====================================================================
