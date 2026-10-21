@@ -868,6 +868,33 @@ check("V18", "mismo coste proporcional, distinta distancia: decisiones distintas
       f"-> stop a 0,5 permite={_fino.get('permite')} (exigido False), "
       f"stop a 4 permite={_ancho.get('permite')} (exigido True)")
 
+print("\n=== NE1: la inferencia RECHAZA un NAV no evaluable ===")
+# =====================================================================
+# Exigido por la tercera revision: "Anade una prueba del consumidor con un
+# NAV invalido; no basta con comprobar que el productor anade un campo."
+# El bucle de contrastes de experimento.py no miraba `nav_fiable`, asi que
+# un NAV con dias no evaluables dentro habria dado un p-valor.
+from evaluador.experimento import motivo_no_evaluable
+
+_res_malo = {
+    "u/candidata": {"nav_fiable": False, "dias_no_evaluables": 55},
+    "u/referencia": {"nav_fiable": True, "dias_no_evaluables": 0},
+}
+_res_bueno = {
+    "u/candidata": {"nav_fiable": True, "dias_no_evaluables": 0},
+    "u/referencia": {"nav_fiable": True, "dias_no_evaluables": 0},
+}
+_m = motivo_no_evaluable(_res_malo, "u/candidata", "u/referencia")
+_b = motivo_no_evaluable(_res_bueno, "u/candidata", "u/referencia")
+check("NE1", "con una cartera no fiable, el contraste no se emite",
+      bool(_m) and "55" in _m and not _b,
+      f"-> motivo con NAV invalido {_m!r} (tiene que decir por que), con "
+      f"NAV valido {_b!r} (tiene que estar vacio)")
+
+check("NE1b", "una cartera que falta tambien impide contrastar",
+      bool(motivo_no_evaluable({}, "u/candidata")),
+      "-> una clave ausente no puede pasar por contrastable")
+
 # =====================================================================
 print("\n=== V24: reejecucion reproducible ===")
 # =====================================================================

@@ -383,6 +383,30 @@ def _proteger_salida(ruta):
         )
 
 
+def motivo_no_evaluable(resultados, *claves):
+    """El motivo por el que NO se puede contrastar, o cadena vacia.
+
+    El consumidor exige calidad. `nav_fiable` existia desde el cambio 3b y
+    NADIE lo miraba: producir el campo no sirve de nada si la inferencia
+    contrasta igual. Un NAV con fechas no evaluables dentro no puede dar
+    un p-valor, y la respuesta correcta es NO_EVALUABLE con su motivo,
+    nunca p=1 ni un resultado de cero.
+
+    Esta funcion existe aparte para que la prueba del consumidor ejercite
+    LA MISMA guarda que usa el bucle, y no una copia que podria divergir.
+    """
+    motivos = []
+    for k in claves:
+        r = resultados.get(k)
+        if r is None:
+            motivos.append(f"{k}: sin resultado")
+            continue
+        if r.get("nav_fiable") is False:
+            motivos.append(f"{k}: {r.get('dias_no_evaluables')} dias no "
+                           f"evaluables")
+    return "; ".join(motivos)
+
+
 def main(descargar=None):
     _proteger_salida(SALIDA)
     global RUN_ID, SALIDA_CORRIDA
@@ -589,6 +613,23 @@ def main(descargar=None):
             print(f"  {h['id']:24} sin resultados para contrastar")
             pvalores[h["id"]] = None
             continue
+        # EL CONSUMIDOR EXIGE CALIDAD. `nav_fiable` existia y nadie lo
+        # miraba: producir el campo no sirve de nada si la inferencia
+        # contrasta igual. Un NAV con dias no evaluables dentro no puede
+        # dar un p-valor, y la respuesta correcta es NO_EVALUABLE con su
+        # motivo, nunca p=1 ni un resultado de cero.
+        motivos = motivo_no_evaluable(resultados, clave_e, clave_r)
+        if motivos:
+            print(f"  {h['id']:24} NO_EVALUABLE ({motivos})")
+            contrastes[h["id"]] = {
+                "estado": "NO_EVALUABLE", "motivo": motivos,
+                "p_valor_una_cola": None,
+                "_nota": ("no se emite p-valor con fechas no evaluables "
+                          "dentro; esto NO es un 'no rechaza'"),
+            }
+            pvalores[h["id"]] = None
+            continue
+
         nav_e = resultados[clave_e]["_nav_mensual"]
         nav_r = resultados[clave_r]["_nav_mensual"]
         try:
