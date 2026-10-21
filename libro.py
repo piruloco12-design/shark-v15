@@ -67,6 +67,33 @@ def _finito(valor, nombre):
     return v
 
 
+def comision_explicita(nominal, coste_rel=0.0, coste_fijo=0.0,
+                       coste_minimo=0.0):
+    """Comision de UNA pata, con los componentes SEPARADOS.
+
+        comision = max(coste_minimo, coste_rel * nominal) + coste_fijo
+
+    Las tres cosas son distintas y mezclarlas fue un error mio que la
+    tercera revision tuvo que corregir. Yo medi `coste_rel * N + coste_fijo`
+    y lo llame "minimo por orden". No es lo mismo:
+
+        N = 200, coste_rel = 0,0008, minimo = fijo = 0,50
+          aditivo  -> 0,0008*200 + 0,50 = 0,66
+          minimo   -> max(0,50; 0,16)   = 0,50
+
+    Lo que NO entra aqui, y hay que decirlo porque su ausencia no es un
+    cero: terceros (tasas por instrumento, lado y fecha), FX (sobre los
+    flujos REALMENTE convertidos, no sobre todo el nominal), horquilla y
+    deslizamiento. Esos dos ultimos van en el PRECIO de ejecucion, no en
+    la comision, y si se usa bid/ask observado no se suma otra vez media
+    horquilla.
+    """
+    n = abs(float(nominal))
+    proporcional = max(0.0, float(coste_rel)) * n
+    minimo = max(0.0, float(coste_minimo))
+    return max(minimo, proporcional) + max(0.0, float(coste_fijo))
+
+
 def _no_negativo(valor, nombre):
     v = _finito(valor, nombre)
     if v < -CENTIMO:
@@ -364,25 +391,49 @@ class LibroContado:
     # ---- operaciones ----
 
     def cantidad_maxima_comprable(self, iid, precio, coste_rel=0.0,
-                                  coste_fijo=0.0):
+                                  coste_fijo=0.0, coste_minimo=0.0):
         """Cuánto se puede comprar de verdad con el efectivo utilizable.
 
         Esta función es el corazón del arreglo: antes nadie preguntaba esto.
-        Resuelve  q*precio*mult*(1+coste_rel) + coste_fijo <= disponible.
+        Resuelve  q*precio*mult + comision(q) <= disponible, con
+
+            comision(q) = max(coste_minimo, coste_rel*N) + coste_fijo
+
+        que es a trozos: por debajo de cierto tamaño manda el mínimo y el
+        coste no crece con la cantidad; por encima manda la parte
+        proporcional. Se resuelven las dos ramas y se toma la mayor que de
+        verdad cumple su propia condición.
         """
         inst = self._instrumento(iid)
         precio = _positivo(precio, "precio")
-        disponible = self.efectivo_utilizable - _no_negativo(coste_fijo,
-                                                             "coste_fijo")
-        if disponible <= 0:
+        coste_fijo = _no_negativo(coste_fijo, "coste_fijo")
+        coste_minimo = _no_negativo(coste_minimo, "coste_minimo")
+        unidad = precio * inst.multiplicador
+        if unidad <= 0:
             return 0.0
-        por_unidad = precio * inst.multiplicador * (1.0 + coste_rel)
-        if por_unidad <= 0:
-            return 0.0
-        return inst.redondear_a_lote(disponible / por_unidad)
+
+        # Rama PROPORCIONAL: la parte porcentual supera el minimo.
+        candidatos = [0.0]
+        disp_prop = self.efectivo_utilizable - coste_fijo
+        if disp_prop > 0:
+            por_unidad = unidad * (1.0 + coste_rel)
+            if por_unidad > 0:
+                q = disp_prop / por_unidad
+                if coste_rel * q * unidad >= coste_minimo - CENTIMO:
+                    candidatos.append(q)
+
+        # Rama del MINIMO: el coste no depende de la cantidad.
+        disp_min = self.efectivo_utilizable - coste_fijo - coste_minimo
+        if disp_min > 0:
+            q = disp_min / unidad
+            if coste_rel * q * unidad <= coste_minimo + CENTIMO:
+                candidatos.append(q)
+
+        return inst.redondear_a_lote(max(candidatos))
 
     def comprar(self, iid, cantidad, precio, momento=None, *,
-                coste_rel=0.0, coste_fijo=0.0, precio_decision=None,
+                coste_rel=0.0, coste_fijo=0.0, coste_minimo=0.0,
+                precio_decision=None,
                 momento_decision=None, disponible_en=None,
                 riesgo_inicial=0.0, motivo="", reducir_si_no_cabe=True,
                 event_id=None, version_datos="", order_id=None,
@@ -410,7 +461,7 @@ class LibroContado:
             self.liberar_orden(order_id)
 
         maxima = self.cantidad_maxima_comprable(iid, precio, coste_rel,
-                                                coste_fijo)
+                                                coste_fijo, coste_minimo)
         pedida_en_lote = inst.redondear_a_lote(solicitada)
         ejecutada = min(pedida_en_lote, maxima)
 
@@ -449,7 +500,8 @@ class LibroContado:
             return mov
 
         nominal = ejecutada * precio * inst.multiplicador
-        comision = nominal * coste_rel + coste_fijo
+        comision = comision_explicita(nominal, coste_rel, coste_fijo,
+                                      coste_minimo)
         total = nominal + comision
 
         if total > self.efectivo_utilizable + CENTIMO:
@@ -489,7 +541,8 @@ class LibroContado:
         return mov
 
     def vender(self, iid, cantidad, precio, momento=None, *,
-               coste_rel=0.0, coste_fijo=0.0, precio_decision=None,
+               coste_rel=0.0, coste_fijo=0.0, coste_minimo=0.0,
+               precio_decision=None,
                momento_decision=None, motivo="", event_id=None,
                version_datos=""):
         """Vende como máximo lo que hay. Nunca abre un corto."""
@@ -526,8 +579,8 @@ class LibroContado:
             return mov
 
         nominal = ejecutada * precio * inst.multiplicador
-        comision = nominal * _no_negativo(coste_rel, "coste_rel") \
-            + _no_negativo(coste_fijo, "coste_fijo")
+        comision = comision_explicita(nominal, coste_rel, coste_fijo,
+                                      coste_minimo)
         neto = nominal - comision
 
         # Venta ANTIECONOMICA: la comision se come el importe. Con comision

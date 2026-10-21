@@ -49,6 +49,16 @@ MAX_OPEN_TRADES = int(os.getenv("MAX_OPEN_TRADES", "2"))
 # hablen del mismo coste y no de tres distintos.
 # Es un ESCENARIO declarado, no una tarifa verificada con un broker.
 COSTE_POR_PATA = float(os.getenv("COSTE_POR_PATA", "0.0008"))
+
+# --- CAPACIDADES DE LA RUTA AL CONTADO ---
+# El core declara ACCIONES ENTERAS. La fraccion es otra capacidad y hay
+# que declararla a proposito: antes el lote estaba cableado dentro de
+# paper_broker, asi que la capacidad declarada y la ejecutada podian
+# separarse sin que nadie lo viera. Viven aqui para que haya UN sitio.
+LOTE_CORE = float(os.getenv("LOTE_CORE", "1.0"))
+PERMITIR_FRACCIONADO_CORE = os.getenv(
+    "PERMITIR_FRACCIONADO_CORE", "false").strip().lower() == "true"
+DIAS_LIQUIDACION_CORE = int(os.getenv("DIAS_LIQUIDACION_CORE", "0"))
 COSTE_FIJO_POR_ORDEN = float(os.getenv("COSTE_FIJO_POR_ORDEN", "0.0"))
 
 # Múltiplos de ATR para stop y objetivo. Estaban fijos dentro de

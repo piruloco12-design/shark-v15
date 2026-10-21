@@ -26,12 +26,21 @@ series = cargar_panel(PANEL)
 efectivo = series.pop(TICKER_EFECTIVO, None)
 print(f"panel: {len(series)} activos, {len(next(iter(series.values())))} sesiones")
 
+# (etiqueta, coste_rel, coste_fijo ADITIVO, coste_MINIMO)
+# Las dos columnas de la derecha son formulas DISTINTAS:
+#   comision = max(coste_minimo, coste_rel*N) + coste_fijo
+# La entrega anterior midio solo la aditiva y la etiqueto "minimo". Aqui
+# van las dos, con su nombre, para que se puedan comparar.
 ESCENARIOS = [
-    ("declarado_8pb_sin_minimo", 0.0008, 0.0),
-    ("8pb_mas_minimo_0_50", 0.0008, 0.50),
-    ("8pb_mas_minimo_1", 0.0008, 1.0),
-    ("8pb_mas_minimo_2", 0.0008, 2.0),
-    ("sin_coste", 0.0, 0.0),
+    ("sin_friccion", 0.0, 0.0, 0.0),
+    ("8pb_proporcional_declarado", 0.0008, 0.0, 0.0),
+    ("8pb_mas_FIJO_ADITIVO_0_50", 0.0008, 0.50, 0.0),
+    ("8pb_mas_FIJO_ADITIVO_1", 0.0008, 1.0, 0.0),
+    ("8pb_mas_FIJO_ADITIVO_2", 0.0008, 2.0, 0.0),
+    ("8pb_con_MINIMO_0_50", 0.0008, 0.0, 0.50),
+    ("8pb_con_MINIMO_1", 0.0008, 0.0, 1.0),
+    ("8pb_con_MINIMO_2", 0.0008, 0.0, 2.0),
+    ("comision_cero_tipo_T212_Invest", 0.0, 0.0, 0.0),
 ]
 
 universos = {
@@ -40,12 +49,16 @@ universos = {
 }
 
 salida = {"panel": PANEL, "escenarios": {}}
-for nombre, c_rel, c_fijo in ESCENARIOS:
-    salida["escenarios"][nombre] = {"coste_rel": c_rel, "coste_fijo": c_fijo}
-    print(f"\n=== {nombre}: {c_rel*10000:.1f} pb por pata + {c_fijo:.2f} fijo ===")
+for nombre, c_rel, c_fijo, c_min in ESCENARIOS:
+    salida["escenarios"][nombre] = {"coste_rel": c_rel, "coste_fijo": c_fijo,
+                                    "coste_minimo": c_min,
+                                    "formula": "max(minimo, rel*N) + fijo"}
+    print(f"\n=== {nombre}: {c_rel*10000:.1f} pb, fijo {c_fijo:.2f}, "
+          f"minimo {c_min:.2f} ===")
     for nombre_u, series_u in universos.items():
         pol = Politicas(capital_inicial=1000.0, coste_rel=c_rel,
-                        coste_fijo=c_fijo, permitir_fraccionado=True, lote=0.0,
+                        coste_fijo=c_fijo, coste_minimo=c_min,
+                        permitir_fraccionado=True, lote=0.0,
                         calentamiento_sesiones=253)
         ev = EvaluadorMensual(series_u, pol)
         ests = {"comprar_y_mantener": ComprarYMantener(),
@@ -78,6 +91,6 @@ for nombre, c_rel, c_fijo in ESCENARIOS:
                   f"rech {v['rechazadas']:4}/{v['intenciones']}")
         salida["escenarios"][nombre][nombre_u] = fila
 
-io.open(os.path.join(REPO, "resultados/v3/sensibilidad_tarifa.json"), "w",
+io.open(os.path.join(REPO, "resultados/v3/sensibilidad_tarifa_v2.json"), "w",
         encoding="utf-8").write(json.dumps(salida, indent=2, default=str))
-print("\nguardado resultados/v3/sensibilidad_tarifa.json")
+print("\nguardado resultados/v3/sensibilidad_tarifa_v2.json")

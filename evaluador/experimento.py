@@ -16,14 +16,33 @@ pre-registrar y decir que se pre-registró.
 
 QUE NO PUEDE CONCLUIR ESTO, medido y no supuesto
 
-Con 15 años de datos mensuales, el contraste detecta una ventaja de +0,72%
-anual el 12% de las veces, y rechaza en falso el 7,5%. Es decir: por debajo
-de un 3-4% anual de diferencial, no se puede distinguir una ventaja real de
-la suerte. Un «no rechaza» aquí significa «indetectable con esta muestra»,
-NO «no hay ventaja». Y un «rechaza» por los pelos tampoco demuestra mucho.
+Un «no rechaza» aquí significa «indetectable con esta muestra», NO «no hay
+ventaja». Y un «rechaza» por los pelos tampoco demuestra mucho.
 
-Esa es la resolución del aparato, no un defecto del código, y ninguna
-corrección la mejora. Está medida en tests/test_inferencia.py.
+Lo que SÍ está medido, y sobre qué: un proceso SINTÉTICO declarado, no el
+panel real. Incrementos mensuales normales IID con un factor común
+N(0,006; 0,040) y una parte idiosincrásica N(0; 0,015), 179 incrementos.
+Sobre eso, en tests/test_inferencia.py:
+
+  - tasa de rechazo sin ventaja: 7,5%, con 200 simulaciones y 400
+    remuestras. Intervalo Monte Carlo 4,6-12,0%, compatible con el 5%
+    nominal.
+  - detección por tamaño del efecto: 40 simulaciones por punto y 300
+    remuestras, así que cada punto lleva un intervalo ancho (12% es 5/40,
+    intervalo 5,5-26,1%; 60% es 24/40, intervalo 44,6-73,7%).
+
+RETIRADO: la frase «por debajo de un 3-4% anual no se distingue una
+ventaja real de la suerte» figuraba aquí como si fuera una propiedad del
+aparato. No lo es. Es una lectura de 40 simulaciones de un proceso
+sintético que yo elegí, sin la corrección de Holm aplicada --que empeora
+la detección-- y no transfiere al proceso real, cuya dependencia y
+varianza no están medidas. Tampoco calibra la cota de M01, que es otro
+procedimiento sobre otro objeto estadístico.
+
+Lo que queda en pie es más modesto y suficiente: con esta muestra, un
+efecto del tamaño del que yo reclamé (+0,0105 puntos anuales) no se
+distingue del ruido, y eso se ve en que el intervalo del diferencial
+incluye el cero con holgura.
 
 ADEMAS
 
@@ -71,6 +90,11 @@ SALIDA = os.getenv("SALIDA_EXP", "resultados/v3")
 
 
 RUN_ID = "sin_identificar"
+# Carpeta de ESTA corrida. Se fija en main(). El registro ya tenia nombre
+# unico, pero los CSV y report.json reutilizaban el nombre: la siguiente
+# corrida los pisaba y la evidencia de la anterior desaparecia. Ahora cada
+# corrida escribe en su propia carpeta y nada se sobrescribe.
+SALIDA_CORRIDA = SALIDA
 
 
 def _identificador_corrida() -> str:
@@ -190,7 +214,14 @@ def cargar(tickers, descargar=None):
 # =====================================================================
 
 def guardar_artefactos(nombre, resultado, carpeta):
-    """Los artefactos de la tabla 4.6: decisiones, ordenes, NAV, posiciones."""
+    """Los artefactos de la tabla 4.6.
+
+    Produce: NAV diario, decisiones, ordenes y fills, ledger diario (caja,
+    derechos, reservas, NAV, exposicion y calidad por fecha), incidencias
+    de valoracion y el resumen. Lo que esta funcion devuelve es lo que de
+    verdad escribe: antes el docstring mencionaba posiciones que no
+    exportaba.
+    """
     os.makedirs(carpeta, exist_ok=True)
     base = os.path.join(carpeta, nombre)
 
@@ -241,17 +272,36 @@ def guardar_artefactos(nombre, resultado, carpeta):
         })
     pd.DataFrame(movs).to_csv(f"{base}.orders_fills.csv", index=False)
 
-    # El resumen, sin los objetos internos
-    limpio = {k: v for k, v in resultado.items() if not k.startswith("_")}
-    with open(f"{base}.resumen.json", "w") as f:
-        json.dump(limpio, f, indent=2, default=str)
-
-    return {
+    # LEDGER DIARIO: caja, derechos, obligaciones, reservas, valor de las
+    # posiciones, NAV, exposicion y CALIDAD de la marca, dia a dia. El
+    # docstring de esta funcion decia "posiciones" y no exportaba nada de
+    # esto: la trayectoria se calculaba y se quedaba dentro del proceso,
+    # asi que la exposicion media no era comprobable desde los artefactos.
+    rutas = {
         "nav_daily": f"{base}.nav_daily.csv",
         "decisions": f"{base}.decisions.csv",
         "orders_fills": f"{base}.orders_fills.csv",
         "resumen": f"{base}.resumen.json",
     }
+    ld = resultado.get("_ledger_diario")
+    if ld is not None and len(ld):
+        ld.to_csv(f"{base}.ledger_daily.csv")
+        rutas["ledger_daily"] = f"{base}.ledger_daily.csv"
+
+    # Incidencias de valoracion: los dias no evaluables con su motivo. Sin
+    # esto, `nav_fiable: false` no dice POR QUE.
+    inc = resultado.get("incidencias_valoracion") or []
+    if inc:
+        pd.DataFrame(inc).to_csv(f"{base}.incidencias.csv", index=False)
+        rutas["incidencias"] = f"{base}.incidencias.csv"
+
+    # El resumen, sin los objetos internos
+    limpio = {k: v for k, v in resultado.items() if not k.startswith("_")}
+    limpio["artefactos_de_esta_cartera"] = rutas
+    with open(f"{base}.resumen.json", "w") as f:
+        json.dump(limpio, f, indent=2, default=str)
+
+    return rutas
 
 
 def guardar_panel(series, efectivo, carpeta):
@@ -335,10 +385,16 @@ def _proteger_salida(ruta):
 
 def main(descargar=None):
     _proteger_salida(SALIDA)
-    os.makedirs(SALIDA, exist_ok=True)
-    os.makedirs(os.path.join(SALIDA, "registros"), exist_ok=True)
-    global RUN_ID
+    global RUN_ID, SALIDA_CORRIDA
     RUN_ID = _identificador_corrida()
+    SALIDA_CORRIDA = os.path.join(SALIDA, RUN_ID)
+    _proteger_salida(SALIDA_CORRIDA)
+    if os.path.isdir(SALIDA_CORRIDA) and os.listdir(SALIDA_CORRIDA):
+        raise SalidaProtegida(
+            f"{SALIDA_CORRIDA} ya tiene contenido. Una corrida no pisa a "
+            f"otra: cada una escribe en su propia carpeta.")
+    os.makedirs(SALIDA, exist_ok=True)
+    os.makedirs(SALIDA_CORRIDA, exist_ok=True)
 
     # ---------- PASO 1: el registro, ANTES de calcular nada ----------
     reg = REG.crear(
@@ -358,15 +414,36 @@ def main(descargar=None):
             "longitud_bloque_media_meses": LONGITUD_BLOQUE,
             "remuestras": REMUESTRAS,
             "alfa_familiar": ALFA,
-            "potencia_medida": {
-                "+0,72%/ano": 0.12, "+1,21%/ano": 0.18, "+2,43%/ano": 0.32,
-                "+3,66%/ano": 0.60, "+6,17%/ano": 0.92,
+            "deteccion_medida": {
+                "proceso": ("sintetico declarado: incrementos mensuales "
+                            "normales IID, factor comun N(0,006;0,040) e "
+                            "idiosincrasia N(0;0,015), 179 incrementos"),
+                "simulaciones_por_punto": 40,
+                "remuestras_por_contraste": 300,
+                "incluye_correccion_familiar": False,
+                "curva": {
+                    "+0,72%/ano": 0.12, "+1,21%/ano": 0.18,
+                    "+2,43%/ano": 0.32, "+3,66%/ano": 0.60,
+                    "+6,17%/ano": 0.92,
+                },
+                "intervalos_monte_carlo_95": {
+                    "+0,72%/ano": [0.055, 0.261],
+                    "+3,66%/ano": [0.446, 0.737],
+                },
             },
-            "tasa_falso_positivo_medida": 0.075,
+            "tasa_rechazo_sin_ventaja": {
+                "valor": 0.075, "simulaciones": 200, "remuestras": 400,
+                "intervalo_monte_carlo_95": [0.046, 0.120],
+                "nominal": 0.05,
+            },
             "_nota_potencia": (
-                "por debajo de un 3-4% anual de diferencial, este montaje no "
-                "distingue una ventaja real de la suerte. Un 'no rechaza' "
-                "significa indetectable, no inexistente."
+                "RETIRADA la afirmacion de una resolucion universal de 3-4% "
+                "anual. Estas cifras son de un proceso SINTETICO declarado, "
+                "con 40 simulaciones por punto y SIN la correccion familiar "
+                "aplicada; no transfieren al proceso real ni calibran la "
+                "cota de M01, que es otro procedimiento sobre otro objeto. "
+                "Un 'no rechaza' sigue significando indetectable con esta "
+                "muestra, no inexistente."
             ),
         },
         estado="EXPLORATORIO",
@@ -380,8 +457,7 @@ def main(descargar=None):
             os.path.join(_AQUI, "inferencia.py"),
             os.path.join(_AQUI, "experimento.py"),
         ],
-        salida=os.path.join(SALIDA, "registros",
-                            f"experiment_registry_{RUN_ID}.json"),
+        salida=os.path.join(SALIDA_CORRIDA, "experiment_registry.json"),
     )
 
     print("=" * 72)
@@ -394,10 +470,14 @@ def main(descargar=None):
     for h in FAMILIA:
         print(f"  - {h['id']}: {h['estrategia']} vs {h['referencia']}")
     print(f"\nLo que este montaje PUEDE concluir:")
-    print(f"  tasa de falso positivo medida: 7,5% (nominal 5%)")
-    print(f"  potencia para +0,72%/ano: 12%   para +3,66%/ano: 60%")
-    print(f"  -> por debajo de ~3-4% anual, un 'no rechaza' solo significa")
-    print(f"     que la muestra no lo distingue de la suerte")
+    print(f"  sobre un proceso SINTETICO declarado (normales IID con factor")
+    print(f"  comun, 179 incrementos), NO sobre el panel real:")
+    print(f"    rechazo sin ventaja: 7,5% con 200 simulaciones")
+    print(f"      (intervalo Monte Carlo 4,6-12,0%; nominal 5%)")
+    print(f"    deteccion: 12% a +0,72%/ano y 60% a +3,66%/ano, con 40")
+    print(f"      simulaciones por punto y SIN correccion familiar")
+    print(f"  -> un 'no rechaza' significa indetectable con esta muestra,")
+    print(f"     no inexistente. NO hay una resolucion universal medida.")
 
     # ---------- PASO 2: datos ----------
     print(f"\n{'=' * 72}\nDATOS\n{'=' * 72}")
@@ -430,7 +510,7 @@ def main(descargar=None):
               f"({type(e).__name__}: {e})")
         congelado = {"error": f"{type(e).__name__}: {e}"}
 
-    panel = guardar_panel(series, efectivo, SALIDA)
+    panel = guardar_panel(series, efectivo, SALIDA_CORRIDA)
     print(f"  panel guardado: {panel['filas']} filas, "
           f"{panel['desde']} -> {panel['hasta']}, hash {panel['hash']}")
 
@@ -475,7 +555,7 @@ def main(descargar=None):
                 continue
             resultados[f"{nombre_u}/{clave}"] = r
             artefactos[f"{nombre_u}/{clave}"] = guardar_artefactos(
-                f"{nombre_u}.{clave}", r, SALIDA)
+                f"{nombre_u}.{clave}", r, SALIDA_CORRIDA)
             # El resumen por pantalla NO puede tirar una corrida ya
             # terminada. Esto murio con KeyError sobre
             # 'rotacion_anual_nominal' DESPUES de descargar 31 activos y 15
@@ -651,8 +731,7 @@ def main(descargar=None):
         # El enlace va del informe AL registro, no al contrario: el
         # registro se escribe antes de que exista el panel, asi que no
         # puede contener su hash. El informe si puede nombrar el registro.
-        "registro_archivo": os.path.join(
-            "registros", f"experiment_registry_{RUN_ID}.json"),
+        "registro_archivo": "experiment_registry.json",
         "registro": reg,
         "panel": panel,
         "universo_congelado": congelado,
@@ -666,7 +745,7 @@ def main(descargar=None):
         "holm": holm,
         "artefactos": artefactos,
     }
-    with open(os.path.join(SALIDA, "report.json"), "w") as f:
+    with open(os.path.join(SALIDA_CORRIDA, "report.json"), "w") as f:
         json.dump(salida, f, indent=2, default=str)
     # Puntero a la ultima corrida. Es un puntero, no evidencia: se
     # sobrescribe a proposito, y los registros de registros/ no.
@@ -686,7 +765,7 @@ def main(descargar=None):
         print("distingue estas estrategias de su referencia, no que no haya")
         print("ventaja. Son dos afirmaciones distintas y solo la primera")
         print("esta respaldada.")
-    print(f"\nArtefactos en {SALIDA}/")
+    print(f"\nArtefactos en {SALIDA_CORRIDA}/")
     return salida
 
 
@@ -700,8 +779,11 @@ if __name__ == "__main__":
         print("EL EXPERIMENTO FALLO")
         print("=" * 72)
         print(rastro)
-        os.makedirs(SALIDA, exist_ok=True)
-        with open(os.path.join(SALIDA, "fallo.json"), "w") as f:
+        # El fallo va en la carpeta de SU corrida si ya existe, y si no en
+        # la base: un fallo antes de fijar la carpeta sigue siendo dato.
+        destino = SALIDA_CORRIDA if os.path.isdir(SALIDA_CORRIDA) else SALIDA
+        os.makedirs(destino, exist_ok=True)
+        with open(os.path.join(destino, "fallo.json"), "w") as f:
             json.dump({"fallo": True, "traceback": rastro.splitlines()[-16:],
                        "traceback_completo": rastro}, f, indent=2)
         raise

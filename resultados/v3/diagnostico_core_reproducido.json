@@ -1,0 +1,17 @@
+{
+  "dos_compras": {
+    "saldo_reportado": 1000.0,
+    "nominal_abierto": 900.0,
+    "coste_entrada_estimado": 0.7200000000000001,
+    "operaciones": 1,
+    "actualizaciones_saldo": [],
+    "cantidad_primera": 9.0,
+    "contrato_no_reutilizar_caja_cumplido": true
+  },
+  "venta_sin_inventario": {
+    "registradas": 0,
+    "estado_declarado": "BLOQUEADA",
+    "contrato_contado_cumplido": true
+  },
+  "nota": "Reproduccion de funciones reales con almacenamiento en memoria. No es rentabilidad ni ejecucion real."
+}

@@ -107,8 +107,43 @@ def _is_valid_trade_setup(trade_setup, signal=None):
     return True
 
 
+_CUENTA = None
+
+
+def cuenta(ruta=None, reiniciar=False, lote=None,
+           permitir_fraccionado=None, dias_liquidacion=None):
+    """El ÚNICO libro autoritativo de esta ruta. Se crea una sola vez.
+
+    Antes había dos saldos: `paper_state.capital`, que solo se movía al
+    cerrar, y la realidad de las posiciones abiertas. Con 1.000 de saldo se
+    podían comprometer 2.000 porque la apertura no descontaba nada. Ahora
+    la apertura pasa por aquí o no pasa.
+    """
+    global _CUENTA
+    if _CUENTA is not None and not reiniciar and ruta is None:
+        return _CUENTA
+    from config import (CAPITAL, DATABASE_NAME, LOTE_CORE,
+                        PERMITIR_FRACCIONADO_CORE, DIAS_LIQUIDACION_CORE)
+    from cuenta_contado import CuentaContado
+    # El lote y la liquidacion salen de config, no cableados aqui: la
+    # capacidad declarada y la ejecutada tienen que ser la misma cosa.
+    _CUENTA = CuentaContado(
+        ruta or DATABASE_NAME, moneda="USD",
+        lote=LOTE_CORE if lote is None else float(lote),
+        permitir_fraccionado=(PERMITIR_FRACCIONADO_CORE
+                              if permitir_fraccionado is None
+                              else bool(permitir_fraccionado)),
+        dias_liquidacion=(DIAS_LIQUIDACION_CORE if dias_liquidacion is None
+                          else int(dias_liquidacion)))
+    if not _CUENTA.arrancada:
+        _CUENTA.arrancar(_safe_float(CAPITAL, 1000.0),
+                         motivo="arranque declarado de la variante al contado")
+    return _CUENTA
+
+
 def open_trade(ticker, signal, regime, trade_setup):
-    capital = _safe_float(get_paper_capital())
+    c = cuenta()
+    capital = c.efectivo_utilizable
 
     if signal not in ["BUY", "SELL"]:
         print(f"PAPER BROKER | Trade no abierto en {ticker}: señal inválida ({signal})")
@@ -122,24 +157,73 @@ def open_trade(ticker, signal, regime, trade_setup):
         print(f"PAPER BROKER | Trade setup inválido en {ticker}, no se abre trade")
         return capital
 
+    # ---- ADMISIÓN: se comprueba TODO antes de escribir una fila ----
+    # Identidad, producto, moneda, inventario, lote, caja utilizable y
+    # dirección. Un SELL sin inventario se rechaza aquí: en esta modalidad
+    # una señal de venta no se convierte en apertura corta en ningún punto.
+    momento = datetime.now().isoformat()
+    entrada = _safe_float(trade_setup["entry"])
+    pedida = _safe_float(trade_setup["position_size"])
+    order_id = f"{ticker}-{signal}-{momento}"
+    adm = c.admitir(order_id=order_id, instrumento=ticker, lado=signal,
+                    cantidad=pedida, precio=entrada,
+                    coste_rel=COSTE_POR_PATA,
+                    coste_fijo=COSTE_FIJO_POR_ORDEN, momento=momento)
+    if not adm["admitida"]:
+        print(f"PAPER BROKER | Trade RECHAZADO en {ticker} ({signal}): "
+              f"{adm['motivo']}")
+        try:
+            from storage import log_risk_event
+            log_risk_event(timestamp=momento, ticker=ticker, signal=signal,
+                           event_type="ADMISION_RECHAZADA",
+                           reason=adm["motivo"][:300])
+        except Exception:
+            # Que no se pueda registrar el rechazo no lo convierte en
+            # aceptación: la orden sigue rechazada.
+            pass
+        return c.efectivo_utilizable
+
+    cantidad = adm["cantidad"]
+    fill = c.aplicar_fill(
+        event_id=f"fill-{order_id}", order_id=order_id, instrumento=ticker,
+        lado=signal, cantidad=cantidad, precio=entrada,
+        coste_rel=COSTE_POR_PATA, coste_fijo=COSTE_FIJO_POR_ORDEN,
+        momento=momento,
+        riesgo_inicial=abs(cantidad * (entrada - _safe_float(
+            trade_setup["stop_loss"]))),
+        motivo=regime or "", cantidad_pre_admision=pedida)
+    if not fill.get("aplicado"):
+        c.liberar(order_id)
+        print(f"PAPER BROKER | Fill NO aplicado en {ticker}: "
+              f"{fill.get('error') or 'repetido'}")
+        return c.efectivo_utilizable
+
     create_paper_trade(
-        timestamp_open=datetime.now().isoformat(),
+        timestamp_open=momento,
         ticker=ticker,
         signal=signal,
         regime=regime,
-        entry_price=_safe_float(trade_setup["entry"]),
+        entry_price=entrada,
         stop_loss=_safe_float(trade_setup["stop_loss"]),
         take_profit=_safe_float(trade_setup["take_profit"]),
-        position_size=_safe_float(trade_setup["position_size"])
+        position_size=cantidad
     )
+    capital = c.efectivo_utilizable
+    if cantidad < pedida - 1e-9:
+        print(f"PAPER BROKER | Cantidad recortada en {ticker}: "
+              f"{pedida} -> {cantidad} ({adm.get('motivo')})")
 
+    # Se imprime la cantidad ADMITIDA, no la pedida. Antes se imprimia la
+    # del setup, asi que el log decia 9,9920 aunque la admision hubiera
+    # dejado otra cosa: el registro contaba una operacion que no ocurrio.
     print(
         f"PAPER BROKER | Trade abierto | "
         f"{ticker} | {signal} | "
-        f"Entry: {_safe_float(trade_setup['entry']):.4f} | "
+        f"Entry: {entrada:.4f} | "
         f"SL: {_safe_float(trade_setup['stop_loss']):.4f} | "
         f"TP: {_safe_float(trade_setup['take_profit']):.4f} | "
-        f"Size: {_safe_float(trade_setup['position_size']):.4f}"
+        f"Size: {cantidad:.4f} (pedida {pedida:.4f}) | "
+        f"Caja utilizable: {capital:.2f}"
     )
 
     # El aviso corto del broker solo se manda si se pide: la
@@ -303,8 +387,16 @@ def check_and_close_trades(latest_prices, rangos_barra=None):
         rangos_barra = {}
 
     open_trades = get_open_paper_trades()
-    capital = _safe_float(get_paper_capital())
-    capital_inicial = capital
+    # La CUENTA es el unico saldo autoritativo. `paper_state.capital` queda
+    # como espejo para los avisos y el panel, y se escribe DESDE la cuenta.
+    # Antes se leia como verdad: la apertura descontaba caja en el libro y
+    # el cierre movia `paper_state.capital`, asi que los dos saldos
+    # divergian. Medido: tras comprar 5 a 100 y cerrar al take profit, la
+    # caja del libro seguia en 499,60 con 5 unidades de una posicion ya
+    # cerrada, mientras el espejo decia 1019,18.
+    c = cuenta()
+    capital_inicial = _safe_float(get_paper_capital())
+    sin_respaldo = 0
     cerrados = 0
 
     for trade in open_trades:
@@ -355,15 +447,64 @@ def check_and_close_trades(latest_prices, rangos_barra=None):
 
             # PnL NETO: las dos patas cobradas. Antes era bruto y el
             # capital del bot subia sin pagar la ejecucion.
+            # El desglose sigue saliendo de contabilizar_cierre, pero su
+            # `capital_despues` ya NO manda: la caja la mueve la cuenta,
+            # cobrando cada pata en su propio fill. La comision de entrada
+            # se cobro al abrir, la de salida se cobra aqui, y el efecto
+            # total sobre la caja es bruto menos las dos: no se cobra dos
+            # veces.
             cont = contabilizar_cierre(signal, entry, exit_price, size,
-                                       capital)
+                                       _safe_float(get_paper_capital()))
             pnl = cont["neto"]
 
             if not _es_finito(pnl):
                 print(f"PAPER BROKER | PnL no finito en {ticker}, se omite cierre")
                 continue
 
-            capital = cont["capital_despues"]
+            inventario = c.cantidad(ticker)
+            if inventario <= 0:
+                # Trade de la modalidad ANTIGUA: se abrio sin descontar
+                # caja, asi que no hay inventario contra el que cerrarlo.
+                # No se inventa un respaldo: se cierra la fila, se deja
+                # dicho, y la cuenta no se toca. Es la migracion
+                # conciliada, no un cierre contable.
+                sin_respaldo += 1
+                print(f"PAPER BROKER | {ticker}: cierre SIN RESPALDO "
+                      f"CONTABLE (trade de la modalidad antigua: la cuenta "
+                      f"no tiene inventario). No altera la caja.")
+                try:
+                    from storage import log_risk_event
+                    log_risk_event(
+                        timestamp=datetime.now().isoformat(), ticker=ticker,
+                        signal=signal, event_type="CIERRE_SIN_RESPALDO",
+                        reason=("trade abierto en la modalidad antigua: sin "
+                                "inventario en la cuenta al contado"))
+                except Exception:
+                    pass
+            else:
+                order_id = f"cierre-{trade['id']}-{ticker}"
+                adm = c.admitir(order_id=order_id, instrumento=ticker,
+                                lado="SELL", cantidad=min(size, inventario),
+                                precio=exit_price, coste_rel=COSTE_POR_PATA,
+                                coste_fijo=COSTE_FIJO_POR_ORDEN)
+                if not adm["admitida"]:
+                    print(f"PAPER BROKER | cierre de {ticker} NO admitido: "
+                          f"{adm['motivo']}. La posicion sigue abierta.")
+                    continue
+                fill = c.aplicar_fill(
+                    event_id=f"fill-{order_id}", order_id=order_id,
+                    instrumento=ticker, lado="SELL", cantidad=adm["cantidad"],
+                    precio=exit_price, coste_rel=COSTE_POR_PATA,
+                    coste_fijo=COSTE_FIJO_POR_ORDEN,
+                    momento=datetime.now().isoformat(),
+                    motivo=close_reason or "")
+                if not fill.get("aplicado") and not fill.get("repetido"):
+                    print(f"PAPER BROKER | cierre de {ticker} NO aplicado: "
+                          f"{fill.get('error')}. La posicion sigue abierta.")
+                    continue
+
+            nav = c.nav(latest_prices)
+            capital = nav["nav"] if nav.get("evaluable") else float("nan")
             cerrados += 1
 
             close_paper_trade(
@@ -395,10 +536,22 @@ def check_and_close_trades(latest_prices, rangos_barra=None):
         except Exception as e:
             print(f"PAPER BROKER | Error cerrando trade de {trade.get('ticker', 'UNKNOWN')}: {e}")
 
-    # Solo escribimos capital si de verdad cambió. Antes se
-    # reescribía el mismo valor en cada ciclo, cada 5 minutos.
-    if cerrados > 0 and capital != capital_inicial:
-        update_paper_capital(capital)
+    # El espejo se escribe DESDE la cuenta, y solo si cambia. No es el
+    # saldo autoritativo: si alguien lo edita, la cuenta no se entera y la
+    # proxima escritura lo corrige.
+    if cerrados > 0:
+        nav = c.nav(latest_prices)
+        if nav.get("evaluable"):
+            if abs(nav["nav"] - capital_inicial) > 1e-9:
+                update_paper_capital(nav["nav"])
+        else:
+            print(f"PAPER BROKER | NAV NO EVALUABLE: {nav.get('motivo')}. "
+                  f"El espejo del capital NO se actualiza con un numero "
+                  f"inventado.")
+    if sin_respaldo:
+        print(f"PAPER BROKER | {sin_respaldo} cierre(s) sin respaldo "
+              f"contable, de la modalidad antigua. La caja de la cuenta no "
+              f"los refleja a proposito.")
 
     return cerrados
 

@@ -1,0 +1,19 @@
+{
+  "tras_abrir": {
+    "caja_de_la_cuenta": 499.6,
+    "paper_state_capital": 1000.0,
+    "inventario_de_la_cuenta": 5.0,
+    "trades_persistidos": 1,
+    "coinciden_los_saldos": false
+  },
+  "tras_cerrar": {
+    "caja_de_la_cuenta": 1019.184,
+    "paper_state_capital": 1019.184,
+    "inventario_de_la_cuenta": 0.0,
+    "trades_abiertos": 0,
+    "cerrados": 1,
+    "coinciden_los_saldos": true,
+    "inventario_liberado": true
+  },
+  "_lectura": "Si tras cerrar el inventario de la cuenta sigue en 5 y los dos saldos no coinciden, el cierre no pasa por el libro: la posicion sigue viva para la contabilidad y el capital se movio por otro camino."
+}

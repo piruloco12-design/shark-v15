@@ -145,6 +145,27 @@ jobs:
             echo
           } >> resultados/ultimo.md
 
+      - name: Integracion de la ruta viva
+        # BLOQUEA. Entran por open_trade y check_and_close_trades, no por
+        # funciones auxiliares, porque el fallo que las motiva fue
+        # precisamente ese: declare capacidades citando un modulo que la
+        # ruta no usaba, y la ruta registraba cortos y comprometia 2.000
+        # con 1.000 de saldo.
+        run: |
+          set -o pipefail
+          python tests/test_integracion_core.py 2>&1 | tee /tmp/integracion.txt
+          {
+            echo '## Integracion de la ruta viva'
+            echo
+            echo 'Caja, inventario y reservas de la ruta que de verdad'
+            echo 'opera, comprobados entrando por su apertura y su cierre.'
+            echo
+            echo '```'
+            tail -30 /tmp/integracion.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
       - name: Comprobar que todo importa
         env:
           TELEGRAM_TOKEN: ""

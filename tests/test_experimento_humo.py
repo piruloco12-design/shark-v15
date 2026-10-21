@@ -20,6 +20,7 @@ que no estaba comprobado.
 
 Uso:  python tests/test_experimento_humo.py
 """
+import hashlib
 import io
 import json
 import os
@@ -62,8 +63,19 @@ def check(ident, nombre, cond, detalle=""):
 IDX = pd.bdate_range("2011-01-03", periods=3800, tz="UTC")
 
 
+def _semilla_estable(texto: str) -> int:
+    """Semilla reproducible ENTRE PROCESOS.
+
+    Usaba `hash(texto)`, que en Python lleva aleatorizacion por proceso
+    (PYTHONHASHSEED): la misma prueba generaba series distintas en cada
+    ejecucion, asi que una prueba de reproducibilidad no era reproducible
+    ella misma. Lo señalo la tercera revision.
+    """
+    return int(hashlib.sha256(texto.encode()).hexdigest()[:8], 16)
+
+
 def _serie(ticker: str) -> pd.DataFrame:
-    semilla = abs(hash(ticker)) % (2 ** 31)
+    semilla = _semilla_estable(ticker)
     rng = np.random.default_rng(semilla)
     n = len(IDX)
     deriva = 1.0 + (semilla % 13) / 20000.0
@@ -104,12 +116,22 @@ except Exception as e:
           f"-> {type(e).__name__}: {str(e)[:200]}")
     traceback.print_exc()
 
+# Cada corrida escribe en SU carpeta: resultados/<base>/<run_id>/. Antes
+# los CSV y report.json reutilizaban el nombre en la base y la siguiente
+# corrida los pisaba.
+ruta_informe = None
 try:
-    ruta_informe = os.path.join(tmp, "report.json")
+    carpeta = globals().get("EXP").SALIDA_CORRIDA if "EXP" in globals() else tmp
+    ruta_informe = os.path.join(carpeta, "report.json")
     if os.path.exists(ruta_informe):
         informe = json.load(io.open(ruta_informe, encoding="utf-8"))
 except Exception as e:
     print(f"  (no se pudo leer el informe: {e})")
+
+check("H2b", "la corrida escribe en su propia carpeta, no en la base",
+      ruta_informe is not None and os.path.dirname(ruta_informe) != tmp
+      and os.path.basename(os.path.dirname(ruta_informe)) not in ("", None),
+      f"-> informe en {ruta_informe}")
 
 check("H2", "escribe report.json", informe is not None,
       f"-> no hay informe en {tmp}")
@@ -120,12 +142,17 @@ if informe:
           f"-> {len(informe.get('resumenes', {}))} resumenes: "
           f"{sorted(informe.get('resumenes', {}))}")
 
+    # La ruta del registro es RELATIVA a la carpeta de la corrida, no a la
+    # base: cada corrida tiene su carpeta y su registro dentro.
+    _ruta_reg = os.path.join(os.path.dirname(ruta_informe),
+                             informe.get("registro_archivo") or "")
     check("H4", "el informe enlaza con SU registro de corrida",
           bool(informe.get("run_id"))
           and bool(informe.get("registro_archivo"))
-          and os.path.exists(os.path.join(tmp, informe["registro_archivo"])),
+          and os.path.exists(_ruta_reg),
           f"-> run_id={informe.get('run_id')}, "
-          f"registro={informe.get('registro_archivo')}")
+          f"registro={informe.get('registro_archivo')}, existe="
+          f"{os.path.exists(_ruta_reg)}")
 
     # Las claves que el resumen por pantalla y las tablas LEEN. Esta es la
     # comprobacion que faltaba: la que murio fue una lectura de clave.
@@ -140,6 +167,23 @@ if informe:
                 faltan.setdefault(clave, []).append(k)
     check("H5", "cada resumen trae las claves que leen el informe y las tablas",
           not faltan, f"-> faltan: {faltan}")
+
+    # El ledger diario tiene que EXISTIR como archivo: se calculaba y no
+    # se exportaba, asi que la exposicion media no era comprobable desde
+    # los artefactos.
+    _carp = os.path.dirname(ruta_informe)
+    _ledgers = [f for f in os.listdir(_carp) if f.endswith(".ledger_daily.csv")]
+    check("H5b", "el ledger diario se exporta como artefacto, no solo se calcula",
+          len(_ledgers) == 8,
+          f"-> {len(_ledgers)} archivos ledger_daily de 8 carteras: {_ledgers[:3]}")
+
+    _arte = informe.get("artefactos", {})
+    _declara_ledger = all("ledger_daily" in v for v in _arte.values()) if _arte else False
+    check("H5c", "el informe no anuncia archivos que no produce",
+          _declara_ledger and all(
+              os.path.exists(r) for v in _arte.values() for r in v.values()),
+          f"-> {len(_arte)} carteras; todas declaran ledger_daily="
+          f"{_declara_ledger}")
 
     check("H6", "hay contrastes y correccion de Holm para la familia",
           len(informe.get("contrastes", {})) == 4
@@ -169,7 +213,7 @@ if informe:
             metodo_inferencia="i", parametros_inferencia={},
             estado="EXPLORATORIO", universo_etiqueta="u", politicas={},
             variantes_ya_vistas=[], rutas_codigo=[],
-            salida=os.path.join(tmp, informe["registro_archivo"]))
+            salida=_ruta_reg)
         ok_nosobre = False
     except Exception as e:
         ok_nosobre = type(e).__name__ == "RegistroYaExiste"

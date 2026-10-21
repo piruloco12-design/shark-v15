@@ -211,12 +211,20 @@ for mensual in (0.0006, 0.001, 0.002, 0.003, 0.005):
           f"{det/N*100:10.0f}%")
 
 print()
-print("         La ventaja que reclame de M03 sobre comprar y mantener en")
-print("         renta variable era +0,72 puntos al ano, o +0,06% al mes:")
-print("         la primera fila. Con la tasa de falso positivo medida")
-print("         arriba (en torno al 5-8%), ese efecto y el ruido son del")
-print("         MISMO tamano. Ninguna correccion del motor arregla eso:")
-print("         es la resolucion del aparato, no un fallo del codigo.")
+print("         AVISO sobre como leer esta curva. El proceso es SINTETICO")
+print("         y lo elegi yo: normales IID con factor comun, 179")
+print("         incrementos. Son 40 simulaciones por punto, asi que el")
+print("         12% es 5/40 (intervalo 5,5-26,1%) y el 60% es 24/40")
+print("         (44,6-73,7%). Y la curva NO incluye la correccion de")
+print("         Holm, que empeora la deteccion del procedimiento que de")
+print("         verdad se aplica.")
+print()
+print("         Por eso queda RETIRADA la afirmacion de que 'por debajo de")
+print("         un 3-4% anual no se distingue de la suerte': eso seria una")
+print("         propiedad del aparato frente al proceso REAL, y aqui no")
+print("         hay ninguna medida sobre el proceso real. Lo que queda es")
+print("         que en ESTE proceso sintetico un efecto del tamano que")
+print("         reclame se confunde con el ruido.")
 
 check("la potencia crece con el tamano del efecto (el contraste discrimina)",
       curva[0.005] > curva[0.002] > curva[0.0006],

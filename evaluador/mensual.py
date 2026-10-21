@@ -125,6 +125,11 @@ class Politicas:
     moneda_cuenta: str = "USD"
     coste_rel: float = 0.0008          # por pata, escenario declarado
     coste_fijo: float = 0.0
+    # Minimo por orden. Es OTRA cosa que el fijo aditivo:
+    #   comision = max(coste_minimo, coste_rel*N) + coste_fijo
+    # Medi la aditiva y la llame "minimo", y no es lo mismo: con N=200,
+    # 8 pb y 0,50, la aditiva son 0,66 y el minimo 0,50.
+    coste_minimo: float = 0.0
     dias_liquidacion: int = 0
     permitir_fraccionado: bool = True
     lote: float = 0.0                  # 0 = fraccionable
@@ -509,6 +514,8 @@ class EvaluadorMensual:
                         cantidad, nota_adm = _admitir(
                             pedida, t, precio_ejec, libro, self.pol.limites,
                             coste_rel=self.pol.coste_rel)
+                        # Nota: `admitir` acota por peso, no por coste; el
+                        # minimo lo aplica el libro al ejecutar.
                     if cantidad <= 0:
                         libro.rechazar(
                             t, pedida, precio_ejec, fecha, tipo="COMPRA",
@@ -526,6 +533,7 @@ class EvaluadorMensual:
                     libro.comprar(t, cantidad, precio_ejec, fecha,
                                   coste_rel=self.pol.coste_rel,
                                   coste_fijo=self.pol.coste_fijo,
+                                  coste_minimo=self.pol.coste_minimo,
                                   precio_decision=precio_dec,
                                   momento_decision=f_dec,
                                   motivo=estrategia.id,
@@ -539,6 +547,7 @@ class EvaluadorMensual:
                     libro.vender(t, cantidad, precio_ejec, fecha,
                                  coste_rel=self.pol.coste_rel,
                                  coste_fijo=self.pol.coste_fijo,
+                                 coste_minimo=self.pol.coste_minimo,
                                  precio_decision=precio_dec,
                                  momento_decision=f_dec,
                                  motivo=estrategia.id)
@@ -665,6 +674,7 @@ class EvaluadorMensual:
                 libro.vender(t, q, precio, fecha_fin,
                              coste_rel=self.pol.coste_rel,
                              coste_fijo=self.pol.coste_fijo,
+                             coste_minimo=self.pol.coste_minimo,
                              motivo="POLITICA_TERMINAL_LIQUIDAR")
             # El dinero de la venta puede quedar como DERECHO si hay dias de
             # liquidacion. No se fuerza el cobro: inventar una fecha de

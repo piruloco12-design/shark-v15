@@ -184,6 +184,10 @@ check("setup NaN no llega a la base de datos",
 setup_bueno = {"entry": 100.0, "stop_loss": 98.0, "take_profit": 102.5,
                "position_size": 2.5, "risk_amount": 5.0, "risk_per_unit": 2.0, "rr_ratio": 1.25}
 paper_broker.open_trade("TEST", "BUY", "TREND", setup_bueno)
+# Se captura AQUI la cantidad ejecutada: mas abajo el trade ya esta
+# cerrado y el inventario vale cero, asi que leerlo alli no diria nada.
+_cant_ejecutada = (paper_broker.cuenta().cantidad("TEST")
+                   if hasattr(paper_broker, "cuenta") else None)
 check("setup valido si se guarda", paper_broker.get_open_trade_count() == 1)
 check("has_open_trade_for_ticker lo detecta", paper_broker.has_open_trade_for_ticker("TEST"))
 
@@ -212,11 +216,19 @@ check("target tocado -> cierra 1", n == 1 and paper_broker.get_open_trade_count(
 # sigue distinguiendo exactamente lo que fue escrita para distinguir: la
 # diferencia entre las dos salidas (3,75) es nueve veces la comision.
 from config import COSTE_POR_PATA as _CPP
-_bruto_target = (102.5 - 100.0) * 2.5
-_comisiones = (100.0 * 2.5 + 102.5 * 2.5) * _CPP
+# La cantidad EJECUTADA, no la pedida. El setup pide 2,5 unidades y la
+# ruta al contado declara acciones enteras, asi que ejecuta 2. Antes nada
+# imponia el lote en la ruta viva: se registraban 2,5 unidades mientras
+# capacidades_core declaraba acciones enteras, que es el fallo que la
+# tercera revision señalo con "declara acciones enteras, pero registra
+# 9,992006... unidades".
+_cant = _cant_ejecutada
+_ejecutada = 2.0
+_bruto_target = (102.5 - 100.0) * _ejecutada
+_comisiones = (100.0 * _ejecutada + 102.5 * _ejecutada) * _CPP
 esperado = capital_antes + _bruto_target - _comisiones
-_esperado_si_usara_close = (capital_antes + (101.0 - 100.0) * 2.5
-                            - (100.0 * 2.5 + 101.0 * 2.5) * _CPP)
+_esperado_si_usara_close = (capital_antes + (101.0 - 100.0) * _ejecutada
+                            - (100.0 * _ejecutada + 101.0 * _ejecutada) * _CPP)
 real = storage.get_paper_capital()
 check("PnL calculado EN el nivel del target, no en el Close",
       abs(real - esperado) < 1e-6, f"-> esperado {esperado:.4f}, real {real:.4f}")
@@ -224,6 +236,11 @@ check("PnL calculado EN el nivel del target, no en el Close",
 check("y el valor NO es el que daria salir al Close",
       abs(real - _esperado_si_usara_close) > 1.0,
       f"-> real {real:.4f}, por el Close serian {_esperado_si_usara_close:.4f}")
+
+check("el lote entero se impone en la ruta viva: 2,5 pedidas -> 2",
+      abs(_cant - _ejecutada) < 1e-9,
+      f"-> la cuenta registro {_cant} unidades, exigidas {_ejecutada}. "
+      f"Si sale 2,5, la ruta viva no impone el lote que declara")
 
 check("el capital del core paga las dos patas",
       abs((capital_antes + _bruto_target) - real - _comisiones) < 1e-9,
