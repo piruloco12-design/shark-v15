@@ -78,6 +78,7 @@ from session_volatility_intelligence import (evaluate_session_filter,
                                              evaluate_volatility_filter)
 from final_decision_engine import evaluate_final_decision
 from paper_broker import _decidir_cierre
+from libro import comision_explicita
 from validator.shark_v15_backtester import (_simulate_ai_result,
                                             _simulate_context_result,
                                             _simulate_risk_result)
@@ -119,6 +120,7 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
     abiertas: dict = {}
     operaciones: list = []
     senales = permitidas = bloqueadas = no_admitidas = 0
+    fallos: dict = {}
     nav_diario: dict = {}
     n_orden = 0
 
@@ -163,11 +165,21 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
                 continue
             bruto = (precio_salida - pos["entrada"]) * adm["cantidad"]
             riesgo = abs(pos["entrada"] - pos["stop_loss"]) * adm["cantidad"]
+            # La comision de la pierna de venta con la MISMA formula que
+            # cobra la cuenta, no una estimacion mia.
+            com_venta = comision_explicita(
+                precio_salida * adm["cantidad"], coste_rel=coste_rel,
+                coste_fijo=0.0, coste_minimo=coste_minimo)
+            com_compra = float(pos.get("comision", 0.0))
+            neto = bruto - com_venta - com_compra
             operaciones.append({
                 "instrumento": t, "entrada": pos["entrada"],
                 "salida": precio_salida, "cantidad": adm["cantidad"],
                 "pnl_bruto": bruto, "motivo": motivo,
+                "comision_compra": com_compra, "comision_venta": com_venta,
+                "pnl_neto": neto,
                 "R_bruto": (bruto / riesgo) if riesgo > 0 else None,
+                "R_neto": (neto / riesgo) if riesgo > 0 else None,
                 "abierta_en": str(pos["fecha"]), "cerrada_en": str(fecha),
             })
             abiertas.pop(t, None)
@@ -244,8 +256,20 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
                     "stop_loss": float(setup["stop_loss"]),
                     "take_profit": float(setup["take_profit"]),
                     "cantidad": adm["cantidad"], "fecha": fecha,
+                    "comision": comision_explicita(
+                        float(setup["entry"]) * adm["cantidad"],
+                        coste_rel=coste_rel, coste_fijo=0.0,
+                        coste_minimo=coste_minimo),
                 }
             except Exception as e:
+                # NO se tragan los errores. Un `except: continue` aqui me
+                # dio una corrida con 15.539 senales permitidas y CERO
+                # operaciones, con el NAV clavado en 1000,00, y lo presente
+                # como si fuera un resultado. Es el mismo patron que las
+                # auditorias ya me cazaron: la evidencia perdida en
+                # silencio parece un dato.
+                fallos[f"{type(e).__name__}: {str(e)[:70]}"] = (
+                    fallos.get(f"{type(e).__name__}: {str(e)[:70]}", 0) + 1)
                 continue
 
         nav = c.nav(precios_hoy)
@@ -254,7 +278,11 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
 
     serie = pd.Series(nav_diario).sort_index()
     pnls = [o["pnl_bruto"] for o in operaciones]
+    netos = [o["pnl_neto"] for o in operaciones]
+    comisiones = sum(o["comision_compra"] + o["comision_venta"]
+                     for o in operaciones)
     rs = [o["R_bruto"] for o in operaciones if o["R_bruto"] is not None]
+    rs_netas = [o["R_neto"] for o in operaciones if o["R_neto"] is not None]
     anos = (serie.index[-1] - serie.index[0]).days / 365.25 if len(serie) > 1 else 0
     nav_final = float(serie.iloc[-1]) if len(serie) else capital
     cagr = (nav_final / capital) ** (1 / anos) - 1 if anos > 0 and nav_final > 0 else None
@@ -267,20 +295,43 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
         "bloqueadas": bloqueadas, "no_admitidas": no_admitidas,
         "esperanza_por_operacion": (sum(pnls) / len(pnls)) if pnls else None,
         "esperanza_en_R": (sum(rs) / len(rs)) if rs else None,
+        "esperanza_neta_por_operacion": (sum(netos) / len(netos)) if netos else None,
+        "esperanza_neta_en_R": (sum(rs_netas) / len(rs_netas)) if rs_netas else None,
+        "comisiones_totales": comisiones,
+        "comision_media_ida_y_vuelta": (comisiones / len(operaciones)) if operaciones else None,
+        "pnl_bruto_total": sum(pnls), "pnl_neto_total": sum(netos),
         "ganadoras": sum(1 for p in pnls if p > 0),
         "perdedoras": sum(1 for p in pnls if p <= 0),
+        "ganadoras_netas": sum(1 for p in netos if p > 0),
+        "perdedoras_netas": sum(1 for p in netos if p <= 0),
         "nav_final": nav_final, "cagr": cagr, "anos": round(anos, 2),
         "caja_final": est.get("efectivo"),
+        "fallos_en_entrada": fallos,
         "posiciones_abiertas_al_final": len(abiertas),
         "_nav": serie, "_operaciones": operaciones,
     }
 
 
 def main():
-    escenarios = [
-        ("8pb_proporcional", COSTE_POR_PATA, 0.0),
-        ("8pb_con_minimo_0_50", COSTE_POR_PATA, 0.50),
-    ]
+    # BARRIDO DE COSTE. La pregunta que decide si esta estrategia sirve no
+    # es "cuanto gana" sino "por debajo de que coste por pata deja de
+    # perder". La esperanza BRUTA por operacion es fija; el coste la come.
+    # Un unico escenario no contesta eso, un barrido si.
+    if os.environ.get("B1_BARRIDO") == "1":
+        escenarios = [
+            ("0pb_suelo_irreal", 0.0, 0.0),
+            ("1pb_por_pata", 0.0001, 0.0),
+            ("2pb_por_pata", 0.0002, 0.0),
+            ("3pb_por_pata", 0.0003, 0.0),
+            ("5pb_por_pata", 0.0005, 0.0),
+            ("8pb_por_pata", 0.0008, 0.0),
+            ("15pb_por_pata_divisa_T212", 0.0015, 0.0),
+        ]
+    else:
+        escenarios = [
+            ("8pb_proporcional", COSTE_POR_PATA, 0.0),
+            ("8pb_con_minimo_0_50", COSTE_POR_PATA, 0.50),
+        ]
     salida = {"variante": VARIANTE, "panel": PANEL, "resultados": {}}
     for etq, c_rel, c_min in escenarios:
         print(f"\n{'='*74}\n{etq}\n{'='*74}")
@@ -291,18 +342,46 @@ def main():
               f"({r['ganadoras']} ganadoras / {r['perdedoras']} perdedoras)")
         e = r["esperanza_por_operacion"]
         er = r["esperanza_en_R"]
-        print(f"  esperanza por operacion: "
-              f"{('%+.4f' % e) if e is not None else '—'} USD")
-        print(f"  esperanza en riesgo:     "
-              f"{('%+.4f' % er) if er is not None else '—'} R")
+        en = r["esperanza_neta_por_operacion"]
+        ern = r["esperanza_neta_en_R"]
+        print(f"  esperanza BRUTA por operacion: "
+              f"{('%+.4f' % e) if e is not None else '—'} USD   "
+              f"({('%+.4f' % er) if er is not None else '—'} R)")
+        print(f"  comision media ida y vuelta:   "
+              f"{r['comision_media_ida_y_vuelta']:.4f} USD"
+              if r['comision_media_ida_y_vuelta'] is not None else "  —")
+        print(f"  esperanza NETA por operacion:  "
+              f"{('%+.4f' % en) if en is not None else '—'} USD   "
+              f"({('%+.4f' % ern) if ern is not None else '—'} R)")
+        print(f"  aciertos brutos {r['ganadoras']}/{r['operaciones']} -> "
+              f"netos {r['ganadoras_netas']}/{r['operaciones']}")
+        print(f"  PnL bruto {r['pnl_bruto_total']:+.2f} - comisiones "
+              f"{r['comisiones_totales']:.2f} = neto "
+              f"{r['pnl_neto_total']:+.2f} USD")
         print(f"  NAV final: {r['nav_final']:.2f} desde 1000 en "
               f"{r['anos']} anos")
         print(f"  CAGR: "
               f"{('%.4f%%' % (r['cagr']*100)) if r['cagr'] is not None else '—'}")
+        # RECONCILIACION. Si esto no cuadra, las dos cifras de arriba no
+        # describen la misma corrida y ninguna vale.
+        var_nav = r["nav_final"] - 1000.0
+        residuo = var_nav - r["pnl_neto_total"]
+        print(f"  reconciliacion: variacion del NAV {var_nav:+.4f} - PnL "
+              f"neto cerrado {r['pnl_neto_total']:+.4f} = {residuo:+.4f}")
+        print(f"     (el residuo son las {r['posiciones_abiertas_al_final']} "
+              f"posiciones abiertas al final, marcadas a mercado)")
+        if r.get("fallos_en_entrada"):
+            print(f"  FALLOS EN LA ENTRADA (no son un resultado, son un "
+                  f"fallo mio):")
+            for m, n in sorted(r["fallos_en_entrada"].items(),
+                               key=lambda kv: -kv[1])[:6]:
+                print(f"    {n:>7} x  {m}")
         limpio = {k: v for k, v in r.items() if not k.startswith("_")}
         limpio["operaciones_detalle"] = r["_operaciones"][:200]
         salida["resultados"][etq] = limpio
-    destino = os.path.join(REPO, "resultados/v3/b1_al_contado.json")
+    nombre = ("b1_barrido_coste.json" if os.environ.get("B1_BARRIDO") == "1"
+              else "b1_al_contado.json")
+    destino = os.path.join(REPO, "resultados/v3", nombre)
     io.open(destino, "w", encoding="utf-8").write(
         json.dumps(salida, indent=2, default=str))
     print(f"\nguardado {destino}")

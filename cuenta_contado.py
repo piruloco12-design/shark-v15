@@ -37,7 +37,7 @@ import sqlite3
 import time
 
 from libro import (LibroContado, Instrumento, OperacionNoEjecutable,
-                   LibroInvalido)
+                   LibroInvalido, comision_explicita)
 
 # Identificador de la modalidad. Va en cada evento para que no se mezcle
 # con la B1 historica, que tenia otra contabilidad.
@@ -234,6 +234,7 @@ class CuentaContado:
                       momento=p.get("momento"),
                       coste_rel=p.get("coste_rel", 0.0),
                       coste_fijo=p.get("coste_fijo", 0.0),
+                      coste_minimo=p.get("coste_minimo", 0.0),
                       riesgo_inicial=p.get("riesgo_inicial", 0.0),
                       motivo=p.get("motivo", ""),
                       reducir_si_no_cabe=False,
@@ -244,6 +245,7 @@ class CuentaContado:
                      momento=p.get("momento"),
                      coste_rel=p.get("coste_rel", 0.0),
                      coste_fijo=p.get("coste_fijo", 0.0),
+                     coste_minimo=p.get("coste_minimo", 0.0),
                      motivo=p.get("motivo", ""), event_id=event_id)
         elif tipo == "LIQUIDAR":
             L.liquidar_pendientes(p.get("momento"))
@@ -357,7 +359,8 @@ class CuentaContado:
     # ---- admision ----
 
     def admitir(self, *, order_id, instrumento, lado, cantidad, precio,
-                coste_rel=0.0, coste_fijo=0.0, moneda=None, lote=None,
+                coste_rel=0.0, coste_fijo=0.0, coste_minimo=0.0,
+                moneda=None, lote=None,
                 momento=None) -> dict:
         """Comprueba TODO y reserva, o rechaza sin tocar nada.
 
@@ -419,7 +422,7 @@ class CuentaContado:
 
         # BUY: cuanto cabe DE VERDAD con la caja utilizable, contando costes.
         maxima = self.libro.cantidad_maxima_comprable(
-            instrumento, precio, coste_rel, coste_fijo)
+            instrumento, precio, coste_rel, coste_fijo, coste_minimo)
         admisible = min(en_lote, inst.redondear_a_lote(maxima))
         if admisible <= 0:
             return {"admitida": False, "cantidad": 0.0,
@@ -429,7 +432,12 @@ class CuentaContado:
                                f"{en_lote * precio * inst.multiplicador:.2f} "
                                f"mas costes")}
         nominal = admisible * precio * inst.multiplicador
-        importe = nominal + nominal * coste_rel + coste_fijo
+        # La reserva usa la MISMA formula que cobra el libro:
+        #   comision = max(coste_minimo, coste_rel*N) + coste_fijo
+        # Reservar con una formula distinta de la que se cobra deja la
+        # reserva corta y el fill falla por un centimo.
+        importe = nominal + comision_explicita(nominal, coste_rel, coste_fijo,
+                                               coste_minimo)
         try:
             self._registrar(f"res-{order_id}", "RESERVA",
                             {"order_id": order_id, "importe": importe})
@@ -458,7 +466,8 @@ class CuentaContado:
     # ---- fills ----
 
     def aplicar_fill(self, *, event_id, order_id, instrumento, lado, cantidad,
-                     precio, coste_rel=0.0, coste_fijo=0.0, momento=None,
+                     precio, coste_rel=0.0, coste_fijo=0.0,
+                     coste_minimo=0.0, momento=None,
                      riesgo_inicial=0.0, motivo="", cantidad_pre_admision=0.0):
         """Aplica el fill una sola vez. Repetir el event_id no cambia nada."""
         self._exigir_cuenta()
@@ -466,6 +475,7 @@ class CuentaContado:
             "order_id": order_id, "instrumento": instrumento,
             "cantidad": float(cantidad), "precio": float(precio),
             "coste_rel": float(coste_rel), "coste_fijo": float(coste_fijo),
+            "coste_minimo": float(coste_minimo),
             "momento": momento, "riesgo_inicial": float(riesgo_inicial),
             "motivo": motivo,
             "cantidad_pre_admision": float(cantidad_pre_admision),
