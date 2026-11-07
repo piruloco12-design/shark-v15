@@ -191,11 +191,11 @@ cripto_sesgo_extremo  (2 activos)
 
 VARIANTE                  ANUAL  SHARPE    MAXDD   EXPOS   ROT/A    FINAL
 ----------------------------------------------------------------------
-comprar_y_mantener       61.21%    0.83   -81.3%   94.5%    0.17  310.929
+comprar_y_mantener       61.21%    0.83   -81.3%   94.5%    0.17  311.016
 M02_tendencia            52.22%    0.83   -66.3%   69.9%    1.66  156.070
-M03_momentum_12_1        51.59%    0.80   -79.8%   69.9%    2.33  148.482
+M03_momentum_12_1        51.60%    0.80   -79.8%   69.9%    2.33  148.524
 M02_mas_M03              50.56%    0.84   -64.8%   63.0%    1.83  136.758
-M03_con_banda            50.58%    0.81   -78.7%   68.3%    2.24  136.997
+M03_con_banda            50.59%    0.81   -78.7%   68.3%    2.24  137.035
 efectivo (BIL)            1.53%            -0.4%
 cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
 
@@ -205,20 +205,20 @@ cuenta sin remunerar      0.00%   (lo que de verdad cobra la cuenta: 0%)
   M02_tendencia
     anual +52.22%  vs comprar y mantener +61.21%  -> NO bate
     train: +97.91% vs +120.57%  -> NO bate
-    test : +16.58% vs +23.68%  -> NO bate
+    test : +16.58% vs +23.69%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
     I29: mejor Sharpe (0.83 vs 0.83) pero MENOS dinero. No es una mejora del beneficio.
 
   M03_momentum_12_1
-    anual +51.59%  vs comprar y mantener +61.21%  -> NO bate
+    anual +51.60%  vs comprar y mantener +61.21%  -> NO bate
     train: +102.68% vs +120.57%  -> NO bate
-    test : +13.72% vs +23.68%  -> NO bate
+    test : +13.72% vs +23.69%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
 
   M02_mas_M03
     anual +50.56%  vs comprar y mantener +61.21%  -> NO bate
     train: +96.14% vs +120.57%  -> NO bate
-    test : +16.60% vs +23.68%  -> NO bate
+    test : +16.60% vs +23.69%  -> NO bate
     VEREDICTO: NO PASA: forma peor de estar invertido
     I29: mejor Sharpe (0.84 vs 0.83) pero MENOS dinero. No es una mejora del beneficio.
 

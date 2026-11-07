@@ -1,8 +1,8 @@
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash 6c52fb304e4c3ccc
-Commit: 67baffb20524-sucio
+Registro escrito ANTES de calcular: hash 16c83374bf4fa4e5
+Commit: b34451331042-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -28,7 +28,7 @@ DATOS
 
   Universo congelado el 2026-10-19, 32 instrumentos
   Comprobado el 2026-11-07: 32 con datos (100.0%)
-  panel guardado: 120704 filas, 2011-11-07 -> 2026-11-06, hash d383867be6441051
+  panel guardado: 120704 filas, 2011-11-07 -> 2026-11-06, hash 5cda4b3029d50e5f
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)
@@ -113,4 +113,4 @@ distingue estas estrategias de su referencia, no que no haya
 ventaja. Son dos afirmaciones distintas y solo la primera
 esta respaldada.
 
-Artefactos en resultados/v3/20261107T123636Z-67baffb2/
+Artefactos en resultados/v3/20261107T125403Z-b3445133/
