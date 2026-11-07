@@ -1,0 +1,48 @@
+{
+  "variante": "B1_AL_CONTADO_diario_v1",
+  "panel": "/home/claude/shark-v15/resultados/v2/prices_snapshot.csv",
+  "resultados": {
+    "8pb_proporcional": {
+      "variante": "B1_AL_CONTADO_diario_v1",
+      "etiqueta": "8pb_proporcional",
+      "coste_rel": 0.0008,
+      "coste_minimo": 0.0,
+      "operaciones": 0,
+      "senales": 16839,
+      "permitidas": 15539,
+      "bloqueadas": 1300,
+      "no_admitidas": 5278,
+      "esperanza_por_operacion": null,
+      "esperanza_en_R": null,
+      "ganadoras": 0,
+      "perdedoras": 0,
+      "nav_final": 1000.0,
+      "cagr": 0.0,
+      "anos": 14.0,
+      "caja_final": 1000.0,
+      "posiciones_abiertas_al_final": 0,
+      "operaciones_detalle": []
+    },
+    "8pb_con_minimo_0_50": {
+      "variante": "B1_AL_CONTADO_diario_v1",
+      "etiqueta": "8pb_con_minimo_0_50",
+      "coste_rel": 0.0008,
+      "coste_minimo": 0.5,
+      "operaciones": 0,
+      "senales": 16839,
+      "permitidas": 15539,
+      "bloqueadas": 1300,
+      "no_admitidas": 5278,
+      "esperanza_por_operacion": null,
+      "esperanza_en_R": null,
+      "ganadoras": 0,
+      "perdedoras": 0,
+      "nav_final": 1000.0,
+      "cagr": 0.0,
+      "anos": 14.0,
+      "caja_final": 1000.0,
+      "posiciones_abiertas_al_final": 0,
+      "operaciones_detalle": []
+    }
+  }
+}

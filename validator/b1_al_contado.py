@@ -1,0 +1,312 @@
+"""
+B1 POR EL LIBRO DE CAJA CORREGIDO — la medicion que faltaba.
+
+Lo que Astra dejo pendiente en su primera auditoria y seguia sin hacer:
+"Experimento del Shark al contado: conectar las senales de B1 al ejecutor
+corregido como variante separada e identificada."
+
+## Por que hacia falta
+
+Las cifras publicadas de B1 salen de `shark_v15_backtester.py`, que lleva
+su propia contabilidad y tiene los mismos dos defectos que tenia la ruta
+viva antes de arreglarla:
+
+1. **No descuenta el nominal.** Hace `entry_cost = precio * coste * size`
+   y `capital -= entry_cost`: cobra la comision pero NUNCA resta el
+   dinero que queda inmovilizado en la posicion. El capital no refleja lo
+   que hay comprado.
+2. **No comprueba si cabe.** Nadie pregunta si el nominal entra en la
+   cuenta, asi que puede abrir posiciones que no se podrian pagar.
+3. **Un capital por activo.** `run_v16_backtest_single_asset` arranca
+   cada activo con su propio capital y `print_consolidated` SUMA los
+   resultados. Con cuatro activos a 1.000, el capital desplegado son
+   4.000, no 1.000.
+
+Aqui se corre la MISMA senal --`check_signal`, el escaner, los filtros y
+el motor de decision final, importados tal cual-- pero cada orden pasa
+por `CuentaContado`: caja real compartida entre todos los activos, lotes
+enteros, admision antes de escribir y las dos comisiones cobradas en su
+propio fill.
+
+## Lo que esta medicion NO es
+
+- **No es el marco temporal del bot.** El bot corre en velas de 30
+  minutos y yfinance solo da ~60 dias de ese intervalo. Esto es DIARIO,
+  15 anos. Es otra pregunta, con mucha mas muestra.
+- **No es el universo del bot.** De sus cuatro activos (IWM, NVDA, AMZN,
+  META) el panel guardado solo tiene IWM. Aqui corre sobre los 32 ETF del
+  panel.
+- **El filtro de IA esta simulado**, igual que en el backtester original:
+  `_simulate_ai_result` devuelve un valor fijo. El filtro real necesita
+  llamadas a una API. Eso esta declarado alli y se conserva aqui.
+
+Asi que esto mide la LOGICA de B1 con contabilidad correcta sobre datos
+reales. No predice lo que hara el bot en su marco. Decirlo al principio
+es mas util que ponerlo en una nota al pie.
+
+Uso:  python validator/b1_al_contado.py
+"""
+import io
+import json
+import os
+import sys
+import tempfile
+
+REPO = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, REPO)
+sys.path.insert(0, os.path.join(REPO, "tests"))
+os.environ.setdefault("TELEGRAM_TOKEN", "")
+os.environ.setdefault("CAPITAL", "1000")
+
+import types
+sys.modules.setdefault("yfinance", types.ModuleType("yfinance"))
+try:
+    import _ta_stub
+    _ta_stub.instalar_si_falta()
+except Exception:
+    pass
+
+import numpy as np
+import pandas as pd
+
+from indicators import add_indicators
+from market_regime import detect_market_regime
+from signals import check_signal
+from opportunity_scanner import scan_smart_opportunity
+from risk_management import calculate_trade_levels
+from session_volatility_intelligence import (evaluate_session_filter,
+                                             evaluate_volatility_filter)
+from final_decision_engine import evaluate_final_decision
+from paper_broker import _decidir_cierre
+from validator.shark_v15_backtester import (_simulate_ai_result,
+                                            _simulate_context_result,
+                                            _simulate_risk_result)
+from cuenta_contado import CuentaContado
+from config import COSTE_POR_PATA, RISK_PER_TRADE
+
+PANEL = os.path.join(REPO, "resultados/v2/prices_snapshot.csv")
+CALENTAMIENTO = 250
+MAX_ABIERTAS = 2          # igual que MAX_OPEN_TRADES del bot
+VARIANTE = "B1_AL_CONTADO_diario_v1"
+
+
+def cargar(ruta):
+    d = pd.read_csv(ruta, parse_dates=["fecha"])
+    salida = {}
+    for t, g in d.groupby("instrumento"):
+        df = g.set_index("fecha").sort_index()[
+            ["Open", "High", "Low", "Close", "Volume"]]
+        if len(df) > CALENTAMIENTO + 50:
+            salida[t] = df
+    return salida
+
+
+def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
+    series = cargar(PANEL)
+    con_ind = {}
+    for t, df in series.items():
+        try:
+            con_ind[t] = add_indicators(df.copy())
+        except Exception as e:
+            print(f"  (sin indicadores para {t}: {type(e).__name__})")
+    fechas = sorted(set().union(*[set(df.index) for df in con_ind.values()]))
+
+    tmp = tempfile.mkdtemp(prefix="b1contado_")
+    c = CuentaContado(os.path.join(tmp, "c.sqlite"), moneda="USD", lote=1.0,
+                      permitir_fraccionado=False, dias_liquidacion=0)
+    c.arrancar(capital, motivo=f"{VARIANTE} {etiqueta}")
+
+    abiertas: dict = {}
+    operaciones: list = []
+    senales = permitidas = bloqueadas = no_admitidas = 0
+    nav_diario: dict = {}
+    n_orden = 0
+
+    for i, fecha in enumerate(fechas):
+        if i < CALENTAMIENTO:
+            continue
+        precios_hoy = {}
+
+        # --- cierres primero: liberan caja para las entradas de hoy ---
+        for t in list(abiertas):
+            df = con_ind.get(t)
+            if df is None or fecha not in df.index:
+                continue
+            fila = df.loc[fecha]
+            pos = abiertas[t]
+            cerrar, precio_salida, motivo = _decidir_cierre(
+                pos["signal"], pos["stop_loss"], pos["take_profit"],
+                float(fila["Close"]), float(fila["High"]), float(fila["Low"]),
+                open_=float(fila["Open"]))
+            if not cerrar:
+                continue
+            n_orden += 1
+            oid = f"sell-{n_orden}"
+            inv = c.cantidad(t)
+            if inv <= 0:
+                abiertas.pop(t, None)
+                continue
+            adm = c.admitir(order_id=oid, instrumento=t, lado="SELL",
+                            cantidad=min(pos["cantidad"], inv),
+                            precio=precio_salida, coste_rel=coste_rel,
+                            coste_minimo=coste_minimo)
+            if not adm["admitida"]:
+                no_admitidas += 1
+                continue
+            r = c.aplicar_fill(event_id=f"f-{oid}", order_id=oid,
+                               instrumento=t, lado="SELL",
+                               cantidad=adm["cantidad"], precio=precio_salida,
+                               coste_rel=coste_rel, coste_minimo=coste_minimo,
+                               momento=str(fecha), motivo=motivo)
+            if not r.get("aplicado"):
+                no_admitidas += 1
+                continue
+            bruto = (precio_salida - pos["entrada"]) * adm["cantidad"]
+            riesgo = abs(pos["entrada"] - pos["stop_loss"]) * adm["cantidad"]
+            operaciones.append({
+                "instrumento": t, "entrada": pos["entrada"],
+                "salida": precio_salida, "cantidad": adm["cantidad"],
+                "pnl_bruto": bruto, "motivo": motivo,
+                "R_bruto": (bruto / riesgo) if riesgo > 0 else None,
+                "abierta_en": str(pos["fecha"]), "cerrada_en": str(fecha),
+            })
+            abiertas.pop(t, None)
+
+        # --- entradas ---
+        for t in sorted(con_ind):
+            df = con_ind[t]
+            if fecha not in df.index:
+                continue
+            fila = df.loc[fecha]
+            precios_hoy[t] = float(fila["Close"])
+            if t in abiertas or len(abiertas) >= MAX_ABIERTAS:
+                continue
+            hasta = df.loc[:fecha]
+            if len(hasta) < CALENTAMIENTO:
+                continue
+            try:
+                regimen = detect_market_regime(hasta)
+                base = check_signal(hasta)
+                senal = base
+                if base == "NO_SIGNAL":
+                    info = scan_smart_opportunity(hasta)
+                    if info.get("signal") in ("BUY", "SELL"):
+                        senal = info["signal"]
+                if senal not in ("BUY", "SELL"):
+                    continue
+                senales += 1
+                final = evaluate_final_decision(
+                    ai_result=_simulate_ai_result(),
+                    context_result=_simulate_context_result(),
+                    session_result=evaluate_session_filter(hasta, regimen),
+                    volatility_result=evaluate_volatility_filter(hasta, regimen),
+                    risk_result=_simulate_risk_result(),
+                    adx=float(fila["adx"]), regime=regimen, data=hasta,
+                    ticker=t)
+                if final.get("decision") != "ALLOW":
+                    bloqueadas += 1
+                    continue
+                permitidas += 1
+                if senal == "SELL":
+                    # Cuenta al contado: un SELL sin inventario no abre
+                    # corto. Se cuenta como permitida y no ejecutable.
+                    no_admitidas += 1
+                    continue
+                setup = calculate_trade_levels(
+                    df=hasta, signal=senal, capital=capital,
+                    risk_per_trade=RISK_PER_TRADE,
+                    efectivo_disponible=c.efectivo_utilizable,
+                    coste_rel=coste_rel)
+                cant = float(setup.get("position_size", 0) or 0)
+                if cant <= 0:
+                    no_admitidas += 1
+                    continue
+                n_orden += 1
+                oid = f"buy-{n_orden}"
+                adm = c.admitir(order_id=oid, instrumento=t, lado="BUY",
+                                cantidad=cant, precio=float(setup["entry"]),
+                                coste_rel=coste_rel, coste_minimo=coste_minimo)
+                if not adm["admitida"]:
+                    no_admitidas += 1
+                    continue
+                r = c.aplicar_fill(event_id=f"f-{oid}", order_id=oid,
+                                   instrumento=t, lado="BUY",
+                                   cantidad=adm["cantidad"],
+                                   precio=float(setup["entry"]),
+                                   coste_rel=coste_rel,
+                                   coste_minimo=coste_minimo,
+                                   momento=str(fecha), motivo=f"{VARIANTE}")
+                if not r.get("aplicado"):
+                    no_admitidas += 1
+                    continue
+                abiertas[t] = {
+                    "signal": senal, "entrada": float(setup["entry"]),
+                    "stop_loss": float(setup["stop_loss"]),
+                    "take_profit": float(setup["take_profit"]),
+                    "cantidad": adm["cantidad"], "fecha": fecha,
+                }
+            except Exception as e:
+                continue
+
+        nav = c.nav(precios_hoy)
+        if nav.get("evaluable"):
+            nav_diario[fecha] = nav["nav"]
+
+    serie = pd.Series(nav_diario).sort_index()
+    pnls = [o["pnl_bruto"] for o in operaciones]
+    rs = [o["R_bruto"] for o in operaciones if o["R_bruto"] is not None]
+    anos = (serie.index[-1] - serie.index[0]).days / 365.25 if len(serie) > 1 else 0
+    nav_final = float(serie.iloc[-1]) if len(serie) else capital
+    cagr = (nav_final / capital) ** (1 / anos) - 1 if anos > 0 and nav_final > 0 else None
+    est = c.estado()
+    return {
+        "variante": VARIANTE, "etiqueta": etiqueta,
+        "coste_rel": coste_rel, "coste_minimo": coste_minimo,
+        "operaciones": len(operaciones),
+        "senales": senales, "permitidas": permitidas,
+        "bloqueadas": bloqueadas, "no_admitidas": no_admitidas,
+        "esperanza_por_operacion": (sum(pnls) / len(pnls)) if pnls else None,
+        "esperanza_en_R": (sum(rs) / len(rs)) if rs else None,
+        "ganadoras": sum(1 for p in pnls if p > 0),
+        "perdedoras": sum(1 for p in pnls if p <= 0),
+        "nav_final": nav_final, "cagr": cagr, "anos": round(anos, 2),
+        "caja_final": est.get("efectivo"),
+        "posiciones_abiertas_al_final": len(abiertas),
+        "_nav": serie, "_operaciones": operaciones,
+    }
+
+
+def main():
+    escenarios = [
+        ("8pb_proporcional", COSTE_POR_PATA, 0.0),
+        ("8pb_con_minimo_0_50", COSTE_POR_PATA, 0.50),
+    ]
+    salida = {"variante": VARIANTE, "panel": PANEL, "resultados": {}}
+    for etq, c_rel, c_min in escenarios:
+        print(f"\n{'='*74}\n{etq}\n{'='*74}")
+        r = correr(c_rel, c_min, 1000.0, etq)
+        print(f"  senales {r['senales']} | permitidas {r['permitidas']} | "
+              f"bloqueadas {r['bloqueadas']} | no admitidas {r['no_admitidas']}")
+        print(f"  operaciones cerradas: {r['operaciones']} "
+              f"({r['ganadoras']} ganadoras / {r['perdedoras']} perdedoras)")
+        e = r["esperanza_por_operacion"]
+        er = r["esperanza_en_R"]
+        print(f"  esperanza por operacion: "
+              f"{('%+.4f' % e) if e is not None else '—'} USD")
+        print(f"  esperanza en riesgo:     "
+              f"{('%+.4f' % er) if er is not None else '—'} R")
+        print(f"  NAV final: {r['nav_final']:.2f} desde 1000 en "
+              f"{r['anos']} anos")
+        print(f"  CAGR: "
+              f"{('%.4f%%' % (r['cagr']*100)) if r['cagr'] is not None else '—'}")
+        limpio = {k: v for k, v in r.items() if not k.startswith("_")}
+        limpio["operaciones_detalle"] = r["_operaciones"][:200]
+        salida["resultados"][etq] = limpio
+    destino = os.path.join(REPO, "resultados/v3/b1_al_contado.json")
+    io.open(destino, "w", encoding="utf-8").write(
+        json.dumps(salida, indent=2, default=str))
+    print(f"\nguardado {destino}")
+
+
+if __name__ == "__main__":
+    main()
