@@ -1,10 +1,10 @@
 PRUEBA DE PROVEEDORES — cada uno por separado
 Cascada por defecto: ['yfinance', 'finnhub', 'alpha_vantage', 'twelve_data']
 
-  OK    yfinance   SPY         3770 velas  2011-10-21 -> 2026-10-20
+  OK    yfinance   SPY         3772 velas  2011-11-07 -> 2026-11-06
   FALLA stooq      SPY       ValueError: No se pudo descargar SPY con ningún provider. Detalles: ['stooq: Stooq
-  OK    yfinance   BTC-USD     4418 velas  2014-09-17 -> 2026-10-21
-  OK    coinbase   BTC-USD     4112 velas  2015-07-20 -> 2026-10-21
+  OK    yfinance   BTC-USD     4434 velas  2014-09-17 -> 2026-11-07
+  OK    coinbase   BTC-USD     4129 velas  2015-07-20 -> 2026-11-07
   FALLA stooq      GLD       ValueError: No se pudo descargar GLD con ningún provider. Detalles: ['stooq: Stooq
 
 CRUCE yfinance vs stooq en SPY (ultimos cierres comunes)
