@@ -1,8 +1,8 @@
 ========================================================================
 MEDICION CON EL MOTOR CORREGIDO
 ========================================================================
-Registro escrito ANTES de calcular: hash 7fc4a9fc08c50fe5
-Commit: 7acd23162fd0-sucio
+Registro escrito ANTES de calcular: hash 6c52fb304e4c3ccc
+Commit: 67baffb20524-sucio
 Estado: EXPLORATORIO  |  universo: EXPLORATORY_SURVIVOR_UNIVERSE
 Familia declarada: 4 hipotesis
   - multiactivo/M03: M03_momentum_12_1 vs comprar_y_mantener
@@ -28,7 +28,7 @@ DATOS
 
   Universo congelado el 2026-10-19, 32 instrumentos
   Comprobado el 2026-11-07: 32 con datos (100.0%)
-  panel guardado: 120704 filas, 2011-11-07 -> 2026-11-06, hash 5d5f6cd94ad781e8
+  panel guardado: 120704 filas, 2011-11-07 -> 2026-11-06, hash d383867be6441051
 
 ========================================================================
 UNIVERSO: multiactivo  (31 activos)
@@ -38,9 +38,9 @@ UNIVERSO: multiactivo  (31 activos)
   ESTRATEGIA                     CAGR  SHARPE  MAXDD-D   ROT/A  INTENC
   --------------------------------------------------------------------
   comprar_y_mantener            8.74%    0.75   -27.1%    0.04      31
-  rebalanceo_equiponderado      6.49%    0.71   -23.8%    0.43    5208
+  rebalanceo_equiponderado      6.50%    0.71   -23.8%    0.43    5208
   M03_momentum_12_1             9.58%    0.61   -32.2%    6.24    1048
-  M02_tendencia                 6.13%    0.61   -25.0%    4.02    3514
+  M02_tendencia                 6.12%    0.61   -25.0%    4.02    3513
 
 ========================================================================
 UNIVERSO: renta_variable  (14 activos)
@@ -57,16 +57,16 @@ UNIVERSO: renta_variable  (14 activos)
 ========================================================================
 INFERENCIA (al final, sobre la familia declarada)
 ========================================================================
-  multiactivo/M03          CAGR  +9.58% vs  +8.74%  dif +0.84 pts  p=0.3159
-  multiactivo/M02          CAGR  +6.13% vs  +8.74%  dif -2.61 pts  p=0.9236
+  multiactivo/M03          CAGR  +9.58% vs  +8.74%  dif +0.84 pts  p=0.3161
+  multiactivo/M02          CAGR  +6.12% vs  +8.74%  dif -2.62 pts  p=0.9258
   renta_variable/M03       CAGR +13.25% vs +13.42%  dif -0.17 pts  p=0.5855
   renta_variable/M02       CAGR +12.57% vs +13.42%  dif -0.85 pts  p=0.8934
 
   CORRECCION DE HOLM sobre 4 hipotesis, error familiar 0.05
-    multiactivo/M03          p=0.315937  umbral=0.01250  -> no rechaza
+    multiactivo/M03          p=0.316137  umbral=0.01250  -> no rechaza
     renta_variable/M03       p=0.585483  umbral=0.01667  -> no rechaza
     renta_variable/M02       p=0.893421  umbral=0.02500  -> no rechaza
-    multiactivo/M02          p=0.923615  umbral=0.05000  -> no rechaza
+    multiactivo/M02          p=0.925815  umbral=0.05000  -> no rechaza
 
 ========================================================================
 M04 BASICO: que cuesta limitar la cartera
@@ -95,9 +95,9 @@ SESGO DE SUPERVIVENCIA, POR ESCENARIOS DECLARADOS
   ------------------------------------------------------------
   leve/colapso                   +0.61%   -0.22         8.4%
   moderado/colapso               +1.37%   +0.53        15.5%
-  severo/colapso                 +2.00%   +1.16        16.7%
+  severo/colapso                 +1.99%   +1.16        16.7%
   leve/desvanecimiento           +0.50%   -0.34         2.4%
-  moderado/desvanecimiento       +2.72%   +1.88         2.4%
+  moderado/desvanecimiento       +2.71%   +1.88         2.4%
   severo/desvanecimiento         +2.88%   +2.05         0.6%
 
   cambio en el diferencial: de -0.34 a +2.05 puntos
@@ -113,4 +113,4 @@ distingue estas estrategias de su referencia, no que no haya
 ventaja. Son dos afirmaciones distintas y solo la primera
 esta respaldada.
 
-Artefactos en resultados/v3/20261107T040204Z-7acd2316/
+Artefactos en resultados/v3/20261107T123636Z-67baffb2/
