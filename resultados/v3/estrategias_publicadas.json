@@ -1,0 +1,234 @@
+{
+  "estado": "EXPLORATORIO",
+  "panel": "/home/claude/shark-v15/resultados/v2/prices_snapshot.csv",
+  "resultados": {
+    "8pb_proporcional/multiactivo": {
+      "comprar_y_mantener": {
+        "cagr": 0.090464,
+        "retorno_total": 2.358919,
+        "caida_maxima": -0.271205,
+        "comisiones": 0.799361,
+        "intenciones": 31,
+        "rechazadas": 0,
+        "nav_final": 3358.918714,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "M03_propia": {
+        "cagr": 0.103799,
+        "retorno_total": 2.981512,
+        "caida_maxima": -0.321691,
+        "comisiones": 140.340447,
+        "intenciones": 1050,
+        "rechazadas": 13,
+        "nav_final": 3981.511874,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_faber_sma10m": {
+        "cagr": 0.050073,
+        "retorno_total": 0.980922,
+        "caida_maxima": -0.090988,
+        "comisiones": 30.881351,
+        "intenciones": 3790,
+        "rechazadas": 0,
+        "nav_final": 1980.922193,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_paridad_inversa": {
+        "cagr": 0.03757,
+        "retorno_total": 0.675292,
+        "caida_maxima": -0.128312,
+        "comisiones": 15.412135,
+        "intenciones": 5208,
+        "rechazadas": 8,
+        "nav_final": 1675.291628,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_doble_momento": {
+        "cagr": 0.095041,
+        "retorno_total": 2.561602,
+        "caida_maxima": -0.359393,
+        "comisiones": 127.154881,
+        "intenciones": 1046,
+        "rechazadas": 10,
+        "nav_final": 3561.601673,
+        "nav_fiable": true,
+        "exposicion_media": null
+      }
+    },
+    "8pb_proporcional/renta_variable": {
+      "comprar_y_mantener": {
+        "cagr": 0.137509,
+        "retorno_total": 5.065007,
+        "caida_maxima": -0.349771,
+        "comisiones": 0.799361,
+        "intenciones": 14,
+        "rechazadas": 0,
+        "nav_final": 6065.006735,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "M03_propia": {
+        "cagr": 0.137614,
+        "retorno_total": 5.072873,
+        "caida_maxima": -0.304812,
+        "comisiones": 162.027295,
+        "intenciones": 967,
+        "rechazadas": 10,
+        "nav_final": 6072.872918,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_faber_sma10m": {
+        "cagr": 0.090134,
+        "retorno_total": 2.344706,
+        "caida_maxima": -0.155258,
+        "comisiones": 41.513879,
+        "intenciones": 2022,
+        "rechazadas": 3,
+        "nav_final": 3344.706466,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_paridad_inversa": {
+        "cagr": 0.130805,
+        "retorno_total": 4.583611,
+        "caida_maxima": -0.357858,
+        "comisiones": 21.644735,
+        "intenciones": 2352,
+        "rechazadas": 0,
+        "nav_final": 5583.610854,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_doble_momento": {
+        "cagr": 0.116379,
+        "retorno_total": 3.665596,
+        "caida_maxima": -0.304812,
+        "comisiones": 118.097318,
+        "intenciones": 964,
+        "rechazadas": 11,
+        "nav_final": 4665.596374,
+        "nav_fiable": true,
+        "exposicion_media": null
+      }
+    },
+    "8pb_con_minimo_0_50/multiactivo": {
+      "comprar_y_mantener": {
+        "cagr": 0.088456,
+        "retorno_total": 2.273398,
+        "caida_maxima": -0.269364,
+        "comisiones": 15.5,
+        "intenciones": 31,
+        "rechazadas": 0,
+        "nav_final": 3273.397573,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "M03_propia": {
+        "cagr": 0.084138,
+        "retorno_total": 2.096339,
+        "caida_maxima": -0.332259,
+        "comisiones": 498.621942,
+        "intenciones": 1050,
+        "rechazadas": 54,
+        "nav_final": 3096.339064,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_faber_sma10m": {
+        "cagr": -0.172346,
+        "retorno_total": -0.929097,
+        "caida_maxima": -0.929549,
+        "comisiones": 1290.5,
+        "intenciones": 3790,
+        "rechazadas": 1209,
+        "nav_final": 70.903495,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_paridad_inversa": {
+        "cagr": -0.215068,
+        "retorno_total": -0.96622,
+        "caida_maxima": -0.9665,
+        "comisiones": 1092.5,
+        "intenciones": 5208,
+        "rechazadas": 3023,
+        "nav_final": 33.779744,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_doble_momento": {
+        "cagr": 0.0744,
+        "retorno_total": 1.729131,
+        "caida_maxima": -0.371029,
+        "comisiones": 495.5,
+        "intenciones": 1046,
+        "rechazadas": 55,
+        "nav_final": 2729.130532,
+        "nav_fiable": true,
+        "exposicion_media": null
+      }
+    },
+    "8pb_con_minimo_0_50/renta_variable": {
+      "comprar_y_mantener": {
+        "cagr": 0.137024,
+        "retorno_total": 5.028934,
+        "caida_maxima": -0.349882,
+        "comisiones": 7.0,
+        "intenciones": 14,
+        "rechazadas": 0,
+        "nav_final": 6028.934443,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "M03_propia": {
+        "cagr": 0.124078,
+        "retorno_total": 4.136429,
+        "caida_maxima": -0.305662,
+        "comisiones": 474.463978,
+        "intenciones": 967,
+        "rechazadas": 48,
+        "nav_final": 5136.428904,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_faber_sma10m": {
+        "cagr": 0.043522,
+        "retorno_total": 0.814875,
+        "caida_maxima": -0.221267,
+        "comisiones": 887.0,
+        "intenciones": 2022,
+        "rechazadas": 248,
+        "nav_final": 1814.874968,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_paridad_inversa": {
+        "cagr": 0.077889,
+        "retorno_total": 1.855774,
+        "caida_maxima": -0.360845,
+        "comisiones": 1084.0,
+        "intenciones": 2352,
+        "rechazadas": 184,
+        "nav_final": 2855.774243,
+        "nav_fiable": true,
+        "exposicion_media": null
+      },
+      "PUB_doble_momento": {
+        "cagr": 0.100873,
+        "retorno_total": 2.836371,
+        "caida_maxima": -0.30566,
+        "comisiones": 448.710291,
+        "intenciones": 964,
+        "rechazadas": 68,
+        "nav_final": 3836.371322,
+        "nav_fiable": true,
+        "exposicion_media": null
+      }
+    }
+  }
+}

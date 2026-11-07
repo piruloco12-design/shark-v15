@@ -166,6 +166,23 @@ jobs:
             echo
           } >> resultados/ultimo.md
 
+      - name: Seguimiento de divulgaciones
+        # Contra fixtures: la SEC esta bloqueada en el contenedor donde se
+        # escribio. Lo que BLOQUEA es que ninguna etiqueta de frescura
+        # pueda decir "tiempo real" con ningun plazo, y que el modulo no
+        # pueda emitir una orden.
+        run: |
+          set -o pipefail
+          python tests/test_divulgaciones.py 2>&1 | tee /tmp/divulg.txt
+          {
+            echo '## Seguimiento de divulgaciones (modo OBSERVE)'
+            echo
+            echo '```'
+            tail -24 /tmp/divulg.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
       - name: Comprobar que todo importa
         env:
           TELEGRAM_TOKEN: ""
