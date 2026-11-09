@@ -328,12 +328,34 @@ def guardar_panel(series, efectivo, carpeta):
         d.index.name = "fecha"
         trozos.append(d)
     panel = pd.concat(trozos).sort_index(kind="stable")
-    ruta = os.path.join(carpeta, "prices_snapshot.csv")
-    panel.to_csv(ruta)
-
+    # COMPRIMIDO. Esta copia existe solo como constancia de la entrada de
+    # la corrida: nadie la lee --todos los lectores apuntan al fijo
+    # `resultados/v2/prices_snapshot.csv`-- y sin comprimir son 12,8 MB
+    # por corrida. Ocho corridas llenaron 100 MB del repositorio y, via
+    # el artefacto de Actions, agotaron la cuota de 500 MB de
+    # almacenamiento, con lo que GitHub dejo de arrancar corridas nuevas.
+    import gzip
     import hashlib
-    with open(ruta, "rb") as f:
-        h = hashlib.sha256(f.read()).hexdigest()[:16]
+    csv_texto = panel.to_csv()
+    # El hash se calcula sobre el CONTENIDO, no sobre los bytes
+    # comprimidos: gzip incrusta una marca de tiempo, asi que hashear el
+    # .gz daria un hash distinto para datos identicos y la constancia no
+    # serviria para comparar corridas. mtime=0 por la misma razon.
+    h = hashlib.sha256(csv_texto.encode("utf-8")).hexdigest()[:16]
+    ruta = os.path.join(carpeta, "prices_snapshot.csv.gz")
+    # gzip.open() NO acepta mtime; solo GzipFile. Y se le pasa `fileobj`
+    # en vez del nombre porque GzipFile escribe el NOMBRE DEL FICHERO en
+    # la cabecera del .gz: con el nombre dentro, dos ficheros de datos
+    # identicos en rutas distintas dan bytes distintos. Con fileobj y
+    # mtime=0 la salida es deterministica y datos iguales dan un .gz
+    # byte a byte igual, que es lo que hace util la constancia.
+    with open(ruta, "wb") as crudo:
+        # filename="" EXPLICITO: sin el, GzipFile coge el nombre de
+        # `fileobj.name` y lo mete en la cabecera igual, asi que datos
+        # identicos en rutas distintas seguian dando bytes distintos.
+        with gzip.GzipFile(filename="", mode="wb", fileobj=crudo,
+                           mtime=0) as f:
+            f.write(csv_texto.encode("utf-8"))
     return {"ruta": ruta, "hash": h, "filas": len(panel),
             "instrumentos": sorted(todas),
             "columnas": list(panel.columns),

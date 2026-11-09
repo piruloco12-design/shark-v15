@@ -549,5 +549,17 @@ jobs:
         if: always()
         with:
           name: resultados-validacion
-          path: resultados/
-          retention-days: 30
+          # SOLO los resumenes, no resultados/ entero.
+          #
+          # Subir resultados/ completo daba 67 MB por corrida. Con 30 dias
+          # de retencion, 56 artefactos acumularon 591 MB y reventaron la
+          # cuota gratuita de 500 MB de GitHub; pasada la cuota, GitHub no
+          # arranca corridas nuevas y fallan en segundos sin ningun
+          # trabajo. El artefacto era ademas REDUNDANTE: el paso anterior
+          # ya commitea resultados/ al repositorio.
+          path: |
+            resultados/*.md
+            resultados/*.txt
+            resultados/*.json
+            resultados/v3/*.json
+          retention-days: 7
