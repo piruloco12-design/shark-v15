@@ -120,6 +120,12 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
     abiertas: dict = {}
     operaciones: list = []
     senales = permitidas = bloqueadas = no_admitidas = 0
+    # Desglose: 'no admitida' agrupaba causas muy distintas y eso
+    # escondia que la mayoria son VENTAS que una cuenta al contado no
+    # puede ejecutar (cantidad >= 0, sin cortos).
+    motivos_no_adm: dict = {}
+    def _na(causa):
+        motivos_no_adm[causa] = motivos_no_adm.get(causa, 0) + 1
     fallos: dict = {}
     nav_diario: dict = {}
     n_orden = 0
@@ -223,6 +229,7 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
                     # Cuenta al contado: un SELL sin inventario no abre
                     # corto. Se cuenta como permitida y no ejecutable.
                     no_admitidas += 1
+                    _na("SELL sin inventario (cuenta al contado, sin cortos)")
                     continue
                 setup = calculate_trade_levels(
                     df=hasta, signal=senal, capital=capital,
@@ -232,6 +239,7 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
                 cant = float(setup.get("position_size", 0) or 0)
                 if cant <= 0:
                     no_admitidas += 1
+                    _na("tamano calculado 0 (riesgo/lote/caja)")
                     continue
                 n_orden += 1
                 oid = f"buy-{n_orden}"
@@ -240,6 +248,18 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
                                 coste_rel=coste_rel, coste_minimo=coste_minimo)
                 if not adm["admitida"]:
                     no_admitidas += 1
+                    # La causa se normaliza a una etiqueta ESTABLE. Meter
+                    # la cantidad dentro hacia que cada rechazo fuera una
+                    # causa distinta y el desglose no agrupaba nada.
+                    m = str(adm.get("motivo", "?"))
+                    if "lote" in m:
+                        causa = ("compra rechazada: el tamano por riesgo no "
+                                 "llega a 1 participacion entera")
+                    elif "no cabe" in m:
+                        causa = "compra rechazada: no cabe en la caja utilizable"
+                    else:
+                        causa = f"compra rechazada: {m[:40]}"
+                    _na(causa)
                     continue
                 r = c.aplicar_fill(event_id=f"f-{oid}", order_id=oid,
                                    instrumento=t, lado="BUY",
@@ -293,6 +313,7 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
         "operaciones": len(operaciones),
         "senales": senales, "permitidas": permitidas,
         "bloqueadas": bloqueadas, "no_admitidas": no_admitidas,
+        "no_admitidas_por_causa": motivos_no_adm,
         "esperanza_por_operacion": (sum(pnls) / len(pnls)) if pnls else None,
         "esperanza_en_R": (sum(rs) / len(rs)) if rs else None,
         "esperanza_neta_por_operacion": (sum(netos) / len(netos)) if netos else None,
@@ -338,6 +359,9 @@ def main():
         r = correr(c_rel, c_min, 1000.0, etq)
         print(f"  senales {r['senales']} | permitidas {r['permitidas']} | "
               f"bloqueadas {r['bloqueadas']} | no admitidas {r['no_admitidas']}")
+        for causa, n in sorted(r.get("no_admitidas_por_causa", {}).items(),
+                               key=lambda kv: -kv[1]):
+            print(f"      {n:>5}  {causa}")
         print(f"  operaciones cerradas: {r['operaciones']} "
               f"({r['ganadoras']} ganadoras / {r['perdedoras']} perdedoras)")
         e = r["esperanza_por_operacion"]
