@@ -1,0 +1,59 @@
+{
+  "activos": [
+    "NVDA",
+    "META"
+  ],
+  "sintetico": true,
+  "multiplo_viabilidad": 0.0,
+  "resultados": {
+    "1d": {
+      "variante": "B1_AL_CONTADO_diario_v1",
+      "etiqueta": "panel_vivo_1d",
+      "coste_rel": 0.0008,
+      "coste_minimo": 0.0,
+      "operaciones": 0,
+      "senales": 525,
+      "permitidas": 484,
+      "bloqueadas": 41,
+      "no_admitidas": 484,
+      "no_admitidas_por_causa": {
+        "compra rechazada: el tamano por riesgo no llega a 1 participacion entera": 322,
+        "SELL sin inventario (cuenta al contado, sin cortos)": 162
+      },
+      "esperanza_por_operacion": null,
+      "esperanza_en_R": null,
+      "esperanza_neta_por_operacion": null,
+      "esperanza_neta_en_R": null,
+      "comisiones_totales": 0,
+      "comision_media_ida_y_vuelta": null,
+      "pnl_bruto_total": 0,
+      "pnl_neto_total": 0,
+      "ganadoras": 0,
+      "perdedoras": 0,
+      "ganadoras_netas": 0,
+      "perdedoras_netas": 0,
+      "nav_final": 1000.0,
+      "cagr": 0.0,
+      "anos": 4.41,
+      "caja_final": 1000.0,
+      "fallos_en_entrada": {},
+      "posiciones_abiertas_al_final": 0,
+      "_nav": "2022-06-14 00:00:00+00:00    1000.0\n2022-06-15 00:00:00+00:00    1000.0\n2022-06-16 00:00:00+00:00    1000.0\n2022-06-17 00:00:00+00:00    1000.0\n2022-06-20 00:00:00+00:00    1000.0\n                              ...  \n2026-11-03 00:00:00+00:00    1000.0\n2026-11-04 00:00:00+00:00    1000.0\n2026-11-05 00:00:00+00:00    1000.0\n2026-11-06 00:00:00+00:00    1000.0\n2026-11-09 00:00:00+00:00    1000.0\nLength: 1150, dtype: float64",
+      "fallos_de_descarga": {},
+      "barras_por_activo": {
+        "NVDA": 1400,
+        "META": 1400
+      },
+      "ventana": [
+        "2021-06-29 00:00:00+00:00",
+        "2026-11-09 00:00:00+00:00"
+      ],
+      "reconciliacion": {
+        "variacion_nav": 0.0,
+        "pnl_neto_cerrado": 0,
+        "residuo": 0.0,
+        "posiciones_abiertas_al_final": 0
+      }
+    }
+  }
+}

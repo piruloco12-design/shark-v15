@@ -105,8 +105,15 @@ def cargar(ruta):
     return salida
 
 
-def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
-    series = cargar(PANEL)
+def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta="",
+           series=None):
+    # `series` inyectable: el mismo motor de medicion vale para el panel
+    # de 32 ETFs del snapshot y para el panel REAL del bot en vivo
+    # (IWM, NVDA, AMZN, META), que se descarga en otro validador. Sin
+    # esto habria que duplicar el motor, y entonces las dos mediciones ya
+    # no serian comparables.
+    if series is None:
+        series = cargar(PANEL)
     con_ind = {}
     for t, df in series.items():
         try:

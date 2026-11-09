@@ -420,6 +420,61 @@ jobs:
             echo
           } >> resultados/ultimo.md
 
+      - name: Panel EN VIVO del bot (30m contra diario)
+        # Esto es lo que ninguna otra medicion del repositorio hace.
+        # Todas las demas usan el snapshot de 32 ETFs, donde de los
+        # cuatro instrumentos que el bot opera de verdad
+        # (config.ASSETS = IWM, NVDA, AMZN, META) solo aparece IWM.
+        #
+        # Consecuencia: el hallazgo de las 180 operaciones condenadas
+        # --objetivo menor que la comision, 179 de ellas en BIL-- es un
+        # artefacto de ESE panel. BIL no esta en el panel en vivo.
+        #
+        # Corre aqui y no en el contenedor de Claude porque alli el proxy
+        # bloquea Yahoo y Stooq (403) y pip no alcanza PyPI, asi que
+        # yfinance no se puede ni instalar. Actions si tiene red.
+        #
+        # continue-on-error: la descarga depende de proveedores externos y
+        # su caida no debe tumbar la validacion entera. El validador falla
+        # ruidosamente si un marco se queda sin datos, en vez de emitir
+        # 0 operaciones y un NAV de exactamente 1000, que tiene pinta de
+        # resultado.
+        if: always()
+        continue-on-error: true
+        env:
+          PV_ACTIVOS: ${{ github.event.inputs.assets }}
+          PV_MARCOS: "30m,1d"
+          PV_PERIODO_1D: "5y"
+        run: |
+          set -o pipefail
+          echo "--- sin filtro de viabilidad: el bot tal como esta hoy ---"
+          python validator/b1_panel_vivo.py 2>&1 \
+            | tee resultados/panel_vivo.txt
+          echo
+          echo "--- con filtro de viabilidad 1x ---"
+          B1_VIABILIDAD=1 python validator/b1_panel_vivo.py 2>&1 \
+            | tee resultados/panel_vivo_viab1x.txt
+          {
+            echo '## Panel EN VIVO del bot (IWM, NVDA, AMZN, META)'
+            echo
+            echo 'La cifra comparable entre marcos es la esperanza NETA'
+            echo 'por operacion, no el NAV: Yahoo solo sirve ~60 dias de'
+            echo 'intradia, asi que 30m y 1d NO cubren la misma ventana.'
+            echo 'El recorte "diario dentro de la ventana de 30m" quita'
+            echo 'ese confundido.'
+            echo
+            echo '```'
+            cat resultados/panel_vivo.txt
+            echo '```'
+            echo
+            echo '### Con filtro de viabilidad 1x'
+            echo
+            echo '```'
+            cat resultados/panel_vivo_viab1x.txt
+            echo '```'
+            echo
+          } >> resultados/ultimo.md
+
       - name: Experimento institucional (M02/M03 solo largos)
         if: always()
         run: |
