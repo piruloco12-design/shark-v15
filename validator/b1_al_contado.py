@@ -457,11 +457,29 @@ def main():
                                key=lambda kv: -kv[1])[:6]:
                 print(f"    {n:>7} x  {m}")
         limpio = {k: v for k, v in r.items() if not k.startswith("_")}
-        # TODAS las operaciones, no las 200 primeras. Con 200 la prueba
-        # de conviccion no tiene potencia: rho = -0,08 da p = 0,24 con
-        # n=200 y p ~ 0,04 con n=636. El truncamiento decidia la
-        # conclusion, que es exactamente lo que no debe pasar.
-        limpio["operaciones_detalle"] = r["_operaciones"]
+        # TODAS las operaciones en la medicion BASE, no las 200 primeras.
+        # Con 200 la prueba de conviccion no tiene potencia: rho = -0,08
+        # da p = 0,24 con n=200 y p ~ 0,04 con n=636. El truncamiento
+        # decidia la conclusion, que es exactamente lo que no debe pasar.
+        #
+        # En el BARRIDO no se volca el detalle: son 7 escenarios que
+        # comparten casi toda la estructura, y volcarlos todos dio un
+        # fichero de 3,1 MB con 4.229 operaciones que se commitea en cada
+        # corrida del CI. El detalle sirve para condicionar por
+        # instrumento --asi se encontro lo de BIL-- y eso se hace sobre la
+        # base. Del barrido lo que se quiere son los agregados, mas un
+        # resumen por instrumento que cabe en unas lineas.
+        if os.environ.get("B1_BARRIDO") == "1":
+            porinst: dict = {}
+            for o in r["_operaciones"]:
+                a = porinst.setdefault(o["instrumento"],
+                                       {"n": 0, "neto": 0.0, "ganadoras": 0})
+                a["n"] += 1
+                a["neto"] += o["pnl_neto"]
+                a["ganadoras"] += 1 if o["pnl_neto"] > 0 else 0
+            limpio["resumen_por_instrumento"] = porinst
+        else:
+            limpio["operaciones_detalle"] = r["_operaciones"]
         salida["resultados"][etq] = limpio
     if os.environ.get("B1_BARRIDO") == "1":
         # El barrido y el filtro se combinan: hay que saber que da el
