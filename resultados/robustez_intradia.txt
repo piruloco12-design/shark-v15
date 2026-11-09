@@ -7,20 +7,20 @@ Config actual: SL 2.0 ATR / TP 2.5 ATR
 Bootstrap: 10000 | Monte Carlo: 5000
 
 Descargando 30m / 60d ...
-  IWM     yfinance      780 velas
-  NVDA    yfinance      780 velas
-  AMZN    yfinance      780 velas
-  META    yfinance      780 velas
+  IWM     yfinance      775 velas
+  NVDA    yfinance      775 velas
+  AMZN    yfinance      775 velas
+  META    yfinance      775 velas
 
-Operaciones totales con la config actual: 65
+Operaciones totales con la config actual: 66
 
 ==============================================================
 1) BOOTSTRAP DE LA EXPECTATIVA
 ==============================================================
-Operaciones:            65
-Expectativa observada:  +0.0940 € por operación
-Intervalo 90%:          -1.2405  a  +1.4619
-Prob. expectativa > 0:  55.0%
+Operaciones:            66
+Expectativa observada:  -0.1716 € por operación
+Intervalo 90%:          -1.5118  a  +1.1618
+Prob. expectativa > 0:  41.7%
 
 LECTURA: INDECISO. El cero está dentro del intervalo, así que
          esta muestra no distingue la estrategia de una moneda.
@@ -31,30 +31,30 @@ LECTURA: INDECISO. El cero está dentro del intervalo, así que
 2) MONTE CARLO DE LA CURVA DE CAPITAL
 ==============================================================
 Capital inicial:   1000.00 €
-Operaciones:       65
+Operaciones:       66
 
 A) MISMAS OPERACIONES, OTRO ORDEN
    (el capital final no cambia al barajar; solo el camino)
-   Drawdown mediano:        4.95%
-   Drawdown percentil 95:   7.47%
-   Peor drawdown simulado:  12.94%
-   Capital final (fijo):    1006.11 €
+   Drawdown mediano:        5.68%
+   Drawdown percentil 95:   8.40%
+   Peor drawdown simulado:  11.63%
+   Capital final (fijo):    988.67 €
 
 B) REMUESTREO: si las próximas operaciones salieran de
    esta misma distribución
-   Capital final, percentil 5:   919.06 €
-   Capital final, mediana:       1007.01 €
-   Capital final, percentil 95:  1093.62 €
-   Drawdown percentil 95:        10.55%
-   Prob. terminar en pérdida:    44.7%
+   Capital final, percentil 5:   902.34 €
+   Capital final, mediana:       988.59 €
+   Capital final, percentil 95:  1075.98 €
+   Drawdown percentil 95:        11.95%
+   Prob. terminar en pérdida:    58.3%
    Prob. perder la mitad:        0.0%
 
 LECTURA: el drawdown que hay que estar dispuesto a aguantar es
-         del 7.5%, no el que salió en el histórico: el orden
+         del 8.4%, no el que salió en el histórico: el orden
          de las operaciones es azar y la racha mala no tiene por
          qué haber caído dentro del periodo de prueba.
-         El remuestreo da 45% de probabilidad de acabar
-         en pérdida sobre otras 65 operaciones.
+         El remuestreo da 58% de probabilidad de acabar
+         en pérdida sobre otras 66 operaciones.
 
 ==============================================================
 3) BARRIDO DE PARÁMETROS (SL / TP)
@@ -62,56 +62,51 @@ LECTURA: el drawdown que hay que estar dispuesto a aguantar es
 
    SL    TP   R:R   OPS    WR%    EXPECT     PF  VEREDICTO
 --------------------------------------------------------------
-  1.5   2.0  1.33    79   40.5   -1.6435   0.60
-  1.5   2.5  1.67    74   36.5   -1.5776   0.64
-  1.5   3.0  2.00    71   33.8   -1.4328   0.70
-  1.5   3.5  2.33    70   31.4   -1.3677   0.73
-  2.0   2.0  1.00    73   53.4   -0.3420   0.89
-  2.0   2.5  1.25    65   52.3 +  0.0940   1.03 <-- CONFIG ACTUAL
-  2.0   3.0  1.50    61   50.8 +  0.6390   1.19
-  2.0   3.5  1.75    63   39.7   -0.4942   0.88
-  2.5   2.0  0.80    72   56.9   -0.1130   0.96
-  2.5   2.5  1.00    65   55.4 +  0.2564   1.10
-  2.5   3.0  1.20    61   52.5 +  0.4209   1.15
-  2.5   3.5  1.40    61   41.0   -0.6162   0.83
-  3.0   2.0  0.67    67   62.7 +  0.0529   1.02
-  3.0   2.5  0.83    60   61.7 +  0.4464   1.20
-  3.0   3.0  1.00    59   55.9 +  0.3141   1.12
-  3.0   3.5  1.17    55   49.1   -0.0679   0.98
+  1.5   2.0  1.33    80   38.8   -1.9014   0.55
+  1.5   2.5  1.67    75   34.7   -1.8207   0.59
+  1.5   3.0  2.00    72   31.9   -1.7016   0.65
+  1.5   3.5  2.33    71   29.6   -1.6638   0.67
+  2.0   2.0  1.00    74   51.4   -0.5938   0.81
+  2.0   2.5  1.25    66   50.0   -0.1716   0.95 <-- CONFIG ACTUAL
+  2.0   3.0  1.50    62   48.4 +  0.3287   1.10
+  2.0   3.5  1.75    64   37.5   -0.7930   0.81
+  2.5   2.0  0.80    73   54.8   -0.3275   0.88
+  2.5   2.5  1.00    66   53.0 +  0.0173   1.01
+  2.5   3.0  1.20    62   50.0 +  0.1532   1.05
+  2.5   3.5  1.40    63   38.1   -0.9708   0.74
+  3.0   2.0  0.67    68   60.3   -0.1636   0.93
+  3.0   2.5  0.83    61   59.0 +  0.1971   1.08
+  3.0   3.0  1.00    60   53.3 +  0.0538   1.02
+  3.0   3.5  1.17    57   45.6   -0.4447   0.86
 
-Combinaciones con expectativa positiva: 7 de 16
-Configuración actual (SL 2.0 / TP 2.5): expectativa +0.0940, PF 1.03
+Combinaciones con expectativa positiva: 5 de 16
+Configuración actual (SL 2.0 / TP 2.5): expectativa -0.1716, PF 0.95
 Vecinos inmediatos con expectativa positiva: 3 de 8
 
-LECTURA: ZONA MIXTA. Ni pico ni meseta clara. Con esta muestra
-         no se puede separar señal de ruido.
+LECTURA: la configuración actual no tiene expectativa positiva
+         en este periodo. Si otras combinaciones sí, ojo: elegir
+         ahora la mejor de la tabla ES sobreajustar.
 
 ==============================================================
 4) ECONOMÍA REAL: ¿QUÉ SIGNIFICA ESTO EN DINERO?
 ==============================================================
 Periodo cubierto:       0.2 años
-Operaciones:            65  ->  273.0 al año
+Operaciones:            66  ->  279.0 al año
 Riesgo por operación:   5.00 € (0.5% de 1000 €)
-Expectativa en riesgo:  +0.019 R por operación
+Expectativa en riesgo:  -0.034 R por operación
 
 RENTABILIDAD ANUAL SOBRE 1000 €
-  pesimista (p05)  :  -338.65 €/año  =  -33.87% anual
-  central          :   +25.67 €/año  =   +2.57% anual
-  optimista (p95)  :  +399.10 €/año  =  +39.91% anual
+  pesimista (p05)  :  -421.79 €/año  =  -42.18% anual
+  central          :   -47.89 €/año  =   -4.79% anual
+  optimista (p95)  :  +324.13 €/año  =  +32.41% anual
 
 CAPITAL NECESARIO PARA SACAR 1.000 €/MES (12.000 €/año)
   pesimista (p05)  : imposible, la expectativa es negativa
-  central          :        467,471 €
-  optimista (p95)  :         30,068 €
+  central          : imposible, la expectativa es negativa
+  optimista (p95)  :         37,022 €
 
-LECTURA: 2.6% anual. Eso está por debajo de lo que
-         da un índice sin hacer nada, y muy por debajo de lo que
-         haría falta para vivir de esto con una cuenta pequeña.
-         El cuello de botella no es el código ni los filtros:
-         son 273 operaciones al año con una ventaja de
-         0.019 R. Para cambiarlo hace falta más
-         ventaja por operación o muchas más operaciones, y subir
-         el riesgo solo multiplica también las pérdidas.
+LECTURA: con expectativa central negativa no hay capital que
+         arregle esto. El problema no es el tamaño de la cuenta.
 
 JSON escrito en resultados/robustez_30m.json
 

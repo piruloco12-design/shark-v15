@@ -1,0 +1,30 @@
+{
+  "activos": [
+    "IWM",
+    "NVDA",
+    "AMZN",
+    "META"
+  ],
+  "sintetico": false,
+  "multiplo_viabilidad": 1.0,
+  "resultados": {
+    "30m": {
+      "error": "ningun activo descargado",
+      "fallos": {
+        "IWM": "ValueError: No se pudo descargar IWM con ningún provider. Detalles: [\"yfinance: module 'yfinance' has no attribute 'download'\", 'fin",
+        "NVDA": "ValueError: No se pudo descargar NVDA con ningún provider. Detalles: [\"yfinance: module 'yfinance' has no attribute 'download'\", 'fi",
+        "AMZN": "ValueError: No se pudo descargar AMZN con ningún provider. Detalles: [\"yfinance: module 'yfinance' has no attribute 'download'\", 'fi",
+        "META": "ValueError: No se pudo descargar META con ningún provider. Detalles: [\"yfinance: module 'yfinance' has no attribute 'download'\", 'fi"
+      }
+    },
+    "1d": {
+      "error": "ningun activo descargado",
+      "fallos": {
+        "IWM": "ValueError: No se pudo descargar IWM con ningún provider. Detalles: [\"yfinance: module 'yfinance' has no attribute 'download'\", 'fin",
+        "NVDA": "ValueError: No se pudo descargar NVDA con ningún provider. Detalles: [\"yfinance: module 'yfinance' has no attribute 'download'\", 'fi",
+        "AMZN": "ValueError: No se pudo descargar AMZN con ningún provider. Detalles: [\"yfinance: module 'yfinance' has no attribute 'download'\", 'fi",
+        "META": "ValueError: No se pudo descargar META con ningún provider. Detalles: [\"yfinance: module 'yfinance' has no attribute 'download'\", 'fi"
+      }
+    }
+  }
+}

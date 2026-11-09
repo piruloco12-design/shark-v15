@@ -1,0 +1,31 @@
+======================================================================
+B1 SOBRE EL PANEL EN VIVO DEL BOT
+======================================================================
+  activos: IWM, NVDA, AMZN, META
+  marcos:  30m, 1d
+  filtro de viabilidad: 1.0
+
+  descargando 30m (periodo 60d) ...
+    IWM    30m  FALLO  ValueError: No se pudo descargar IWM con ningún provider. Detalles: ["yfinance: module 'yfinance' has no attribute 'download'", 'fin
+    NVDA   30m  FALLO  ValueError: No se pudo descargar NVDA con ningún provider. Detalles: ["yfinance: module 'yfinance' has no attribute 'download'", 'fi
+    AMZN   30m  FALLO  ValueError: No se pudo descargar AMZN con ningún provider. Detalles: ["yfinance: module 'yfinance' has no attribute 'download'", 'fi
+    META   30m  FALLO  ValueError: No se pudo descargar META con ningún provider. Detalles: ["yfinance: module 'yfinance' has no attribute 'download'", 'fi
+    SIN DATOS para 30m. No se mide.
+
+  descargando 1d (periodo 5y) ...
+    IWM    1d   FALLO  ValueError: No se pudo descargar IWM con ningún provider. Detalles: ["yfinance: module 'yfinance' has no attribute 'download'", 'fin
+    NVDA   1d   FALLO  ValueError: No se pudo descargar NVDA con ningún provider. Detalles: ["yfinance: module 'yfinance' has no attribute 'download'", 'fi
+    AMZN   1d   FALLO  ValueError: No se pudo descargar AMZN con ningún provider. Detalles: ["yfinance: module 'yfinance' has no attribute 'download'", 'fi
+    META   1d   FALLO  ValueError: No se pudo descargar META con ningún provider. Detalles: ["yfinance: module 'yfinance' has no attribute 'download'", 'fi
+    SIN DATOS para 1d. No se mide.
+
+======================================================================
+COMPARACION  (esperanza NETA por operacion: homogenea entre
+              ventanas distintas; el NAV no lo es)
+======================================================================
+  30m   SIN DATOS: ningun activo descargado
+  1d    SIN DATOS: ningun activo descargado
+
+guardado /home/runner/work/shark-v15/shark-v15/resultados/v3/b1_panel_vivo.json
+
+AVISO: sin datos para ['30m', '1d']. La comparacion esta incompleta.
