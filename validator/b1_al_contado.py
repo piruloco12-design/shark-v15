@@ -89,6 +89,9 @@ PANEL = os.path.join(REPO, "resultados/v2/prices_snapshot.csv")
 CALENTAMIENTO = 250
 MAX_ABIERTAS = 2          # igual que MAX_OPEN_TRADES del bot
 VARIANTE = "B1_AL_CONTADO_diario_v1"
+# 0 = sin filtro (comportamiento actual del bot). >0 = exigir que el
+# objetivo supere ese multiplo del coste de ida y vuelta.
+MULTIPLO_VIABILIDAD = float(os.environ.get("B1_VIABILIDAD", "0") or 0)
 
 
 def cargar(ruta):
@@ -238,6 +241,35 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
                     risk_per_trade=RISK_PER_TRADE,
                     efectivo_disponible=c.efectivo_utilizable,
                     coste_rel=coste_rel)
+                # FILTRO DE VIABILIDAD ECONOMICA.
+                #
+                # 180 de 413 operaciones que tocaron su take-profit
+                # perdieron dinero igualmente: el objetivo era MENOR que la
+                # comision de ida y vuelta. 179 de ellas eran BIL, un fondo
+                # de letras del Tesoro cuyo recorrido entero es mas pequeno
+                # que el coste de operarlo.
+                #
+                # Esto NO es "evitar ADX alto porque perdio", que seria
+                # sobreajuste. Es una condicion comprobable ANTES de abrir y
+                # sin ver el resultado: si el objetivo no supera el coste, la
+                # operacion no puede ganar dinero. El ratio es casi
+                # invariante al tamano, porque comision y beneficio son
+                # ambos proporcionales a la cantidad.
+                objetivo = abs(float(setup["take_profit"])
+                               - float(setup["entry"]))
+                cant_prev = float(setup.get("position_size", 0) or 0)
+                if MULTIPLO_VIABILIDAD > 0 and cant_prev > 0:
+                    ganancia = objetivo * cant_prev
+                    coste_ida_vuelta = (
+                        comision_explicita(float(setup["entry"]) * cant_prev,
+                                           coste_rel, 0.0, coste_minimo)
+                        + comision_explicita(
+                            float(setup["take_profit"]) * cant_prev,
+                            coste_rel, 0.0, coste_minimo))
+                    if ganancia < MULTIPLO_VIABILIDAD * coste_ida_vuelta:
+                        no_admitidas += 1
+                        _na("objetivo no supera el coste de ida y vuelta")
+                        continue
                 cant = float(setup.get("position_size", 0) or 0)
                 if cant <= 0:
                     no_admitidas += 1
@@ -367,6 +399,9 @@ def main():
             ("8pb_proporcional", COSTE_POR_PATA, 0.0),
             ("8pb_con_minimo_0_50", COSTE_POR_PATA, 0.50),
         ]
+    if MULTIPLO_VIABILIDAD > 0:
+        escenarios = [(f"{e}__viab_{MULTIPLO_VIABILIDAD:g}x", a, b)
+                      for e, a, b in escenarios]
     salida = {"variante": VARIANTE, "panel": PANEL, "resultados": {}}
     for etq, c_rel, c_min in escenarios:
         print(f"\n{'='*74}\n{etq}\n{'='*74}")
@@ -421,8 +456,12 @@ def main():
         # conclusion, que es exactamente lo que no debe pasar.
         limpio["operaciones_detalle"] = r["_operaciones"]
         salida["resultados"][etq] = limpio
-    nombre = ("b1_barrido_coste.json" if os.environ.get("B1_BARRIDO") == "1"
-              else "b1_al_contado.json")
+    if os.environ.get("B1_BARRIDO") == "1":
+        nombre = "b1_barrido_coste.json"
+    elif MULTIPLO_VIABILIDAD > 0:
+        nombre = f"b1_viabilidad_{MULTIPLO_VIABILIDAD:g}x.json"
+    else:
+        nombre = "b1_al_contado.json"
     destino = os.path.join(REPO, "resultados/v3", nombre)
     io.open(destino, "w", encoding="utf-8").write(
         json.dumps(salida, indent=2, default=str))
