@@ -457,7 +457,10 @@ def main():
         limpio["operaciones_detalle"] = r["_operaciones"]
         salida["resultados"][etq] = limpio
     if os.environ.get("B1_BARRIDO") == "1":
-        nombre = "b1_barrido_coste.json"
+        # El barrido y el filtro se combinan: hay que saber que da el
+        # mejor coste CON el filtro puesto, no solo cada uno por separado.
+        nombre = ("b1_barrido_coste.json" if MULTIPLO_VIABILIDAD <= 0 else
+                  f"b1_barrido_coste_viab_{MULTIPLO_VIABILIDAD:g}x.json")
     elif MULTIPLO_VIABILIDAD > 0:
         nombre = f"b1_viabilidad_{MULTIPLO_VIABILIDAD:g}x.json"
     else:
