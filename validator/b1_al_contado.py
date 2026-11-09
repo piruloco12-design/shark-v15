@@ -187,6 +187,7 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
                 "R_bruto": (bruto / riesgo) if riesgo > 0 else None,
                 "R_neto": (neto / riesgo) if riesgo > 0 else None,
                 "abierta_en": str(pos["fecha"]), "cerrada_en": str(fecha),
+                "conviccion": pos.get("conviccion", {}),
             })
             abiertas.pop(t, None)
 
@@ -213,9 +214,10 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
                 if senal not in ("BUY", "SELL"):
                     continue
                 senales += 1
+                context_result_cache = _simulate_context_result()
                 final = evaluate_final_decision(
                     ai_result=_simulate_ai_result(),
-                    context_result=_simulate_context_result(),
+                    context_result=context_result_cache,
                     session_result=evaluate_session_filter(hasta, regimen),
                     volatility_result=evaluate_volatility_filter(hasta, regimen),
                     risk_result=_simulate_risk_result(),
@@ -271,7 +273,19 @@ def correr(coste_rel, coste_minimo, capital=1000.0, etiqueta=""):
                 if not r.get("aplicado"):
                     no_admitidas += 1
                     continue
+                # Scores de la decision al ENTRAR. Sirven para contestar
+                # la pregunta que decide el tamano variable: predice la
+                # conviccion el resultado? Si no, variar el tamano solo
+                # anade varianza.
+                # OJO: ai_score viene del simulador, es constante y NO
+                # informa. Los demas son reales.
                 abiertas[t] = {
+                    "conviccion": {
+                        "puntuacion_final": final.get("score"),
+                        "motivo": str(final.get("reason", ""))[:40],
+                        "adx": float(fila["adx"]),
+                        "regimen": regimen,
+                    },
                     "signal": senal, "entrada": float(setup["entry"]),
                     "stop_loss": float(setup["stop_loss"]),
                     "take_profit": float(setup["take_profit"]),
