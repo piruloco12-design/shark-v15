@@ -415,7 +415,11 @@ def main():
                                key=lambda kv: -kv[1])[:6]:
                 print(f"    {n:>7} x  {m}")
         limpio = {k: v for k, v in r.items() if not k.startswith("_")}
-        limpio["operaciones_detalle"] = r["_operaciones"][:200]
+        # TODAS las operaciones, no las 200 primeras. Con 200 la prueba
+        # de conviccion no tiene potencia: rho = -0,08 da p = 0,24 con
+        # n=200 y p ~ 0,04 con n=636. El truncamiento decidia la
+        # conclusion, que es exactamente lo que no debe pasar.
+        limpio["operaciones_detalle"] = r["_operaciones"]
         salida["resultados"][etq] = limpio
     nombre = ("b1_barrido_coste.json" if os.environ.get("B1_BARRIDO") == "1"
               else "b1_al_contado.json")
